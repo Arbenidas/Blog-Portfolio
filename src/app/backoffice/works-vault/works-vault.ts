@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { ContentService, DocumentEntry } from '../../services/content.service';
@@ -11,6 +11,7 @@ import { ContentService, DocumentEntry } from '../../services/content.service';
 })
 export class WorksVaultAdmin implements OnInit {
   private contentService = inject(ContentService);
+  private cdr = inject(ChangeDetectorRef);
   works: DocumentEntry[] = [];
 
   ngOnInit() {
@@ -19,6 +20,7 @@ export class WorksVaultAdmin implements OnInit {
 
   async loadWorks() {
     this.works = await this.contentService.getAllWorks();
+    this.cdr.detectChanges();
   }
 
   async deleteWork(id: string) {

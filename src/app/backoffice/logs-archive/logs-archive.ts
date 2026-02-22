@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { ContentService, DocumentEntry } from '../../services/content.service';
@@ -11,6 +11,7 @@ import { ContentService, DocumentEntry } from '../../services/content.service';
 })
 export class LogsArchiveAdmin implements OnInit {
   private contentService = inject(ContentService);
+  private cdr = inject(ChangeDetectorRef);
   logs: DocumentEntry[] = [];
 
   ngOnInit() {
@@ -19,6 +20,7 @@ export class LogsArchiveAdmin implements OnInit {
 
   async loadLogs() {
     this.logs = await this.contentService.getAllLogs();
+    this.cdr.detectChanges();
   }
 
   async deleteLog(id: string) {

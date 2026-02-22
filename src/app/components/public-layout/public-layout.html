@@ -29,6 +29,6 @@
   </div>
 </nav>
 
-<div [@routeAnimations]="getRouteAnimationData(outlet)">
-  <router-outlet #outlet="outlet"></router-outlet>
+<div [@routeAnimations]="animationState()">
+  <router-outlet #outlet="outlet" (activate)="prepareRoute(outlet)"></router-outlet>
 </div>

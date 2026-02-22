@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { RouterModule, RouterOutlet } from '@angular/router';
 import { routeAnimations } from './route-animations';
 
@@ -10,7 +10,11 @@ import { routeAnimations } from './route-animations';
   animations: [routeAnimations]
 })
 export class PublicLayout {
-  getRouteAnimationData(outlet: RouterOutlet) {
-    return outlet && outlet.activatedRouteData && outlet.activatedRouteData['animation'];
+  animationState = signal<string>('Home');
+
+  prepareRoute(outlet: RouterOutlet) {
+    if (outlet.isActivated) {
+      this.animationState.set(outlet.activatedRouteData['animation']);
+    }
   }
 }

@@ -14,7 +14,9 @@ import { WorksVaultAdmin } from './backoffice/works-vault/works-vault';
 import { LogsArchiveAdmin } from './backoffice/logs-archive/logs-archive';
 import { Login } from './backoffice/login/login';
 import { AuthGuard } from './guards/auth.guard';
-
+import { DesignStudio } from './backoffice/design-studio/design-studio';
+import { ProfileEditor } from './backoffice/profile-editor/profile-editor';
+import { NotFound } from './views/not-found/not-found';
 export const routes: Routes = [
     {
         path: '',
@@ -38,8 +40,10 @@ export const routes: Routes = [
             { path: 'works', component: WorksVaultAdmin },
             { path: 'logs', component: LogsArchiveAdmin },
             { path: 'editor', component: BlockEditor },
-            { path: 'editor/:id', component: BlockEditor },
+            { path: 'editor/:slug', component: BlockEditor },
+            { path: 'profile', component: ProfileEditor },
+            { path: 'design-studio', component: DesignStudio },
         ]
     },
-    { path: '**', redirectTo: '' }
+    { path: '**', component: NotFound }
 ];

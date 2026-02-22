@@ -2,6 +2,19 @@
   <div class="fixed inset-0 z-0 bg-halftone opacity-10 pointer-events-none" style="background-size: 8px 8px;"></div>
   <div class="coffee-stain top-10 right-20 opacity-40 transform scale-150 rotate-90"></div>
 
+  <!-- FLUID WIDGET LAYER (Outside the white paper) -->
+  <div class="absolute inset-0 pointer-events-none z-50 overflow-visible hidden md:block">
+    <ng-container *ngFor="let widget of work.blocks">
+      <div *ngIf="widget.type === 'widget'" class="absolute pointer-events-auto" [style.transform]="'translate3d(' + (widget.data?.x || 0) + 'px, ' + (widget.data?.y || 0) + 'px, 0)'">
+         
+         <ng-container>
+            <div class="pointer-events-none" [innerHTML]="getWidgetHtml(widget.content)"></div>
+         </ng-container>
+
+      </div>
+    </ng-container>
+  </div>
+
   <!-- BACK NAV -->
   <div class="relative z-10 w-full mb-8 flex justify-between items-end">
     <a class="inline-flex items-center gap-2 font-mono text-xs font-bold text-charcoal hover:text-primary transition-colors cursor-pointer no-underline" routerLink="/works">
@@ -20,7 +33,7 @@
       
       <!-- HERO SECTION -->
       <section class="relative border-b-2 border-charcoal">
-        <div class="absolute top-4 left-4 bg-charcoal text-white font-mono text-[10px] font-bold px-2 py-1 z-10">REF_ID: {{ work.id.slice(0, 5) | uppercase }}</div>
+        <div class="absolute top-4 left-4 bg-charcoal text-white font-mono text-[10px] font-bold px-2 py-1 z-10">REF_ID: {{ (work.id || 'PREVIEW').slice(0, 5) | uppercase }}</div>
         
         <div class="w-full aspect-video bg-gray-200 relative overflow-hidden flex items-center justify-center">
           <div class="absolute inset-0 halftone-dots opacity-40 pointer-events-none z-10"></div>
@@ -126,6 +139,20 @@
             </div>
           </div>
 
+          <div *ngIf="block.type === 'video'" class="max-w-5xl mx-auto w-full my-12">
+            <div class="bg-gray-100 p-4 border border-charcoal relative">
+              <div class="absolute top-2 left-2 bg-charcoal text-white font-mono text-[9px] px-1 z-10">FIG.{{ i }} : ARCHIVE_VID</div>
+              <!-- YouTube embed -->
+              <div *ngIf="isYoutubeUrl(block.content)" class="w-full aspect-video border border-charcoal overflow-hidden">
+                <iframe [src]="getSafeVideoUrl(block.content)" class="w-full h-full" frameborder="0" allowfullscreen allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"></iframe>
+              </div>
+              <!-- Direct video -->
+              <div *ngIf="!isYoutubeUrl(block.content)">
+                <video [src]="block.content" controls class="w-full border border-charcoal shadow-sm"></video>
+              </div>
+            </div>
+          </div>
+
           <div *ngIf="block.type === 'code'" class="max-w-4xl mx-auto w-full my-8">
             <div class="bg-black text-green-400 p-6 font-mono text-sm border-2 border-charcoal shadow-[6px_6px_0_#d94e1e] transform rotate-1">
               <div class="flex items-center justify-between mb-4 border-b border-green-800 pb-2">
@@ -180,38 +207,81 @@
           </div>
 
           <div *ngIf="block.type === 'diagram'" class="w-full my-16">
-            <div class="w-full h-[500px] border-4 border-charcoal relative bg-paper-cream shadow-[12px_12px_0_#1a1a1a] overflow-hidden bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMiIgY3k9IjIiIHI9IjEiIGZpbGw9IiNjY2MiLz48L3N2Zz4=')]">
-              
-              <div class="absolute top-4 right-4 bg-white border border-charcoal px-3 py-1 shadow-sm transform -rotate-2">
+            <div class="w-full border-4 border-charcoal relative bg-paper-cream shadow-[12px_12px_0_#1a1a1a]">
+              <div class="absolute top-4 right-4 bg-white border border-charcoal px-3 py-1 shadow-sm transform -rotate-2 z-10">
                 <span class="font-mono text-[10px] text-accent-orange font-bold uppercase">CONFIDENTIAL // INTERNAL USE ONLY</span>
               </div>
+              
+              <div class="w-full h-[500px] relative bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMiIgY3k9IjIiIHI9IjEiIGZpbGw9IiNjY2MiLz48L3N2Zz4=')]">
 
-              <div *ngFor="let node of block.data?.nodes; let ni = index" 
-                   class="absolute flex flex-col items-center justify-center pointer-events-none"
-                   [style.left.px]="node.x" [style.top.px]="node.y">
-                   
-                   <div *ngIf="node.type === 'postgres'" class="bg-white border-2 border-charcoal p-4 flex flex-col items-center justify-center min-w-[160px] shadow-[6px_6px_0_#e5e7eb]">
-                      <span class="material-symbols-outlined text-gray-500 mb-2 text-3xl">database</span>
-                      <span class="text-xs font-mono font-bold text-center w-full uppercase">{{ node.label }}</span>
-                   </div>
-                   
-                   <div *ngIf="node.type === 'api'" class="bg-accent-orange text-white border-4 border-charcoal w-24 h-24 rounded-full flex flex-col items-center justify-center shadow-[6px_6px_0_#1a1a1a]">
-                      <span class="material-symbols-outlined mb-1 text-2xl">hub</span>
-                      <span class="text-[10px] font-mono font-bold text-center w-full px-1 uppercase">{{ node.label }}</span>
-                   </div>
-                   
-                   <div *ngIf="node.type === 'client' || node.type === 'mobile'" class="bg-white border-2 border-charcoal p-4 flex flex-col items-center justify-center min-w-[140px] shadow-[6px_6px_0_#e5e7eb]">
-                      <span class="material-symbols-outlined text-teal-600 mb-2 text-2xl">{{ node.type === 'client' ? 'devices' : 'phone_iphone' }}</span>
-                      <span class="text-[10px] font-mono font-bold text-center w-full uppercase">{{ node.label }}</span>
-                   </div>
-                   
-                   <div *ngIf="node.type === 'text'" class="transform -rotate-3 pl-2 max-w-[200px]">
-                     <span class="font-hand text-2xl lg:text-3xl text-charcoal leading-tight block whitespace-pre-wrap">{{ node.label }}</span>
-                   </div>
+                <!-- SVG Arrow Overlay -->
+                <svg class="absolute inset-0 w-full h-full pointer-events-none z-10">
+                  <defs>
+                    <marker id="pub-arrowhead-solid" markerWidth="12" markerHeight="8" refX="10" refY="4" orient="auto"><polygon points="0 0, 12 4, 0 8" fill="#1a1a1a" /></marker>
+                    <marker id="pub-arrowhead-dashed" markerWidth="12" markerHeight="8" refX="10" refY="4" orient="auto"><polygon points="0 0, 12 4, 0 8" fill="#1a1a1a" /></marker>
+                    <marker id="pub-arrowhead-zigzag" markerWidth="14" markerHeight="10" refX="12" refY="5" orient="auto"><polygon points="0 0, 14 5, 0 10" fill="#d94e1e" /></marker>
+                    <marker id="pub-arrowhead-graffiti" markerWidth="16" markerHeight="12" refX="14" refY="6" orient="auto"><circle cx="8" cy="6" r="5" fill="#1a1a1a" opacity="0.7" /></marker>
+                    <marker id="pub-arrowhead-dotted" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><circle cx="5" cy="5" r="4" fill="#1a1a1a" /></marker>
+                  </defs>
+                  <ng-container *ngFor="let arrow of block.data?.arrows">
+                    <line
+                      [attr.x1]="getNodeCenter(block, arrow.from).x"
+                      [attr.y1]="getNodeCenter(block, arrow.from).y"
+                      [attr.x2]="getNodeCenter(block, arrow.to).x"
+                      [attr.y2]="getNodeCenter(block, arrow.to).y"
+                      [attr.stroke]="arrow.type === 'zigzag' ? '#d94e1e' : '#1a1a1a'"
+                      [attr.stroke-width]="getArrowStrokeWidth(arrow.type)"
+                      [attr.stroke-dasharray]="getArrowDashArray(arrow.type) === 'none' ? null : getArrowDashArray(arrow.type)"
+                      [attr.marker-end]="'url(#pub-arrowhead-' + arrow.type + ')'"
+                      [attr.opacity]="arrow.type === 'graffiti' ? 0.6 : 1"
+                      stroke-linecap="round"
+                    />
+                  </ng-container>
+                </svg>
 
+                 <div *ngFor="let node of block.data?.nodes; let ni = index" 
+                      class="absolute flex flex-col items-center justify-center pointer-events-none"
+                      [style.left.px]="node.x" [style.top.px]="node.y">
+                      
+                      <div *ngIf="node.type === 'postgres'" class="bg-white border-2 border-charcoal p-4 flex flex-col items-center justify-center min-w-[160px] shadow-[6px_6px_0_#e5e7eb]">
+                         <span class="material-symbols-outlined text-gray-500 mb-2 text-3xl">database</span>
+                         <span class="text-xs font-mono font-bold text-center w-full uppercase">{{ node.label }}</span>
+                      </div>
+                      
+                      <div *ngIf="node.type === 'api'" class="bg-accent-orange text-white border-4 border-charcoal w-24 h-24 rounded-full flex flex-col items-center justify-center shadow-[6px_6px_0_#1a1a1a]">
+                         <span class="material-symbols-outlined mb-1 text-2xl">hub</span>
+                         <span class="text-[10px] font-mono font-bold text-center w-full px-1 uppercase">{{ node.label }}</span>
+                      </div>
+                      
+                      <div *ngIf="node.type === 'client' || node.type === 'mobile'" class="bg-white border-2 border-charcoal p-4 flex flex-col items-center justify-center min-w-[140px] shadow-[6px_6px_0_#e5e7eb]">
+                         <span class="material-symbols-outlined text-teal-600 mb-2 text-2xl">{{ node.type === 'client' ? 'devices' : 'phone_iphone' }}</span>
+                         <span class="text-[10px] font-mono font-bold text-center w-full uppercase">{{ node.label }}</span>
+                      </div>
+                      
+                      <div *ngIf="node.type === 'text'" class="transform -rotate-3 pl-2 max-w-[200px]">
+                        <span class="font-hand text-2xl lg:text-3xl text-charcoal leading-tight block whitespace-pre-wrap">{{ node.label }}</span>
+                      </div>
+
+                      <!-- Custom Node from Design Studio -->
+                      <div *ngIf="node.type === 'custom' && node.config"
+                        class="p-3 flex flex-col items-center justify-center min-w-[100px]"
+                        [style.background-color]="getBgColor(node.config.bg_color)"
+                        [style.color]="getTextColor(node.config.text_color)"
+                        [style.border]="getBorderCss(node.config.border_style)"
+                        [style.box-shadow]="getShadowCss(node.config.shadow_style)"
+                        [style.border-radius]="node.config.shape === 'circle' ? '50%' : '0'"
+                        [style.width]="node.config.shape === 'circle' ? '100px' : 'auto'"
+                        [style.height]="node.config.shape === 'circle' ? '100px' : 'auto'">
+                        <span *ngIf="node.config.icon" class="material-symbols-outlined mb-1">{{ node.config.icon }}</span>
+                        <span class="text-[10px] font-mono font-bold text-center w-full">{{ node.label }}</span>
+                      </div>
+
+                 </div>
               </div>
+
             </div>
           </div>
+
         </ng-container>
 
         </div>

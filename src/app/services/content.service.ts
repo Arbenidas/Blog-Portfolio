@@ -3,9 +3,50 @@ import { SupabaseService } from './supabase.service';
 
 export interface EditorBlock {
     id: string;
-    type: 'h1' | 'h2' | 'p' | 'image' | 'code' | 'objective-header' | 'objectives' | 'divider' | 'tech-stack' | 'diagram';
+    type: 'h1' | 'h2' | 'p' | 'image' | 'video' | 'code' | 'objective-header' | 'objectives' | 'divider' | 'tech-stack' | 'diagram' | 'widget';
     content: string;
     data?: any;
+}
+
+export interface CustomWidget {
+    id?: string;
+    name: string;
+    html_content: string;
+    created_at?: string;
+}
+
+export interface DiagramNodeConfig {
+    id?: string;
+    name: string;
+    shape: 'box' | 'circle' | 'text';
+    bg_color: string;
+    text_color: string;
+    border_style: string;
+    shadow_style: string;
+    icon?: string;
+    font?: string;
+    created_at?: string;
+}
+
+export interface ProfileExperience {
+    role: string;
+    company: string;
+    location: string;
+    years: string;
+    description: string;
+}
+
+export interface ProfileData {
+    name: string;
+    role: string;
+    location: string;
+    clearance: string;
+    status: string;
+    coreMission: string;
+    experience: ProfileExperience[];
+    languages: string[];
+    frameworks: string[];
+    widgets: { widgetId: string, x: number, y: number }[];
 }
 
 export interface DocumentEntry {
@@ -126,8 +167,8 @@ export class ContentService {
             updatedAt: now
         };
         this.previewDocSignal.set(previewDoc);
-        if (typeof sessionStorage !== 'undefined') {
-            sessionStorage.setItem('portfolio_preview', JSON.stringify(previewDoc));
+        if (typeof localStorage !== 'undefined') {
+            localStorage.setItem('portfolio_preview', JSON.stringify(previewDoc));
         }
     }
 
@@ -170,5 +211,148 @@ export class ContentService {
             .delete()
             .eq('id', id);
         if (error) throw error;
+    }
+
+    // --- CUSTOM WIDGETS ---
+
+    async getCustomWidgets(): Promise<CustomWidget[]> {
+        const { data, error } = await this.supabase
+            .from('custom_widgets')
+            .select('*')
+            .order('created_at', { ascending: false });
+        if (error) console.error(error);
+        return data || [];
+    }
+
+    async saveCustomWidget(widget: CustomWidget): Promise<void> {
+        const payload = {
+            name: widget.name,
+            html_content: widget.html_content
+        };
+
+        if (widget.id) {
+            const { error } = await this.supabase
+                .from('custom_widgets')
+                .update(payload)
+                .eq('id', widget.id);
+            if (error) throw error;
+        } else {
+            const { error } = await this.supabase
+                .from('custom_widgets')
+                .insert([payload]);
+            if (error) throw error;
+        }
+    }
+
+    async deleteCustomWidget(id: string): Promise<void> {
+        const { error } = await this.supabase
+            .from('custom_widgets')
+            .delete()
+            .eq('id', id);
+        if (error) throw error;
+    }
+
+    // --- DIAGRAM NODES ---
+    async getDiagramNodes(): Promise<DiagramNodeConfig[]> {
+        const { data, error } = await this.supabase
+            .from('diagram_nodes')
+            .select('*')
+            .order('created_at', { ascending: false });
+        if (error) console.error(error);
+        return data || [];
+    }
+
+    async saveDiagramNode(node: DiagramNodeConfig): Promise<void> {
+        const payload = {
+            name: node.name,
+            shape: node.shape,
+            bg_color: node.bg_color,
+            text_color: node.text_color,
+            border_style: node.border_style,
+            shadow_style: node.shadow_style,
+            icon: node.icon,
+            font: node.font
+        };
+
+        if (node.id) {
+            const { error } = await this.supabase
+                .from('diagram_nodes')
+                .update(payload)
+                .eq('id', node.id);
+            if (error) throw error;
+        } else {
+            const { error } = await this.supabase
+                .from('diagram_nodes')
+                .insert([payload]);
+            if (error) throw error;
+        }
+    }
+
+    async deleteDiagramNode(id: string): Promise<void> {
+        const { error } = await this.supabase
+            .from('diagram_nodes')
+            .delete()
+            .eq('id', id);
+        if (error) throw error;
+    }
+
+    // --- PERSONNEL PROFILE (About Me) ---
+
+    async getProfile(): Promise<ProfileData | null> {
+        const { data, error } = await this.supabase
+            .from('personnel_profile')
+            .select('data')
+            .eq('id', 1)
+            .single();
+
+        if (error && error.code !== 'PGRST116') { // PGRST116 = not found
+            console.error('Error fetching profile', error);
+        }
+        return data ? data.data as ProfileData : null;
+    }
+
+    async saveProfile(profileData: ProfileData): Promise<void> {
+        const { error } = await this.supabase
+            .from('personnel_profile')
+            .upsert({ id: 1, data: profileData, updated_at: new Date().toISOString() });
+
+        if (error) throw error;
+    }
+
+    // --- VIDEO UPLOAD ---
+
+    async uploadVideo(file: File): Promise<string> {
+        const ext = file.name.split('.').pop() || 'mp4';
+        const fileName = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}.${ext}`;
+        const filePath = `uploads/${fileName}`;
+
+        const { error } = await this.supabase.client.storage
+            .from('videos')
+            .upload(filePath, file, {
+                cacheControl: '3600',
+                upsert: false
+            });
+
+        if (error) throw error;
+
+        const { data } = this.supabase.client.storage
+            .from('videos')
+            .getPublicUrl(filePath);
+
+        return data.publicUrl;
+    }
+
+    extractYoutubeId(url: string): string | null {
+        const patterns = [
+            /(?:youtube\.com\/watch\?v=)([a-zA-Z0-9_-]{11})/,
+            /(?:youtu\.be\/)([a-zA-Z0-9_-]{11})/,
+            /(?:youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/,
+            /(?:youtube\.com\/shorts\/)([a-zA-Z0-9_-]{11})/
+        ];
+        for (const pattern of patterns) {
+            const match = url.match(pattern);
+            if (match) return match[1];
+        }
+        return null;
     }
 }

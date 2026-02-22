@@ -30,7 +30,7 @@
               </div>
             </div>
             <div>
-              <h3 class="font-display font-bold text-lg m-0 group-hover:text-primary transition-colors cursor-pointer" [routerLink]="['/admin/editor', work.id]">{{ work.title || 'Untitled Work' }}</h3>
+              <h3 class="font-display font-bold text-lg m-0 group-hover:text-primary transition-colors cursor-pointer" [routerLink]="['/admin/editor', work.slug || work.id]">{{ work.title || 'Untitled Work' }}</h3>
               <p class="font-mono text-xs text-gray-500 m-0 mt-1">Created: {{ work.createdAt | date:'shortDate' }} | ID: {{ work.id }}</p>
               <div *ngIf="work.tags && work.tags.length > 0" class="flex gap-1 mt-2">
                 <span *ngFor="let tag of work.tags" class="text-[9px] font-mono bg-gray-200 px-1 border border-gray-300">{{ tag }}</span>
@@ -38,7 +38,7 @@
             </div>
           </div>
           <div class="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-            <button class="bg-white border border-charcoal w-8 h-8 flex items-center justify-center hover:bg-charcoal hover:text-white transition-colors cursor-pointer" [routerLink]="['/admin/editor', work.id]" title="Edit">
+            <button class="bg-white border border-charcoal w-8 h-8 flex items-center justify-center hover:bg-charcoal hover:text-white transition-colors cursor-pointer" [routerLink]="['/admin/editor', work.slug || work.id]" title="Edit">
               <span class="material-symbols-outlined text-[16px]">edit</span>
             </button>
             <button (click)="deleteWork(work.id)" class="bg-white border border-charcoal w-8 h-8 flex items-center justify-center hover:bg-red-500 hover:text-white transition-colors cursor-pointer" title="Delete">
