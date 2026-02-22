@@ -1,0 +1,86 @@
+<div class="max-w-6xl mx-auto space-y-8">
+  <div class="flex justify-between items-end border-b-2 border-charcoal pb-4">
+    <div>
+      <h1 class="font-display font-black text-4xl uppercase m-0 text-charcoal">Control_Center</h1>
+      <p class="font-mono text-sm text-gray-500 m-0 mt-1">Manage Works Database directly from the core.</p>
+    </div>
+    
+    <a routerLink="/admin/editor" class="bg-accent-orange text-white font-mono font-bold text-sm uppercase px-6 py-2 shadow-sketch border-2 border-charcoal hover:translate-y-1 hover:shadow-none transition-all cursor-pointer no-underline flex items-center gap-2">
+      <span class="material-symbols-outlined text-[16px]">add</span> Create New
+    </a>
+  </div>
+
+  <!-- STATS -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div class="bg-white border-2 border-charcoal p-6 shadow-[4px_4px_0_#1a1a1a] transform -rotate-1">
+      <div class="flex items-center gap-3 mb-4">
+        <span class="material-symbols-outlined text-3xl text-primary">folder_managed</span>
+        <h2 class="font-mono font-bold text-sm uppercase text-gray-500 m-0">Total Works</h2>
+      </div>
+      <span class="font-nixie text-6xl leading-none">12</span>
+    </div>
+    <div class="bg-white border-2 border-charcoal p-6 shadow-[4px_4px_0_#1a1a1a] transform rotate-1">
+      <div class="flex items-center gap-3 mb-4">
+        <span class="material-symbols-outlined text-3xl text-accent-orange">article</span>
+        <h2 class="font-mono font-bold text-sm uppercase text-gray-500 m-0">Field Logs</h2>
+      </div>
+      <span class="font-nixie text-6xl leading-none">42</span>
+    </div>
+    <div class="bg-white border-2 border-charcoal p-6 shadow-[4px_4px_0_#1a1a1a]">
+      <div class="flex items-center gap-3 mb-4">
+        <span class="material-symbols-outlined text-3xl text-green-600">visibility</span>
+        <h2 class="font-mono font-bold text-sm uppercase text-gray-500 m-0">System Status</h2>
+      </div>
+      <span class="font-display font-black text-3xl text-green-600 leading-none">ONLINE</span>
+    </div>
+  </div>
+
+  <!-- RECENT ENTRIES -->
+  <div class="bg-paper-white border-2 border-charcoal p-1 shadow-sketch-lg">
+    <div class="bg-white border border-charcoal p-6">
+      <h2 class="font-display font-black text-xl border-b-2 border-charcoal pb-2 mb-6 uppercase flex items-center gap-2 m-0 text-charcoal">
+        <span class="material-symbols-outlined">history</span> Recent_Updates
+      </h2>
+      
+      <div class="space-y-4">
+        <!-- Item -->
+        <div class="flex items-center justify-between p-4 border border-gray-200 hover:border-charcoal hover:bg-gray-50 transition-colors group">
+          <div class="flex items-center gap-4">
+            <div class="bg-gray-200 px-2 py-1 font-mono text-[9px] font-bold border border-charcoal">WORK</div>
+            <div>
+              <h3 class="font-display font-bold text-lg m-0 group-hover:text-primary transition-colors cursor-pointer" routerLink="/admin/editor/1">Neural_Net Dashboard</h3>
+              <p class="font-mono text-xs text-gray-500 m-0 mt-1">Edited 2 hours ago by Arbe</p>
+            </div>
+          </div>
+          <div class="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+            <button class="bg-white border border-charcoal w-8 h-8 flex items-center justify-center hover:bg-charcoal hover:text-white transition-colors cursor-pointer" routerLink="/admin/editor/1">
+              <span class="material-symbols-outlined text-[16px]">edit</span>
+            </button>
+            <button class="bg-white border border-charcoal w-8 h-8 flex items-center justify-center hover:bg-red-500 hover:text-white transition-colors cursor-pointer">
+              <span class="material-symbols-outlined text-[16px]">delete</span>
+            </button>
+          </div>
+        </div>
+        
+        <!-- Item -->
+        <div class="flex items-center justify-between p-4 border border-gray-200 hover:border-charcoal hover:bg-gray-50 transition-colors group">
+          <div class="flex items-center gap-4">
+            <div class="bg-gray-200 px-2 py-1 font-mono text-[9px] font-bold border border-charcoal">LOG</div>
+            <div>
+              <h3 class="font-display font-bold text-lg m-0 group-hover:text-accent-orange transition-colors cursor-pointer">AI Integration Protocols</h3>
+              <p class="font-mono text-xs text-gray-500 m-0 mt-1">Edited 1 day ago by Arbe</p>
+            </div>
+          </div>
+          <div class="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+            <button class="bg-white border border-charcoal w-8 h-8 flex items-center justify-center hover:bg-charcoal hover:text-white transition-colors cursor-pointer">
+              <span class="material-symbols-outlined text-[16px]">edit</span>
+            </button>
+            <button class="bg-white border border-charcoal w-8 h-8 flex items-center justify-center hover:bg-red-500 hover:text-white transition-colors cursor-pointer">
+              <span class="material-symbols-outlined text-[16px]">delete</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

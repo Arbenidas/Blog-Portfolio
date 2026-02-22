@@ -1,0 +1,73 @@
+<div class="h-screen w-full flex bg-paper-cream overflow-hidden font-display text-charcoal selection:bg-primary selection:text-white antialiased">
+  <div class="noise-overlay"></div>
+  
+  <!-- ADMIN SIDEBAR -->
+  <aside class="w-64 bg-charcoal text-paper-cream border-r-2 border-charcoal flex flex-col relative z-20">
+    <div class="p-4 border-b border-gray-700 flex items-center justify-between">
+      <div class="font-mono text-xs uppercase font-bold tracking-widest text-accent-orange">
+        System_Admin //
+      </div>
+      <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+    </div>
+    
+    <nav class="flex-grow py-6 space-y-2">
+      <a routerLink="/admin" routerLinkActive="bg-white/10 text-white border-l-4 border-accent-orange" [routerLinkActiveOptions]="{exact: true}" class="w-full text-left px-6 py-3 font-display font-bold uppercase hover:bg-white/5 transition-colors flex items-center gap-3 no-underline text-paper-cream cursor-pointer border-l-4 border-transparent">
+        <span class="material-symbols-outlined text-[20px]">dashboard</span>
+        Dashboard
+      </a>
+      
+      <div class="px-6 py-2 mt-4">
+        <span class="font-mono text-[10px] text-gray-500 uppercase font-bold tracking-widest">Content Core</span>
+      </div>
+      
+      <a routerLink="/admin/editor" routerLinkActive="bg-white/10 text-white border-l-4 border-accent-orange" class="w-full text-left px-6 py-3 font-display font-bold uppercase hover:bg-white/5 transition-colors flex items-center gap-3 no-underline text-paper-cream cursor-pointer border-l-4 border-transparent">
+        <span class="material-symbols-outlined text-[20px]">add_box</span>
+        New Entry
+      </a>
+      <a routerLink="/admin/works" routerLinkActive="bg-white/10 text-white border-l-4 border-accent-orange" class="w-full text-left px-6 py-3 font-display font-bold uppercase hover:bg-white/5 transition-colors flex items-center gap-3 no-underline text-paper-cream cursor-pointer border-l-4 border-transparent">
+        <span class="material-symbols-outlined text-[20px]">folder_open</span>
+        Works Vault
+      </a>
+      <a routerLink="/admin/logs" routerLinkActive="bg-white/10 text-white border-l-4 border-accent-orange" class="w-full text-left px-6 py-3 font-display font-bold uppercase hover:bg-white/5 transition-colors flex items-center gap-3 no-underline text-paper-cream cursor-pointer border-l-4 border-transparent">
+        <span class="material-symbols-outlined text-[20px]">article</span>
+        Logs Archive
+      </a>
+    </nav>
+    
+    <div class="p-6 border-t border-gray-700 mt-auto flex flex-col gap-2">
+      <button (click)="logout()" class="w-full border-2 border-paper-cream text-paper-cream font-mono text-[11px] font-bold uppercase py-2 hover:bg-paper-cream hover:text-charcoal transition-colors flex items-center justify-center gap-2 cursor-pointer bg-transparent">
+        <span class="material-symbols-outlined text-[16px]">logout</span>
+        Logout
+      </button>
+      <a class="w-full border-2 border-transparent text-gray-400 font-mono text-[10px] uppercase py-2 hover:text-paper-cream transition-colors flex items-center justify-center gap-2 no-underline cursor-pointer" routerLink="/">
+        <span class="material-symbols-outlined text-[14px]">public</span>
+        Go to Public Site
+      </a>
+    </div>
+  </aside>
+  
+  <!-- ADMIN MAIN CONTENT -->
+  <main class="flex-grow flex flex-col relative z-20 h-full max-h-screen overflow-y-auto">
+    <!-- Topbar -->
+    <header class="w-full h-14 border-b-2 border-charcoal bg-paper-white flex items-center justify-between px-6 sticky top-0 z-30">
+      <div class="flex items-center gap-4">
+        <span class="font-mono text-xs text-gray-500 font-bold uppercase">Location: </span>
+        <span class="font-mono text-[11px] bg-gray-200 border border-charcoal px-2 py-0.5">/ADMIN/SECURE_Z</span>
+      </div>
+      <div class="flex items-center gap-4">
+        <button class="w-8 h-8 rounded-full border-2 border-charcoal flex items-center justify-center hover:bg-gray-100 cursor-pointer bg-white">
+          <span class="material-symbols-outlined text-[16px]">notifications</span>
+        </button>
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-full bg-charcoal text-white flex items-center justify-center font-bold font-display text-xs border border-charcoal">DG</div>
+        </div>
+      </div>
+    </header>
+    
+    <!-- Render Admin Dashboard or Editor -->
+    <div class="flex-grow p-6 md:p-10 z-10 w-full relative">
+      <div class="absolute inset-0 bg-blueprint opacity-40 pointer-events-none -z-10"></div>
+      <router-outlet></router-outlet>
+    </div>
+  </main>
+</div>

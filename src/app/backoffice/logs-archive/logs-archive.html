@@ -1,0 +1,48 @@
+<div class="max-w-6xl mx-auto space-y-8">
+  <div class="flex justify-between items-end border-b-2 border-charcoal pb-4">
+    <div>
+      <h1 class="font-display font-black text-4xl uppercase m-0 text-charcoal">Logs_Archive</h1>
+      <p class="font-mono text-sm text-gray-500 m-0 mt-1">Manage field logs, technical notes, and system updates.</p>
+    </div>
+    
+    <a routerLink="/admin/editor" [queryParams]="{category: 'log'}" class="bg-primary text-white font-mono font-bold text-sm uppercase px-6 py-2 shadow-sketch border-2 border-charcoal hover:translate-y-1 hover:shadow-none transition-all cursor-pointer no-underline flex items-center gap-2">
+      <span class="material-symbols-outlined text-[16px]">add</span> Create New Log
+    </a>
+  </div>
+
+  <div class="bg-paper-white border-2 border-charcoal p-1 shadow-sketch-lg">
+    <div class="bg-white border border-charcoal p-6">
+      
+      <div *ngIf="logs.length === 0" class="text-center py-12 border-2 border-dashed border-gray-300">
+        <span class="material-symbols-outlined text-4xl text-gray-400 mb-2">article</span>
+        <h3 class="font-display font-bold text-xl text-gray-500 m-0">No logs found</h3>
+        <p class="font-mono text-xs text-gray-400 mt-2">Create a new field log to populate the archive.</p>
+      </div>
+
+      <div *ngIf="logs.length > 0" class="space-y-4">
+        <!-- Item -->
+        <div *ngFor="let log of logs" class="flex items-center justify-between p-4 border border-gray-200 hover:border-charcoal hover:bg-gray-50 transition-colors group">
+          <div class="flex items-center gap-4">
+            <div class="bg-gray-200 px-2 py-1 font-mono text-[10px] font-bold border border-charcoal text-gray-600">LOG</div>
+            <div>
+              <h3 class="font-display font-bold text-lg m-0 group-hover:text-primary transition-colors cursor-pointer" [routerLink]="['/admin/editor', log.id]">{{ log.title || 'Untitled Log' }}</h3>
+              <p class="font-mono text-xs text-gray-500 m-0 mt-1">Created: {{ log.createdAt | date:'shortDate' }} | ID: {{ log.id }}</p>
+              <div *ngIf="log.tags && log.tags.length > 0" class="flex gap-1 mt-2">
+                <span *ngFor="let tag of log.tags" class="text-[9px] font-mono bg-amber-100/50 px-1 border border-amber-200/50 text-amber-800">{{ tag }}</span>
+              </div>
+            </div>
+          </div>
+          <div class="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+            <button class="bg-white border border-charcoal w-8 h-8 flex items-center justify-center hover:bg-charcoal hover:text-white transition-colors cursor-pointer" [routerLink]="['/admin/editor', log.id]" title="Edit">
+              <span class="material-symbols-outlined text-[16px]">edit</span>
+            </button>
+            <button (click)="deleteLog(log.id)" class="bg-white border border-charcoal w-8 h-8 flex items-center justify-center hover:bg-red-500 hover:text-white transition-colors cursor-pointer" title="Delete">
+              <span class="material-symbols-outlined text-[16px]">delete</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>

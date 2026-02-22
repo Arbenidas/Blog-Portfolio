@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+Allow: /works
+Allow: /logs
+Allow: /contact
+Disallow: /admin
+Disallow: /admin/
+
+Sitemap: https://tudominio.com/sitemap.xml

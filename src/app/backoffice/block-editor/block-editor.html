@@ -1,0 +1,288 @@
+<div class="max-w-4xl mx-auto pb-24">
+  <div class="flex justify-between items-center mb-8">
+    <a routerLink="/admin" class="font-mono text-xs font-bold text-gray-500 hover:text-charcoal uppercase flex items-center gap-1 transition-colors cursor-pointer no-underline">
+      <span class="material-symbols-outlined text-[16px]">arrow_back</span>
+      Back to Dashboard
+    </a>
+    <div class="flex gap-4">
+      <button (click)="preview()" class="bg-transparent border-2 border-charcoal text-charcoal font-bold font-mono text-sm uppercase px-6 py-2 hover:bg-gray-100 transition-colors inline-block leading-none flex items-center justify-center no-underline cursor-pointer">
+        Preview
+      </button>
+      <button (click)="save()" class="bg-green-500 border-2 border-charcoal text-white font-bold font-mono text-sm uppercase px-6 py-2 shadow-sketch hover:translate-y-1 hover:shadow-none transition-all flex items-center gap-2">
+        <span class="material-symbols-outlined text-[18px]">save</span> Publish
+      </button>
+    </div>
+  </div>
+
+  <div class="bg-white border-2 border-charcoal shadow-[8px_8px_0_#1a1a1a] p-8 md:p-12 relative">
+    <div class="tape-strip top-[-15px] left-1/2 -translate-x-1/2 rotate-1"></div>
+    
+    <!-- Document Meta -->
+    <div class="border-b-2 border-dashed border-gray-300 pb-8 mb-8 space-y-6">
+      <div>
+        <label class="block font-mono text-xs font-bold uppercase text-gray-500 mb-2">Document Title</label>
+        <input [(ngModel)]="title" (ngModelChange)="!documentId && (slug = contentService.generateSlug(title))" class="w-full text-4xl font-display font-black text-charcoal outline-none border-b-2 border-transparent focus:border-accent-orange transition-colors bg-transparent placeholder-gray-300" placeholder="Untitled Entry" type="text" />
+      </div>
+
+      <div>
+        <label class="block font-mono text-xs font-bold uppercase text-gray-500 mb-1">URL Slug <span class="text-gray-400 normal-case font-normal">— auto-generated, editable</span></label>
+        <div class="flex items-center gap-2 border-b border-dashed border-gray-300 pb-1">
+          <span class="font-mono text-xs text-gray-400">tudominio.com/{{ category }}/</span>
+          <input [(ngModel)]="slug" class="flex-grow font-mono text-sm text-accent-orange outline-none bg-transparent" placeholder="mi-proyecto-increible" type="text" />
+        </div>
+      </div>
+      <div>
+        <label class="block font-mono text-xs font-bold uppercase text-gray-500 mb-2">Cover Photo (URL or File Upload)</label>
+        <div class="flex gap-4 items-start">
+          <div class="flex-grow space-y-2 relative">
+            <input [(ngModel)]="coverPhoto" class="w-full font-mono text-sm text-charcoal outline-none border-b border-dashed border-gray-300 focus:border-accent-orange transition-colors bg-transparent placeholder-gray-400 py-2 pr-10" placeholder="https://example.com/image.jpg" type="text" />
+            <button (click)="fileInput.click()" class="absolute right-0 top-0 h-full px-2 text-gray-500 hover:text-charcoal flex items-center justify-center transition-colors" title="Upload File">
+              <span class="material-symbols-outlined text-[20px]">upload_file</span>
+            </button>
+            <input type="file" #fileInput (change)="onCoverPhotoSelected($event)" accept="image/*" class="hidden" />
+          </div>
+          <div *ngIf="coverPhoto" class="w-24 h-16 border-2 border-charcoal overflow-hidden flex-shrink-0 bg-gray-100">
+            <img [src]="coverPhoto" class="w-full h-full object-cover" alt="Cover Preview" />
+          </div>
+        </div>
+      </div>
+      
+      <div class="flex flex-wrap gap-6">
+        <div>
+          <label class="block font-mono text-xs font-bold uppercase text-gray-500 mb-2">Category</label>
+          <select [(ngModel)]="category" class="bg-gray-100 border border-charcoal font-mono text-sm p-2 outline-none focus:border-accent-orange">
+            <option value="work">Work Database</option>
+            <option value="log">Field Log</option>
+          </select>
+        </div>
+        <div class="flex-grow">
+          <label class="block font-mono text-xs font-bold uppercase text-gray-500 mb-2">Tags (Comma separated)</label>
+          <input [(ngModel)]="tags" class="w-full bg-gray-100 border border-charcoal font-mono text-sm p-2 outline-none focus:border-accent-orange" placeholder="e.g. #REACT, #DESIGN" type="text" />
+        </div>
+      </div>
+
+      <div *ngIf="category === 'work'">
+        <label class="block font-mono text-xs font-bold uppercase text-gray-500 mb-2">Global Index Log (One item per line)</label>
+        <textarea [(ngModel)]="indexLog" readonly class="w-full bg-gray-50 border border-charcoal font-mono text-xs p-3 outline-none focus:border-accent-orange resize-none leading-relaxed" placeholder="01_SPECIFICATIONS&#10;02_MISSION_OBJECTIVES&#10;03_SYSTEM_ARCHITECTURE" rows="4"></textarea>
+      </div>
+    </div>
+
+    <!-- Toolbar -->
+    <div class="flex gap-2 mb-6 p-2 bg-gray-100 border border-charcoal sticky top-14 z-50 overflow-x-auto">
+      <button (click)="addBlock('h1')" class="bg-white border border-charcoal p-2 hover:bg-charcoal hover:text-white transition-colors" title="Add Heading 1">
+        <span class="font-display font-black text-lg leading-none">H1</span>
+      </button>
+      <button (click)="addBlock('h2')" class="bg-white border border-charcoal p-2 hover:bg-charcoal hover:text-white transition-colors" title="Add Heading 2">
+        <span class="font-display font-black text-lg leading-none">H2</span>
+      </button>
+      <button (click)="addBlock('p')" class="bg-white border border-charcoal p-2 hover:bg-charcoal hover:text-white transition-colors" title="Add Paragraph">
+        <span class="material-symbols-outlined leading-none">format_paragraph</span>
+      </button>
+      <button (click)="addBlock('image')" class="bg-white border border-charcoal p-2 hover:bg-charcoal hover:text-white transition-colors" title="Add Image">
+        <span class="material-symbols-outlined leading-none">image</span>
+      </button>
+      <button (click)="addBlock('code')" class="bg-white border border-charcoal p-2 hover:bg-charcoal hover:text-white transition-colors" title="Add Code Block">
+        <span class="material-symbols-outlined leading-none">code</span>
+      </button>
+      <button (click)="addBlock('objective-header')" class="bg-white border border-charcoal p-2 hover:bg-charcoal hover:text-white transition-colors" title="Add Objective Header">
+        <span class="material-symbols-outlined leading-none">hdr_strong</span>
+      </button>
+      <button (click)="addBlock('objectives')" class="bg-white border border-charcoal p-2 hover:bg-charcoal hover:text-white transition-colors" title="Add Objectives Grid">
+        <span class="material-symbols-outlined leading-none">grid_view</span>
+      </button>
+      <button (click)="addBlock('divider')" class="bg-white border border-charcoal p-2 hover:bg-charcoal hover:text-white transition-colors" title="Add Divider">
+        <span class="material-symbols-outlined leading-none">horizontal_rule</span>
+      </button>
+      <button (click)="addBlock('tech-stack')" class="bg-white border border-charcoal p-2 hover:bg-charcoal hover:text-white transition-colors" title="Add Tech Stack">
+        <span class="material-symbols-outlined leading-none">layers</span>
+      </button>
+      <button (click)="addBlock('diagram')" class="bg-white border border-charcoal p-2 hover:bg-charcoal hover:text-white transition-colors" title="Add Diagram">
+        <span class="material-symbols-outlined leading-none">account_tree</span>
+      </button>
+    </div>
+
+    <!-- Workspace blocks -->
+    <div cdkDropList (cdkDropListDropped)="drop($event)" class="min-h-[300px] space-y-4 pb-12">
+      <!-- Empty state -->
+      <div *ngIf="blocks.length === 0" class="text-center py-12 border-2 border-dashed border-gray-300 text-gray-500 font-mono text-sm cursor-pointer hover:border-accent-orange transition-colors" (click)="addBlock('p')">
+        Click here or use the toolbar to add a block.
+      </div>
+
+      <!-- Render Blocks -->
+      <div *ngFor="let block of blocks; let i = index" cdkDrag class="group relative bg-white border border-transparent hover:border-gray-200 p-2 pl-10 -ml-10 transition-colors">
+        
+        <!-- Drag Handle & Controls -->
+        <div class="absolute left-0 top-1/2 -translate-y-1/2 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          <div cdkDragHandle class="w-6 h-6 flex items-center justify-center cursor-move text-gray-400 hover:text-charcoal">
+            <span class="material-symbols-outlined text-[16px]">drag_indicator</span>
+          </div>
+          <button (click)="removeBlock(i)" class="w-6 h-6 flex items-center justify-center text-red-400 hover:text-red-600 transition-colors">
+            <span class="material-symbols-outlined text-[16px]">close</span>
+          </button>
+        </div>
+
+        <!-- Render by block type -->
+        <ng-container [ngSwitch]="block.type">
+          <input *ngSwitchCase="'h1'" [(ngModel)]="block.content" (ngModelChange)="updateIndexLogLive()" placeholder="Heading 1" class="w-full text-3xl font-display font-black text-charcoal outline-none border-b border-dashed border-transparent focus:border-gray-300 bg-transparent py-2" />
+          
+          <input *ngSwitchCase="'h2'" [(ngModel)]="block.content" (ngModelChange)="updateIndexLogLive()" placeholder="Heading 2" class="w-full text-xl font-display font-bold text-charcoal outline-none border-b border-dashed border-transparent focus:border-gray-300 bg-transparent py-2" />
+          
+          <textarea *ngSwitchCase="'p'" [(ngModel)]="block.content" placeholder="Write something..." class="w-full text-lg font-body text-charcoal outline-none border-b border-dashed border-transparent focus:border-gray-300 bg-transparent py-2 resize-none overflow-hidden" rows="2" (input)="autoResize($any($event).target)"></textarea>
+
+          <div *ngSwitchCase="'image'" class="relative">
+            <div *ngIf="!block.content" class="w-full aspect-video bg-gray-100 border-2 border-dashed border-gray-300 flex items-center justify-center flex-col gap-2 cursor-pointer hover:bg-gray-50 hover:border-charcoal transition-colors">
+              <span class="material-symbols-outlined text-4xl text-gray-400">add_photo_alternate</span>
+              <span class="font-mono text-xs text-gray-500 font-bold">CLICK TO ADD IMAGE URL</span>
+              <input [(ngModel)]="block.content" class="text-center font-mono text-xs bg-white border border-charcoal p-1 w-1/2 mt-2" placeholder="https://..." (click)="$event.stopPropagation()"/>
+            </div>
+            <div *ngIf="block.content" class="w-full relative group/img">
+              <img [src]="block.content" class="w-full h-auto border-2 border-charcoal riso-print" alt="Block image" />
+              <button (click)="block.content = ''" class="absolute top-2 right-2 bg-white border border-charcoal w-8 h-8 flex items-center justify-center opacity-0 group-hover/img:opacity-100 transition-opacity text-red-500">
+                <span class="material-symbols-outlined text-[18px]">delete</span>
+              </button>
+            </div>
+          </div>
+
+          <div *ngSwitchCase="'code'" class="w-full code-block font-mono text-sm relative">
+            <textarea [(ngModel)]="block.content" placeholder="// Write code here..." class="w-full bg-transparent text-paper-cream outline-none resize-none font-mono" rows="4"></textarea>
+          </div>
+
+          <div *ngSwitchCase="'objective-header'" class="w-full flex flex-col md:flex-row gap-4 py-2 border-b-2 border-charcoal">
+            <input [(ngModel)]="block.data.title" placeholder="Main Title (e.g. 02_MISSION_OBJECTIVES)" class="w-full md:w-2/3 text-2xl font-black font-display text-charcoal outline-none bg-transparent" />
+            <input [(ngModel)]="block.data.subtitle" placeholder="Subtitle (e.g. /TARGETS)" class="w-full md:w-1/3 text-sm font-mono text-gray-400 outline-none bg-transparent" />
+          </div>
+
+          <div *ngSwitchCase="'objectives'" class="w-full space-y-4 py-4">
+             <div class="font-mono text-xs font-bold text-gray-500">Objectives Grid</div>
+             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+               <div *ngFor="let obj of block.data; let j = index" class="border border-charcoal p-4 bg-gray-50 flex flex-col gap-2 relative">
+                 <input [(ngModel)]="obj.label" placeholder="OBJ_LABEL" class="absolute -top-3 left-4 bg-charcoal text-white font-mono text-[10px] px-1 py-0.5 outline-none" />
+                 <input [(ngModel)]="obj.title" placeholder="Title" class="mt-2 font-bold text-sm bg-transparent border-b border-gray-300 outline-none focus:border-charcoal" />
+                 <textarea [(ngModel)]="obj.desc" placeholder="Description" class="font-mono text-xs bg-transparent resize-none border-b border-gray-300 outline-none focus:border-charcoal h-16" rows="3"></textarea>
+                 <div class="flex items-center gap-2 mt-auto">
+                   <span class="font-mono text-[10px] text-gray-500">Progress %</span>
+                   <input type="number" [(ngModel)]="obj.progress" class="w-16 font-mono text-xs bg-white border border-charcoal px-1 py-0.5 outline-none" />
+                 </div>
+               </div>
+             </div>
+          </div>
+
+          <div *ngSwitchCase="'divider'" class="w-full py-4 text-center text-gray-400 font-mono text-xs bg-gray-50 border-2 border-dashed border-gray-200">
+            --- Divider (Sketch line) ---
+          </div>
+
+          <div *ngSwitchCase="'tech-stack'" class="w-full space-y-2 border-2 border-charcoal p-6 bg-paper-cream transform -rotate-1 relative my-4">
+             <div class="font-display font-black text-xl text-accent-orange mb-4">Tech Stack //</div>
+             <label class="block font-mono text-xs text-gray-500 uppercase">Tags (comma separated)</label>
+             <input [(ngModel)]="block.content" placeholder="React, Node, Tailwind..." class="w-full text-sm font-mono border-b-2 border-charcoal bg-white px-2 py-1 mb-4 outline-none focus:border-accent-orange" />
+             <label class="block font-mono text-xs text-gray-500 uppercase mt-4">Deploy Status</label>
+             <input [(ngModel)]="block.data.status" placeholder="LIVE_PRODUCTION" class="w-1/2 text-sm font-mono border-2 border-charcoal bg-white px-2 py-1 outline-none text-teal-600 font-bold" />
+          </div>
+
+          <div *ngSwitchCase="'diagram'" class="w-full border-4 border-charcoal bg-paper-cream p-4 relative shadow-[8px_8px_0_#1a1a1a] my-4">
+            <div class="absolute top-0 right-0 -mt-3 -mr-3 rotate-3 bg-white border border-charcoal px-2 py-1 flex items-center gap-1 shadow-sm text-accent-orange font-mono text-[10px] font-bold">
+              <span class="material-symbols-outlined text-[12px]">build</span> SYSTEM_DIAGRAM
+            </div>
+            
+            <div class="flex justify-between items-center mb-4">
+              <span class="font-mono text-xs font-bold text-gray-500">DIAGRAM PREVIEW</span>
+              <button (click)="openDiagramEditor(block)" class="bg-charcoal text-white font-mono text-xs px-4 py-2 hover:bg-black transition-colors flex items-center gap-2">
+                <span class="material-symbols-outlined text-[14px]">edit</span> Edit Diagram
+              </button>
+            </div>
+
+            <!-- Diagram Canvas Preview -->
+            <div class="w-full h-[400px] border border-dashed border-gray-400 relative bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMiIgY3k9IjIiIHI9IjEiIGZpbGw9IiNjY2MiLz48L3N2Zz4=')] overflow-hidden pointer-events-none">
+              
+              <div *ngFor="let node of block.data?.nodes; let ni = index" 
+                   class="absolute pointer-events-auto" 
+                   [style.left.px]="node.x" [style.top.px]="node.y">
+                
+                <div class="group/node relative">
+                   <div *ngIf="node.type === 'postgres'" class="bg-white border-2 border-charcoal p-3 flex flex-col items-center justify-center min-w-[120px] shadow-[4px_4px_0_#e5e7eb]">
+                      <span class="material-symbols-outlined text-gray-500 mb-1">database</span>
+                      <div class="text-[10px] font-mono font-bold text-center w-full truncate">{{node.label || 'Database'}}</div>
+                   </div>
+                   
+                   <div *ngIf="node.type === 'api'" class="bg-accent-orange text-white border-2 border-charcoal w-20 h-20 rounded-full flex flex-col items-center justify-center shadow-[4px_4px_0_#1a1a1a]">
+                      <span class="material-symbols-outlined mb-1">hub</span>
+                      <div class="text-[9px] font-mono font-bold text-center w-full px-1 truncate">{{node.label || 'API'}}</div>
+                   </div>
+                   
+                   <div *ngIf="node.type === 'client' || node.type === 'mobile'" class="bg-white border-2 border-charcoal p-3 flex flex-col items-center justify-center min-w-[100px] shadow-[4px_4px_0_#e5e7eb]">
+                      <span class="material-symbols-outlined text-teal-600 mb-1">{{ node.type === 'client' ? 'devices' : 'phone_iphone' }}</span>
+                      <div class="text-[10px] font-mono font-bold text-center w-full truncate">{{node.label || 'Client'}}</div>
+                   </div>
+                   
+                   <div *ngIf="node.type === 'text'" class="transform -rotate-2">
+                     <div class="bg-transparent font-hand text-xl text-charcoal">{{node.label || 'Note'}}</div>
+                   </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </ng-container>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Diagram Editor Modal -->
+<div *ngIf="editingDiagramBlock" class="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4">
+  <div class="w-full max-w-4xl bg-paper-cream border-4 border-charcoal flex flex-col shadow-[8px_8px_0_#1a1a1a]">
+    
+    <!-- Modal Header -->
+    <div class="border-b-4 border-charcoal bg-white flex justify-between items-center p-4 z-10 shrink-0">
+      <div class="flex flex-wrap gap-2 items-center">
+        <span class="font-mono text-xs font-bold text-gray-500 mr-2">ADD NODE:</span>
+        <button (click)="addDiagramNode(editingDiagramBlock, 'postgres', 'Postgres Cluster')" class="px-3 py-2 bg-white border-2 border-charcoal font-mono text-xs hover:bg-gray-100 shadow-sketch transition-transform hover:-translate-y-1">Database</button>
+        <button (click)="addDiagramNode(editingDiagramBlock, 'api', 'GQL_API')" class="px-3 py-2 bg-white border-2 border-charcoal font-mono text-xs hover:bg-gray-100 shadow-sketch transition-transform hover:-translate-y-1">API Core</button>
+        <button (click)="addDiagramNode(editingDiagramBlock, 'client', 'Client App')" class="px-3 py-2 bg-white border-2 border-charcoal font-mono text-xs hover:bg-gray-100 shadow-sketch transition-transform hover:-translate-y-1">Client</button>
+        <button (click)="addDiagramNode(editingDiagramBlock, 'mobile', 'Mobile PWA')" class="px-3 py-2 bg-white border-2 border-charcoal font-mono text-xs hover:bg-gray-100 shadow-sketch transition-transform hover:-translate-y-1">Mobile</button>
+        <button (click)="addDiagramNode(editingDiagramBlock, 'text', 'Note Text')" class="px-3 py-2 bg-white border-2 border-charcoal font-mono text-xs hover:bg-gray-100 shadow-sketch transition-transform hover:-translate-y-1">Text Note</button>
+      </div>
+      
+      <button (click)="closeDiagramEditor()" class="bg-green-500 text-white border-2 border-charcoal shadow-sketch px-6 py-2 font-mono font-bold hover:translate-y-1 hover:shadow-none transition-all flex items-center gap-2 shrink-0">
+        <span class="material-symbols-outlined text-[18px]">check</span> DONE
+      </button>
+    </div>
+
+    <!-- Modal Canvas Space -->
+    <div class="p-4 bg-paper-cream">
+      <div class="w-full h-[400px] relative bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMiIgY3k9IjIiIHI9IjEiIGZpbGw9IiNjY2MiLz48L3N2Zz4=')] overflow-hidden border border-dashed border-gray-400" id="diagram-editor-canvas">
+        
+        <div *ngFor="let node of editingDiagramBlock.data?.nodes; let ni = index" 
+             cdkDrag [cdkDragBoundary]="'#diagram-editor-canvas'" 
+             [cdkDragFreeDragPosition]="{x: node.x, y: node.y}"
+             class="absolute top-0 left-0 cursor-move" 
+             (cdkDragEnded)="onNodeDragEnded($event, node)">
+          
+          <div class="group/node relative">
+             <button (click)="editingDiagramBlock.data!.nodes.splice(ni, 1)" class="absolute -top-2 -right-2 bg-red-500 text-white w-6 h-6 rounded-full flex justify-center items-center text-sm opacity-0 group-hover/node:opacity-100 transition-opacity z-50 shadow-sm border border-charcoal hover:bg-red-600">×</button>
+             
+             <div *ngIf="node.type === 'postgres'" class="bg-white border-2 border-charcoal p-3 flex flex-col items-center justify-center min-w-[120px] shadow-[4px_4px_0_#e5e7eb]">
+                <span class="material-symbols-outlined text-gray-500 mb-1">database</span>
+                <input [(ngModel)]="node.label" class="text-[10px] font-mono font-bold text-center outline-none w-full bg-transparent" />
+             </div>
+             
+             <div *ngIf="node.type === 'api'" class="bg-accent-orange text-white border-2 border-charcoal w-20 h-20 rounded-full flex flex-col items-center justify-center shadow-[4px_4px_0_#1a1a1a]">
+                <span class="material-symbols-outlined mb-1">hub</span>
+                <input [(ngModel)]="node.label" class="text-[9px] font-mono font-bold text-center outline-none bg-transparent w-full px-1" />
+             </div>
+             
+             <div *ngIf="node.type === 'client' || node.type === 'mobile'" class="bg-white border-2 border-charcoal p-3 flex flex-col items-center justify-center min-w-[100px] shadow-[4px_4px_0_#e5e7eb]">
+                <span class="material-symbols-outlined text-teal-600 mb-1">{{ node.type === 'client' ? 'devices' : 'phone_iphone' }}</span>
+                <input [(ngModel)]="node.label" class="text-[10px] font-mono font-bold text-center outline-none w-full bg-transparent" />
+             </div>
+             
+             <div *ngIf="node.type === 'text'" class="transform -rotate-2">
+               <textarea [(ngModel)]="node.label" class="bg-transparent font-hand text-xl text-charcoal outline-none resize-none overflow-hidden placeholder-gray-400" placeholder="Type here..." rows="2"></textarea>
+             </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

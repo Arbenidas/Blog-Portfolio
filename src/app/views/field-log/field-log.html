@@ -1,0 +1,103 @@
+<main *ngIf="log" class="relative min-h-screen pt-24 pb-12 w-full max-w-[1000px] mx-auto px-4 md:px-8">
+  <div class="coffee-stain top-32 -left-10 opacity-50"></div>
+  <div class="fixed inset-0 z-0 bg-grid-pattern opacity-30 pointer-events-none" style="background-size: 20px 20px;"></div>
+
+  <div class="relative z-10 w-full mb-6">
+    <a class="inline-flex items-center gap-2 font-mono text-xs font-bold text-charcoal hover:text-accent-orange transition-colors no-underline cursor-pointer" routerLink="/logs">
+      <span class="material-symbols-outlined text-[16px]">arrow_back</span>
+      RETURN_TO_ARCHIVES
+    </a>
+  </div>
+
+  <article class="bg-paper-white border-2 border-charcoal p-1 shadow-sketch-lg relative z-20">
+    <div class="bg-paper-cream border border-charcoal p-6 md:p-12 relative overflow-hidden">
+      <!-- Decoratives -->
+      <div class="tape-strip top-[-10px] left-[5%] rotate-[-2deg]"></div>
+      <div class="absolute top-4 right-4 flex flex-col items-end opacity-50 select-none">
+        <span class="font-nixie text-4xl leading-none">{{ log.id.slice(0, 3) | uppercase }}</span>
+        <span class="font-mono text-[8px] uppercase font-bold text-center border-t border-charcoal mt-1 pt-1">FILE_REF</span>
+      </div>
+      
+      <!-- Meta Header -->
+      <header class="mb-10 pb-6 border-b-2 border-dashed border-charcoal/50 relative">
+        <div *ngIf="log.coverPhoto" class="mb-8 w-full h-48 sm:h-64 border-2 border-charcoal bg-gray-100 relative overflow-hidden group shadow-sketch">
+           <img [src]="log.coverPhoto" class="w-full h-full object-cover" />
+        </div>
+        <div class="flex flex-wrap gap-2 mb-4">
+          <span class="font-mono text-[10px] font-bold border border-charcoal px-2 py-0.5 bg-accent-orange text-white uppercase shadow-[2px_2px_0_#1a1a1a]">STATUS: LOGGED</span>
+          <span class="font-mono text-[10px] font-bold border border-charcoal px-2 py-0.5 bg-white uppercase">{{ log.createdAt | date:'MMM.dd.yyyy' }}</span>
+        </div>
+        <h1 class="font-display font-black text-4xl md:text-5xl lg:text-6xl text-charcoal leading-[0.9] uppercase tracking-tighter m-0 mb-4 inline-block transform -rotate-1">
+          {{ log.title }}
+        </h1>
+        <div class="flex gap-2">
+          <a *ngFor="let tag of log.tags" class="text-[10px] font-mono font-bold tracking-widest text-charcoal hover:text-primary transition-colors cursor-pointer no-underline block" href="#">#{{ tag }}</a>
+        </div>
+      </header>
+
+      <!-- Content Body -->
+      <div class="font-body text-charcoal/90 leading-relaxed space-y-6 text-lg prose prose-lg max-w-none">
+        
+        <ng-container *ngFor="let block of log.blocks; let first = first">
+          
+          <p *ngIf="block.type === 'p'" 
+             [ngClass]="first ? 'font-bold text-xl drop-cap font-display text-charcoal first-letter:text-5xl first-letter:font-black first-letter:float-left first-letter:pr-2 pl-4 border-l-4 border-primary' : ''">
+             {{ block.content }}
+          </p>
+
+          <h2 *ngIf="block.type === 'h1'" class="font-display font-black text-3xl uppercase border-b-2 border-charcoal pb-1 mt-12 mb-6 transform rotate-1 inline-block">
+            {{ block.content }}
+          </h2>
+
+          <h3 *ngIf="block.type === 'h2'" class="font-display font-black text-2xl uppercase border-b border-charcoal pb-1 mt-10 mb-4 transform -rotate-1 inline-block">
+            {{ block.content }}
+          </h3>
+
+          <div *ngIf="block.type === 'code'" class="code-block my-8 transform -rotate-1 text-sm md:text-base">
+            <pre><code>{{ block.content }}</code></pre>
+          </div>
+
+          <div *ngIf="block.type === 'image'" class="my-8 relative group">
+             <div class="tape-strip right-[-10px] top-[-10px] rotate-12 bg-white/80 border-2 border-dashed border-gray-300 w-24 h-8 z-20"></div>
+             <img [src]="block.content" class="w-full h-auto border-2 border-charcoal riso-print shadow-sketch">
+          </div>
+
+        </ng-container>
+
+      </div>
+
+      <!-- Footer / Author Block -->
+      <footer class="mt-16 pt-8 border-t-4 border-charcoal flex flex-col md:flex-row justify-between items-center gap-6">
+        <div class="flex items-center gap-4">
+          <div class="w-12 h-12 bg-gray-300 border-2 border-charcoal rounded-full overflow-hidden grayscale contrast-125">
+            <span class="material-symbols-outlined text-3xl flex items-center justify-center w-full h-full text-white bg-charcoal">person</span>
+          </div>
+          <div>
+            <span class="block font-mono text-xs font-bold text-gray-500 uppercase tracking-widest">LOGGED_BY</span>
+            <span class="block font-display font-black text-xl uppercase">ADMIN</span>
+          </div>
+        </div>
+        
+        <div class="bg-charcoal text-white px-4 py-2 font-mono text-xs shadow-sketch transform rotate-2">
+          SIGNED: <span class="font-hand text-lg ml-2 text-primary-light">Admin</span>
+        </div>
+      </footer>
+    </div>
+  </article>
+
+  <!-- Navigation -->
+  <div class="mt-8 flex justify-between items-center px-4 w-full">
+    <a class="font-mono text-xs font-bold text-charcoal uppercase hover:text-primary transition-colors flex items-center gap-1 cursor-pointer no-underline" routerLink="/logs">
+      <span class="material-symbols-outlined text-[14px]">arrow_back</span>
+      ARCHIVES
+    </a>
+    <span class="font-mono text-gray-300 text-xs">EOF</span>
+  </div>
+</main>
+
+<main *ngIf="!log" class="relative min-h-screen pt-24 pb-12 w-full flex items-center justify-center">
+  <div class="text-center font-mono">
+    <h2 class="text-2xl font-bold text-charcoal mb-4">LOG NOT FOUND</h2>
+    <a routerLink="/logs" class="text-primary hover:underline">Return to Archives</a>
+  </div>
+</main>

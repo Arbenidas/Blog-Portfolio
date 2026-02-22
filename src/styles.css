@@ -1,1 +1,291 @@
-/* You can add global styles to this file, and also import other style files */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer utilities {
+  .noise-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 50;
+    opacity: 0.08;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='1'/%3E%3C/svg%3E");
+    mix-blend-mode: multiply;
+  }
+  .ink-border {
+    border: 2px solid #1a1a1a;
+    border-radius: 2px 255px 3px 25px / 255px 5px 225px 3px;
+  }
+  .ink-border-thick {
+    border: 3px solid #1a1a1a;
+    border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;
+    box-shadow: 4px 4px 0 rgba(0,0,0,0.8);
+  }
+  .tape-strip {
+    position: absolute;
+    height: 30px;
+    width: 80px;
+    background-color: rgba(220, 220, 200, 0.6);
+    border-left: 1px dashed rgba(0,0,0,0.1);
+    border-right: 1px dashed rgba(0,0,0,0.1);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    transform: rotate(-3deg);
+    z-index: 20;
+  }
+  .tape-strip-long {
+    position: absolute;
+    height: 35px;
+    width: 140px;
+    background-color: rgba(230, 225, 200, 0.7);
+    border: 1px solid rgba(0,0,0,0.05);
+    box-shadow: 1px 1px 3px rgba(0,0,0,0.1);
+    transform: rotate(2deg);
+    z-index: 15;
+  }
+  .tape-strip-sm {
+    position: absolute;
+    height: 20px;
+    width: 50px;
+    background-color: rgba(240, 230, 140, 0.7);
+    border: 1px dashed rgba(0,0,0,0.1);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    z-index: 20;
+  }
+  .riso-print {
+    filter: grayscale(100%) contrast(120%) brightness(110%);
+    mix-blend-mode: multiply;
+  }
+  .halftone-dots {
+    background-image: radial-gradient(#1a1a1a 1px, transparent 1px);
+    background-size: 4px 4px;
+    opacity: 0.15;
+  }
+  .halftone-title {
+    background-image: radial-gradient(#1a1a1a 1px, transparent 1px);
+    background-size: 3px 3px;
+  }
+  .coffee-stain {
+    position: absolute;
+    width: 120px;
+    height: 120px;
+    border: 4px solid #8b5a2b20;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 5;
+    box-shadow: inset 0 0 20px #8b5a2b10;
+    filter: blur(1px);
+  }
+  .coffee-stain::after {
+    content: '';
+    position: absolute;
+    top: -10px;
+    left: -5px;
+    width: 90%;
+    height: 90%;
+    border: 2px solid #8b5a2b15;
+    border-radius: 48%;
+    transform: rotate(20deg);
+  }
+  .stamp-classified {
+    border: 3px solid #d94e1e;
+    color: #d94e1e;
+    font-family: 'Permanent Marker', cursive;
+    padding: 0.2rem 1rem;
+    text-transform: uppercase;
+    font-size: 1.2rem;
+    transform: rotate(-15deg);
+    opacity: 0.8;
+    mix-blend-mode: multiply;
+    display: inline-block;
+    mask-image: url("data:image/svg+xml,%3Csvg width='200' height='100' viewBox='0 0 200 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.5'/%3E%3C/svg%3E");
+  }
+  .stamp-urgent {
+    border: 6px double #d94e1e;
+    color: #d94e1e;
+    font-family: 'Permanent Marker', cursive;
+    padding: 0.5rem 1.5rem;
+    text-transform: uppercase;
+    font-size: 2rem;
+    transform: rotate(-12deg);
+    opacity: 0.9;
+    mix-blend-mode: multiply;
+    position: absolute;
+    z-index: 40;
+    background: rgba(255,255,255,0.7);
+    pointer-events: none;
+  }
+  .terminal-input {
+    background-color: rgba(255,255,255,0.6);
+    border: 2px solid #1a1a1a;
+    font-family: 'VT323', monospace;
+    font-size: 1.25rem;
+    color: #1a1a1a;
+    padding: 0.75rem 1rem;
+    width: 100%;
+    outline: none;
+    transition: all 0.2s ease;
+  }
+  .terminal-input:focus {
+    background-color: #fff;
+    border-color: #d94e1e;
+    box-shadow: 4px 4px 0px 0px #d94e1e;
+    transform: translate(-2px, -2px);
+  }
+  .dial-knob {
+    border-radius: 50%;
+    background: conic-gradient(from 180deg, #eee 0%, #ccc 100%);
+    border: 2px solid #1a1a1a;
+    box-shadow: 2px 2px 0 #1a1a1a;
+  }
+  .radar-grid {
+    background-image: 
+        radial-gradient(circle, rgba(26,26,26,0.2) 1px, transparent 1px),
+        linear-gradient(rgba(26,26,26,0.1) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(26,26,26,0.1) 1px, transparent 1px);
+    background-size: 20px 20px, 40px 40px, 40px 40px;
+    background-position: center;
+  }
+  .typewriter-input {
+    background-color: transparent;
+    border: none;
+    border-bottom: 2px solid #1a1a1a;
+    font-family: 'Share Tech Mono', monospace;
+    color: #1a1a1a;
+    padding: 0.5rem 0;
+    width: 100%;
+    outline: none;
+    background-image: radial-gradient(#1a1a1a 1px, transparent 1px);
+    background-size: 4px 4px;
+    background-repeat: repeat-x;
+    background-position: bottom;
+  }
+  .typewriter-input:focus {
+    border-bottom-color: #d94e1e;
+    box-shadow: 0 4px 0 -2px rgba(217, 78, 30, 0.2);
+  }
+  .code-block {
+    background-color: #1a1a1a;
+    color: #f2f0e4;
+    font-family: 'Share Tech Mono', monospace;
+    padding: 1rem;
+    border-radius: 4px;
+    position: relative;
+    box-shadow: 4px 4px 0 rgba(0,0,0,0.2);
+    overflow-x: auto;
+  }
+  .code-block::before {
+    content: "/// SNIPPET_REF_99 ///";
+    position: absolute;
+    top: 0;
+    right: 0;
+    background: #d94e1e;
+    color: white;
+    font-size: 10px;
+    padding: 2px 6px;
+    font-weight: bold;
+  }
+  .stamp-tech {
+    border: 3px solid #1a1a1a;
+    color: #1a1a1a;
+    font-family: 'Share Tech Mono', monospace;
+    padding: 0.2rem 0.8rem;
+    text-transform: uppercase;
+    font-size: 0.9rem;
+    font-weight: bold;
+    transform: rotate(-2deg);
+    opacity: 0.9;
+    mix-blend-mode: multiply;
+    display: inline-block;
+    background: rgba(255,255,255,0.6);
+    box-shadow: 2px 2px 0 rgba(0,0,0,0.1);
+  }
+  .stamp-tech:nth-child(even) {
+    transform: rotate(3deg);
+    border-color: #d94e1e;
+    color: #d94e1e;
+  }
+  .stamp-tech:nth-child(3n) {
+    transform: rotate(-5deg);
+    border-color: #008f99;
+    color: #008f99;
+  }
+  .section-divider {
+    position: relative;
+    height: 2px;
+    background: #1a1a1a;
+    margin: 3rem 0;
+    border-radius: 50% 50% 50% 50% / 100% 100% 0% 0%;
+    transform: rotate(0.5deg);
+  }
+  .section-divider::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: -5px;
+    width: 100%;
+    height: 4px;
+    background: transparent;
+    border-top: 2px solid #1a1a1a;
+    border-radius: 50%;
+    transform: rotate(-0.5deg);
+  }
+  .timeline-line {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 20px;
+    width: 2px;
+    background-image: linear-gradient(to bottom, #1a1a1a 50%, transparent 50%);
+    background-size: 2px 10px;
+    z-index: 10;
+  }
+  .folder-tab {
+    clip-path: polygon(0 0, 85% 0, 95% 100%, 0% 100%);
+  }
+  .switch-toggle {
+    appearance: none;
+    width: 40px;
+    height: 20px;
+    background: #e5e7eb;
+    border: 2px solid #1a1a1a;
+    position: relative;
+    cursor: pointer;
+  }
+  .switch-toggle::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 12px;
+    height: 12px;
+    background: #1a1a1a;
+    transition: transform 0.2s;
+  }
+  .switch-toggle:checked {
+    background: #d94e1e;
+  }
+  .switch-toggle:checked::after {
+    transform: translateX(20px);
+    background: white;
+  }
+  @media (min-width: 768px) {
+    .timeline-line {
+      left: 50%;
+      transform: translateX(-50%);
+    }
+  }
+  .logs-scroll::-webkit-scrollbar {
+    width: 8px;
+  }
+  .logs-scroll::-webkit-scrollbar-track {
+    background: #f2f0e4;
+    border-left: 1px solid #1a1a1a;
+  }
+  .logs-scroll::-webkit-scrollbar-thumb {
+    background: #1a1a1a;
+    border: 1px solid #f2f0e4;
+  }
+}
