@@ -1,22 +1,16 @@
 import { TranslateLoader } from '@ngx-translate/core';
 import { Observable, of } from 'rxjs';
-import { join } from 'path';
-import * as fs from 'fs';
+
+// Importamos los JSON directamente en el bundle del servidor
+import * as esTranslation from '../../../../public/assets/i18n/es.json';
+import * as enTranslation from '../../../../public/assets/i18n/en.json';
 
 export class ServerTranslateLoader implements TranslateLoader {
-    constructor(
-        private prefix: string = 'public/assets/i18n/',
-        private suffix: string = '.json'
-    ) { }
+    getTranslation(lang: string): Observable<any> {
+        // Por cómo TypeScript compila los JSON, extraemos la data de forma segura
+        const es = (esTranslation as any).default || esTranslation;
+        const en = (enTranslation as any).default || enTranslation;
 
-    public getTranslation(lang: string): Observable<any> {
-        try {
-            const fullPath = join(process.cwd(), this.prefix, lang + this.suffix);
-            const data = JSON.parse(fs.readFileSync(fullPath, 'utf8'));
-            return of(data);
-        } catch (err) {
-            console.error(`[ServerTranslateLoader] Error loading ${lang}:`, err);
-            return of({});
-        }
+        return of(lang === 'en' ? en : es);
     }
 }
