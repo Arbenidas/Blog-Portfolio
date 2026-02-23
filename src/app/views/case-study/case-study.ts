@@ -1,5 +1,5 @@
-import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, inject, OnInit, ChangeDetectorRef, PLATFORM_ID } from '@angular/core';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { ContentService, DocumentEntry, CustomWidget } from '../../services/content.service';
 import { DomSanitizer, SafeHtml, SafeResourceUrl } from '@angular/platform-browser';
@@ -20,6 +20,7 @@ export class CaseStudy implements OnInit {
   private route = inject(ActivatedRoute);
   private cdr = inject(ChangeDetectorRef);
   private sanitizer = inject(DomSanitizer);
+  private platformId = inject(PLATFORM_ID);
 
   work: DocumentEntry | undefined;
   availableWidgets: CustomWidget[] = [];
@@ -122,6 +123,9 @@ export class CaseStudy implements OnInit {
     switch (type) { case 'graffiti': return 4; case 'zigzag': return 3; default: return 2.5; }
   }
   getMarkerUrl(type: string, prefix = 'pub-arrowhead-'): string {
+    if (!isPlatformBrowser(this.platformId)) {
+      return `url(#${prefix}${type})`;
+    }
     const base = window.location.href.split('?')[0].split('#')[0];
     return `url(${base}#${prefix}${type})`;
   }
