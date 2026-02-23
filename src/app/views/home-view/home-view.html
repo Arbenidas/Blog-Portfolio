@@ -78,14 +78,14 @@
     <!-- Tabs Container -->
     <div style="position:relative; margin-top:1rem;">
       <div class="tabs-container">
-        <div (click)="setTab('logs')" class="tab" [ngClass]="activeTab() === 'logs' ? 'tab-active' : 'tab-inactive'">
-          <span class="material-symbols-outlined" style="font-size:14px; color:var(--primary);">history_edu</span> Mission Logs
+        <div (click)="setTab('about')" class="tab" [ngClass]="activeTab() === 'about' ? 'tab-active' : 'tab-inactive'">
+          <span class="material-symbols-outlined" style="font-size:14px; color:#0d9488;">badge</span> Personnel File
         </div>
         <div (click)="setTab('works')" class="tab" [ngClass]="activeTab() === 'works' ? 'tab-active' : 'tab-inactive'">
           <span class="material-symbols-outlined" style="font-size:14px; color:var(--accent-orange);">folder_open</span> Classified Works
         </div>
-        <div (click)="setTab('about')" class="tab" [ngClass]="activeTab() === 'about' ? 'tab-active' : 'tab-inactive'">
-          <span class="material-symbols-outlined" style="font-size:14px; color:#0d9488;">badge</span> Personnel File
+        <div (click)="setTab('logs')" class="tab" [ngClass]="activeTab() === 'logs' ? 'tab-active' : 'tab-inactive'">
+          <span class="material-symbols-outlined" style="font-size:14px; color:var(--primary);">history_edu</span> Mission Logs
         </div>
       </div>
 

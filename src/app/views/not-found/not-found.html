@@ -1,133 +1,79 @@
 <div class="not-found-page">
   <div class="noise-overlay"></div>
   <div class="fixed inset-0 z-0 bg-blueprint opacity-20 pointer-events-none"></div>
-  <div class="fixed inset-0 z-0 bg-[radial-gradient(circle_at_center,_transparent_0%,_#1a1a1a_100%)] opacity-80 pointer-events-none"></div>
+  <div class="fixed inset-0 z-0 bg-vignette opacity-80 pointer-events-none"></div>
 
   <!-- ALERT BAR -->
-  <div class="fixed top-0 w-full z-50 bg-accent-orange/10 border-b border-accent-orange backdrop-blur-sm">
-    <div class="w-full warning-stripe h-2 opacity-80"></div>
-    <div class="px-6 py-2 flex justify-between items-center text-accent-orange font-mono text-xs font-bold tracking-[0.2em] animate-pulse">
+  <div class="alert-bar">
+    <div class="warning-stripe"></div>
+    <div class="alert-content">
       <span>/// SYSTEM_ALERT ///</span>
-      <span class="hidden md:inline">CRITICAL_FAILURE_DETECTED</span>
+      <span class="md-only">CRITICAL_FAILURE_DETECTED</span>
       <span>ERROR_CODE: 0x404</span>
     </div>
   </div>
 
-  <!-- MAIN -->
-  <main class="relative flex-grow flex flex-col items-center justify-center w-full max-w-[1400px] mx-auto px-4 lg:px-8 py-20 min-h-screen">
-
-    <!-- Radar -->
-    <div class="absolute top-1/4 left-10 md:left-20 opacity-20 pointer-events-none hidden lg:block">
-      <div class="w-64 h-64 border border-accent-orange/30 rounded-full flex items-center justify-center relative">
-        <div class="absolute w-full h-full border border-accent-orange/20 rounded-full scale-75"></div>
-        <div class="radar-sweep"></div>
-        <div class="absolute top-1/2 left-1/2 w-2 h-2 bg-accent-orange rounded-full transform -translate-x-1/2 -translate-y-1/2"></div>
-      </div>
-      <div class="mt-2 font-mono text-[10px] text-accent-orange/50 text-center">SECTOR_SCAN: NEGATIVE</div>
-    </div>
-
-    <!-- Corrupted stamp -->
-    <div class="absolute bottom-20 right-10 md:right-32 pointer-events-none hidden md:block opacity-60 transform rotate-12">
-      <div class="stamp-corrupted">DATA_CORRUPTED</div>
-    </div>
-
-    <!-- Warning icon -->
-    <div class="absolute top-32 right-20 pointer-events-none hidden md:block opacity-40">
-      <span class="material-symbols-outlined text-[120px] text-accent-orange animate-pulse">warning</span>
-    </div>
-
-    <!-- CENTER -->
-    <div class="relative z-10 w-full max-w-4xl mx-auto flex flex-col items-center text-center space-y-8">
-
-      <!-- Note card -->
-      <div class="bg-paper-cream text-charcoal p-4 transform -rotate-2 shadow-sketch max-w-xs mx-auto relative group">
+  <main class="not-found-main">
+    <div class="center-content">
+      
+      <!-- Critical Failure Card -->
+      <div class="failure-card">
         <div class="tape-strip"></div>
-        <div class="border-2 border-charcoal p-2">
-          <div class="flex items-center gap-2 justify-center border-b border-charcoal pb-2 mb-2">
-            <span class="material-symbols-outlined text-accent-orange">error</span>
-            <h3 class="font-black text-lg uppercase tracking-wider">System_Failure</h3>
+        <div class="card-inner">
+          <div class="card-header">
+            <span class="material-symbols-outlined text-accent">error</span>
+            <h3>System_Failure</h3>
           </div>
-          <p class="font-mono text-xs font-bold leading-tight">
+          <p class="card-text">
             UNAUTHORIZED ACCESS ATTEMPT DETECTED IN SECTOR 7G. PROTOCOL OVERRIDE INITIATED.
           </p>
         </div>
       </div>
 
-      <!-- 404 number -->
-      <div class="relative py-10">
-        <h1 class="text-[150px] md:text-[220px] leading-none font-black tracking-tighter glitch-text select-none" data-text="404">
-          404
-        </h1>
-        <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full h-full pointer-events-none mix-blend-overlay">
-          <div class="absolute top-[20%] left-[10%] text-6xl text-accent-orange font-hand opacity-40 transform -rotate-12">?</div>
-          <div class="absolute bottom-[20%] right-[15%] text-6xl text-primary font-hand opacity-40 transform rotate-12">?</div>
-        </div>
-        <div class="absolute -bottom-4 left-1/2 transform -translate-x-1/2 bg-charcoal px-4 py-1 border border-accent-orange">
-          <p class="font-mono text-accent-orange text-sm md:text-base tracking-[0.5em] uppercase whitespace-nowrap">LOG_NOT_FOUND</p>
+      <!-- 404 Header -->
+      <div class="error-number-container">
+        <h1 class="glitch-404" data-text="404">404</h1>
+        <div class="log-label-box">
+          <p class="log-label-text">LOG_NOT_FOUND</p>
         </div>
       </div>
 
-      <!-- Terminal -->
-      <div class="w-full max-w-2xl bg-black/80 border-2 border-charcoal p-1 shadow-sketch-lg relative overflow-hidden backdrop-blur-md">
+      <!-- Terminal Output -->
+      <div class="error-terminal">
         <div class="scanlines"></div>
-        <div class="bg-charcoal text-accent-orange px-3 py-1 font-mono text-[10px] flex justify-between items-center border-b border-charcoal/50 relative z-10">
+        <div class="terminal-header">
           <span>TERMINAL_OUTPUT_V.2.04</span>
-          <span class="flex gap-1">
-            <span class="w-2 h-2 bg-accent-orange rounded-full animate-pulse"></span>
-            <span class="w-2 h-2 bg-gray-600 rounded-full"></span>
-            <span class="w-2 h-2 bg-gray-600 rounded-full"></span>
+          <span style="display: flex; gap: 4px;">
+            <span style="width: 8px; height: 8px; background: #d94e1e; border-radius: 50%;"></span>
+            <span style="width: 8px; height: 8px; background: #333; border-radius: 50%;"></span>
           </span>
         </div>
-        <div class="p-6 md:p-8 font-nixie text-lg md:text-xl text-left relative z-10">
-          <p class="text-accent-orange mb-2">&gt; SYSTEM_DIAGNOSTIC_RUNNING...</p>
-          <p class="text-white mb-4"><span class="text-red-500 font-bold">FATAL ERROR:</span> The requested technical dossier has been redacted or moved to a secure sector.</p>
-          <p class="text-gray-400 mb-6 text-base font-mono leading-relaxed">
-            // Trace route failed at node [UNDEFINED].<br/>
-            // Coordinates invalid.<br/>
-            // Please return to base immediately.
-          </p>
-          <div class="border-t border-dashed border-gray-700 pt-4 mt-4">
-            <p class="text-accent-orange animate-pulse">&gt; WAITING_FOR_INPUT_</p>
+        <div class="terminal-body">
+          <p class="terminal-line text-accent">&gt; SYSTEM_DIAGNOSTIC_RUNNING...</p>
+          <p class="terminal-line"><span class="text-error">FATAL ERROR:</span> Data sector unreadable.</p>
+          <div style="margin-top: 1.5rem; border-top: 1px dashed #333; padding-top: 1.5rem;">
+            <p class="terminal-line text-dim">// Trace route failed at node [UNDEFINED].</p>
+            <p class="terminal-line text-dim">// Please return to base immediately.</p>
           </div>
         </div>
       </div>
 
-      <!-- CTA Button -->
-      <div class="pt-6 relative group">
-        <div class="absolute -inset-1 bg-accent-orange rounded-sm blur opacity-20 group-hover:opacity-40 transition duration-200"></div>
-        <a class="relative bg-accent-orange text-white font-display font-black text-xl uppercase tracking-widest px-10 py-5 border-2 border-white/20 shadow-hard hover:translate-y-1 hover:shadow-none hover:bg-white hover:text-accent-orange hover:border-accent-orange transition-all flex items-center justify-center gap-4 group overflow-hidden cursor-pointer no-underline" routerLink="/">
-          <span class="material-symbols-outlined text-2xl group-hover:rotate-180 transition-transform duration-500">restart_alt</span>
-          <span class="relative z-10">Reboot System</span>
+      <!-- Reboot Link -->
+      <div class="reboot-container">
+        <a class="btn-reboot" routerLink="/">
+          <span class="material-symbols-outlined">restart_alt</span>
+          Reboot System
         </a>
       </div>
-    </div>
 
-    <!-- Side decorations -->
-    <div class="absolute top-1/2 left-10 transform -translate-y-1/2 -rotate-90 hidden xl:block opacity-30">
-      <span class="font-mono text-6xl font-bold text-transparent stroke-text">ERROR</span>
-    </div>
-
-    <div class="absolute bottom-10 left-10 transform rotate-6 opacity-80 hidden md:block">
-      <div class="border-2 border-white/20 p-2 bg-charcoal/80 backdrop-blur-sm">
-        <div class="font-mono text-[10px] text-gray-400">
-          <div>MEMORY_DUMP: 0x00000000</div>
-          <div>STATUS: CRITICAL</div>
-          <div>RECOVERY: IMPOSSIBLE</div>
-        </div>
-      </div>
     </div>
   </main>
 
-  <!-- FOOTER -->
-  <footer class="w-full bg-black/50 text-gray-500 py-4 px-6 border-t border-accent-orange/20 backdrop-blur-sm">
-    <div class="max-w-[1400px] mx-auto flex flex-col md:flex-row justify-between items-center text-[10px] font-mono tracking-widest">
-      <div class="flex gap-6">
-        <span class="text-accent-orange">/// CONNECTION_LOST</span>
-        <span class="hidden md:inline">SYSTEM: OFFLINE</span>
-      </div>
-      <div class="flex gap-4 mt-2 md:mt-0 uppercase font-bold">
-        <span>// END_OF_LINE</span>
-      </div>
+  <footer class="not-found-footer">
+    <div>
+      <span class="footer-highlight">/// CONNECTION_LOST</span>
+      <span class="md-only" style="margin-left: 1.5rem;">STATUS: OFFLINE</span>
     </div>
+    <div style="font-weight: bold;">// END_OF_LINE</div>
   </footer>
 </div>

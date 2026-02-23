@@ -27,7 +27,7 @@ export class HomeView implements OnInit, OnDestroy {
   tempCelsius = signal(45.2);
   uptime = signal('12:04:11');
 
-  activeTab = signal<'works' | 'about' | 'logs'>('works');
+  activeTab = signal<'works' | 'about' | 'logs'>('about');
 
   setTab(tab: 'works' | 'about' | 'logs') {
     this.activeTab.set(tab);
