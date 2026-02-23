@@ -1,0 +1,14 @@
+{
+    "NAV": {
+        "HOME": "HOME_HUB",
+        "WORKS": "WORKS_DATABASE",
+        "LOGS": "FIELD_LOGS",
+        "CONTACT": "PERSONNEL_COMM",
+        "STATUS": "SYS_ACTIVE"
+    },
+    "COMMON": {
+        "LANGUAGE": "LANGUAGE",
+        "SELECT_EN": "ENGLISH",
+        "SELECT_ES": "SPANISH"
+    }
+}

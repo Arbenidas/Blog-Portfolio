@@ -128,6 +128,29 @@
     /* gray-300 */
 }
 
+.public-status-group {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.lang-toggle-btn {
+    background: var(--charcoal);
+    color: white;
+    border: none;
+    padding: 0.25rem 0.5rem;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: opacity 0.3s;
+    opacity: 0.8;
+}
+
+.lang-toggle-btn:hover {
+    opacity: 1;
+}
+
 .public-status {
     display: flex;
     align-items: center;

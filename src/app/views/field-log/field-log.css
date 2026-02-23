@@ -598,3 +598,144 @@
     white-space: pre-wrap;
     display: block;
 }
+
+/* Objective Grid Blocks */
+.block-obj-header-container {
+    max-width: 56rem;
+    margin: 4rem auto 2rem auto;
+    width: 100%;
+    display: flex;
+    align-items: baseline;
+    gap: 1rem;
+    border-bottom: 4px solid var(--charcoal);
+    padding-bottom: 0.5rem;
+}
+
+.block-obj-title {
+    font-family: var(--font-display);
+    font-weight: 900;
+    font-size: 2.25rem;
+    font-style: italic;
+    letter-spacing: -0.05em;
+    color: var(--charcoal);
+    margin: 0;
+}
+
+@media (min-width: 768px) {
+    .block-obj-title {
+        font-size: 3rem;
+    }
+}
+
+.block-obj-subtitle {
+    font-family: var(--font-mono);
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: #6b7280;
+    font-weight: bold;
+}
+
+@media (min-width: 768px) {
+    .block-obj-subtitle {
+        font-size: 1.125rem;
+    }
+}
+
+.block-obj-grid {
+    max-width: 64rem;
+    margin: 2rem auto;
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+}
+
+@media (min-width: 768px) {
+    .block-obj-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+.block-obj-card {
+    background-color: var(--paper-white);
+    border: 4px solid var(--charcoal);
+    padding: 1.5rem;
+    padding-top: 2.5rem;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 6px 6px 0 var(--charcoal);
+}
+
+.block-obj-label {
+    position: absolute;
+    top: -0.75rem;
+    left: 1rem;
+    background-color: var(--charcoal);
+    color: white;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    font-weight: bold;
+    padding: 0.25rem 0.5rem;
+}
+
+.block-obj-item-title {
+    font-family: var(--font-display);
+    font-weight: bold;
+    font-size: 1.25rem;
+    color: var(--charcoal);
+    margin-bottom: 1rem;
+    text-transform: capitalize;
+    letter-spacing: -0.025em;
+}
+
+.block-obj-desc {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    line-height: 1.625;
+    color: #4b5563;
+    margin-bottom: 2rem;
+    max-width: 250px;
+}
+
+.block-obj-progress-bg {
+    height: 0.5rem;
+    width: 100%;
+    background-color: #e5e7eb;
+    margin-top: auto;
+}
+
+.block-obj-progress-fill {
+    height: 100%;
+}
+
+.block-obj-progress-high {
+    background-color: #0d9488;
+}
+
+.block-obj-progress-low {
+    background-color: var(--accent-orange);
+}
+
+.block-divider-container {
+    max-width: 56rem;
+    margin: 3rem auto;
+    width: 100%;
+}
+
+.block-divider-1 {
+    width: 100%;
+    height: 2px;
+    background-color: var(--charcoal);
+    opacity: 0.7;
+}
+
+.block-divider-2 {
+    width: 100%;
+    height: 1px;
+    background-color: var(--charcoal);
+    margin-top: 0.25rem;
+    opacity: 0.5;
+}
