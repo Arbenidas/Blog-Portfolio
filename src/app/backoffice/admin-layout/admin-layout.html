@@ -1,85 +1,85 @@
-<div class="h-screen w-full flex bg-paper-cream overflow-hidden font-display text-charcoal selection:bg-primary selection:text-white antialiased">
+<div class="admin-layout-container">
   <div class="noise-overlay"></div>
   
   <!-- ADMIN SIDEBAR -->
-  <aside class="w-64 bg-charcoal text-paper-cream border-r-2 border-charcoal flex flex-col relative z-20">
-    <div class="p-4 border-b border-gray-700 flex items-center justify-between">
-      <div class="font-mono text-xs uppercase font-bold tracking-widest text-accent-orange">
+  <aside class="admin-sidebar">
+    <div class="admin-sidebar-header">
+      <div class="admin-sidebar-title">
         System_Admin //
       </div>
-      <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+      <div class="admin-status-dot"></div>
     </div>
     
-    <nav class="flex-grow py-6 space-y-2">
-      <a routerLink="/admin" routerLinkActive="bg-white/10 text-white border-l-4 border-accent-orange" [routerLinkActiveOptions]="{exact: true}" class="w-full text-left px-6 py-3 font-display font-bold uppercase hover:bg-white/5 transition-colors flex items-center gap-3 no-underline text-paper-cream cursor-pointer border-l-4 border-transparent">
-        <span class="material-symbols-outlined text-[20px]">dashboard</span>
+    <nav class="admin-nav">
+      <a routerLink="/admin" routerLinkActive="active-link" [routerLinkActiveOptions]="{exact: true}" class="admin-nav-link">
+        <span class="material-symbols-outlined admin-nav-icon">dashboard</span>
         Dashboard
       </a>
       
-      <div class="px-6 py-2 mt-4">
-        <span class="font-mono text-[10px] text-gray-500 uppercase font-bold tracking-widest">Content Core</span>
+      <div class="admin-nav-section">
+        <span class="admin-nav-section-title">Content Core</span>
       </div>
       
-      <a routerLink="/admin/editor" routerLinkActive="bg-white/10 text-white border-l-4 border-accent-orange" class="w-full text-left px-6 py-3 font-display font-bold uppercase hover:bg-white/5 transition-colors flex items-center gap-3 no-underline text-paper-cream cursor-pointer border-l-4 border-transparent">
-        <span class="material-symbols-outlined text-[20px]">add_box</span>
+      <a routerLink="/admin/editor" routerLinkActive="active-link" class="admin-nav-link">
+        <span class="material-symbols-outlined admin-nav-icon">add_box</span>
         New Entry
       </a>
-      <a routerLink="/admin/works" routerLinkActive="bg-white/10 text-white border-l-4 border-accent-orange" class="w-full text-left px-6 py-3 font-display font-bold uppercase hover:bg-white/5 transition-colors flex items-center gap-3 no-underline text-paper-cream cursor-pointer border-l-4 border-transparent">
-        <span class="material-symbols-outlined text-[20px]">folder_open</span>
+      <a routerLink="/admin/works" routerLinkActive="active-link" class="admin-nav-link">
+        <span class="material-symbols-outlined admin-nav-icon">folder_open</span>
         Works Vault
       </a>
-      <a routerLink="/admin/logs" routerLinkActive="bg-white/10 text-white border-l-4 border-accent-orange" class="w-full text-left px-6 py-3 font-display font-bold uppercase hover:bg-white/5 transition-colors flex items-center gap-3 no-underline text-paper-cream cursor-pointer border-l-4 border-transparent">
-        <span class="material-symbols-outlined text-[20px]">article</span>
+      <a routerLink="/admin/logs" routerLinkActive="active-link" class="admin-nav-link">
+        <span class="material-symbols-outlined admin-nav-icon">article</span>
         Logs Archive
       </a>
       
-      <div class="px-6 py-2 mt-4">
-        <span class="font-mono text-[10px] text-gray-500 uppercase font-bold tracking-widest">Configuration</span>
+      <div class="admin-nav-section">
+        <span class="admin-nav-section-title">Configuration</span>
       </div>
       
-      <a routerLink="/admin/profile" routerLinkActive="bg-white/10 text-white border-l-4 border-accent-orange" class="w-full text-left px-6 py-3 font-display font-bold uppercase hover:bg-white/5 transition-colors flex items-center gap-3 no-underline text-paper-cream cursor-pointer border-l-4 border-transparent">
-        <span class="material-symbols-outlined text-[20px]">badge</span>
+      <a routerLink="/admin/profile" routerLinkActive="active-link" class="admin-nav-link">
+        <span class="material-symbols-outlined admin-nav-icon">badge</span>
         Personnel File
       </a>
-      <a routerLink="/admin/design-studio" routerLinkActive="bg-white/10 text-white border-l-4 border-accent-orange" class="w-full text-left px-6 py-3 font-display font-bold uppercase hover:bg-white/5 transition-colors flex items-center gap-3 no-underline text-paper-cream cursor-pointer border-l-4 border-transparent">
-        <span class="material-symbols-outlined text-[20px]">extension</span>
+      <a routerLink="/admin/design-studio" routerLinkActive="active-link" class="admin-nav-link">
+        <span class="material-symbols-outlined admin-nav-icon">extension</span>
         Design Studio
       </a>
     </nav>
     
-    <div class="p-6 border-t border-gray-700 mt-auto flex flex-col gap-2">
-      <button (click)="logout()" class="w-full border-2 border-paper-cream text-paper-cream font-mono text-[11px] font-bold uppercase py-2 hover:bg-paper-cream hover:text-charcoal transition-colors flex items-center justify-center gap-2 cursor-pointer bg-transparent">
-        <span class="material-symbols-outlined text-[16px]">logout</span>
+    <div class="admin-sidebar-footer">
+      <button (click)="logout()" class="btn-logout">
+        <span class="material-symbols-outlined" style="font-size: 16px;">logout</span>
         Logout
       </button>
-      <a class="w-full border-2 border-transparent text-gray-400 font-mono text-[10px] uppercase py-2 hover:text-paper-cream transition-colors flex items-center justify-center gap-2 no-underline cursor-pointer" routerLink="/">
-        <span class="material-symbols-outlined text-[14px]">public</span>
+      <a class="btn-public-site" routerLink="/">
+        <span class="material-symbols-outlined" style="font-size: 14px;">public</span>
         Go to Public Site
       </a>
     </div>
   </aside>
   
   <!-- ADMIN MAIN CONTENT -->
-  <main class="flex-grow flex flex-col relative z-20 h-full max-h-screen overflow-y-auto">
+  <main class="admin-main-content">
     <!-- Topbar -->
-    <header class="w-full h-14 border-b-2 border-charcoal bg-paper-white flex items-center justify-between px-6 sticky top-0 z-30">
-      <div class="flex items-center gap-4">
-        <span class="font-mono text-xs text-gray-500 font-bold uppercase">Location: </span>
-        <span class="font-mono text-[11px] bg-gray-200 border border-charcoal px-2 py-0.5">/ADMIN/SECURE_Z</span>
+    <header class="admin-topbar">
+      <div class="admin-topbar-left">
+        <span class="admin-location-label">Location: </span>
+        <span class="admin-location-val">/ADMIN/SECURE_Z</span>
       </div>
-      <div class="flex items-center gap-4">
-        <button class="w-8 h-8 rounded-full border-2 border-charcoal flex items-center justify-center hover:bg-gray-100 cursor-pointer bg-white">
-          <span class="material-symbols-outlined text-[16px]">notifications</span>
+      <div class="admin-topbar-right">
+        <button class="btn-notifications">
+          <span class="material-symbols-outlined" style="font-size: 16px;">notifications</span>
         </button>
-        <div class="flex items-center gap-2">
-          <div class="w-8 h-8 rounded-full bg-charcoal text-white flex items-center justify-center font-bold font-display text-xs border border-charcoal">DG</div>
+        <div style="display: flex; align-items: center; gap: 0.5rem;">
+          <div class="admin-user-avatar">AR</div>
         </div>
       </div>
     </header>
     
     <!-- Render Admin Dashboard or Editor -->
-    <div class="flex-grow p-6 md:p-10 z-10 w-full relative">
-      <div class="absolute inset-0 bg-blueprint opacity-40 pointer-events-none -z-10"></div>
+    <div class="admin-router-container">
+      <div class="admin-bg-blueprint"></div>
       <router-outlet></router-outlet>
     </div>
   </main>

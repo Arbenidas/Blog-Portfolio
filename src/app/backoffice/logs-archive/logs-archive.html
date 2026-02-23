@@ -1,42 +1,48 @@
-<div class="max-w-6xl mx-auto space-y-8">
-  <div class="flex justify-between items-end border-b-2 border-charcoal pb-4">
+<div class="archive-container">
+  <div class="archive-header">
     <div>
-      <h1 class="font-display font-black text-4xl uppercase m-0 text-charcoal">Logs_Archive</h1>
-      <p class="font-mono text-sm text-gray-500 m-0 mt-1">Manage field logs, technical notes, and system updates.</p>
+      <h1 class="archive-title">Logs_Archive</h1>
+      <p class="archive-subtitle">Manage field logs, technical notes, and system updates.</p>
     </div>
     
-    <a routerLink="/admin/editor" [queryParams]="{category: 'log'}" class="bg-primary text-white font-mono font-bold text-sm uppercase px-6 py-2 shadow-sketch border-2 border-charcoal hover:translate-y-1 hover:shadow-none transition-all cursor-pointer no-underline flex items-center gap-2">
+    <a routerLink="/admin/editor" [queryParams]="{category: 'log'}" class="btn-create-log">
       <span class="material-symbols-outlined text-[16px]">add</span> Create New Log
     </a>
   </div>
 
-  <div class="bg-paper-white border-2 border-charcoal p-1 shadow-sketch-lg">
-    <div class="bg-white border border-charcoal p-6">
+  <div class="archive-box-outer">
+    <div class="archive-box-inner">
       
-      <div *ngIf="logs.length === 0" class="text-center py-12 border-2 border-dashed border-gray-300">
-        <span class="material-symbols-outlined text-4xl text-gray-400 mb-2">article</span>
-        <h3 class="font-display font-bold text-xl text-gray-500 m-0">No logs found</h3>
-        <p class="font-mono text-xs text-gray-400 mt-2">Create a new field log to populate the archive.</p>
+      <div *ngIf="isLoading" class="archive-empty-state" style="opacity: 0.7;">
+        <span class="material-symbols-outlined archive-empty-icon" style="animation: pulse 2s infinite;">sync</span>
+        <h3 class="archive-empty-title">Accessing Secure Logs...</h3>
+        <p class="archive-empty-text">Retrieving filed logs. Please stand by.</p>
       </div>
 
-      <div *ngIf="logs.length > 0" class="space-y-4">
+      <div *ngIf="!isLoading && logs.length === 0" class="archive-empty-state">
+        <span class="material-symbols-outlined archive-empty-icon">article</span>
+        <h3 class="archive-empty-title">No logs found</h3>
+        <p class="archive-empty-text">Create a new field log to populate the archive.</p>
+      </div>
+
+      <div *ngIf="logs.length > 0" class="logs-list">
         <!-- Item -->
-        <div *ngFor="let log of logs" class="flex items-center justify-between p-4 border border-gray-200 hover:border-charcoal hover:bg-gray-50 transition-colors group">
-          <div class="flex items-center gap-4">
-            <div class="bg-gray-200 px-2 py-1 font-mono text-[10px] font-bold border border-charcoal text-gray-600">LOG</div>
+        <div *ngFor="let log of logs" class="log-item group">
+          <div class="log-info-group">
+            <div class="log-badge">LOG</div>
             <div>
-              <h3 class="font-display font-bold text-lg m-0 group-hover:text-primary transition-colors cursor-pointer" [routerLink]="['/admin/editor', log.slug || log.id]">{{ log.title || 'Untitled Log' }}</h3>
-              <p class="font-mono text-xs text-gray-500 m-0 mt-1">Created: {{ log.createdAt | date:'shortDate' }} | ID: {{ log.id }}</p>
-              <div *ngIf="log.tags && log.tags.length > 0" class="flex gap-1 mt-2">
-                <span *ngFor="let tag of log.tags" class="text-[9px] font-mono bg-amber-100/50 px-1 border border-amber-200/50 text-amber-800">{{ tag }}</span>
+              <h3 class="log-title" [routerLink]="['/admin/editor', log.slug || log.id]">{{ log.title || 'Untitled Log' }}</h3>
+              <p class="log-meta">Created: {{ log.createdAt | date:'shortDate' }} | ID: {{ log.id }}</p>
+              <div *ngIf="log.tags && log.tags.length > 0" class="log-tags-list">
+                <span *ngFor="let tag of log.tags" class="log-tag">{{ tag }}</span>
               </div>
             </div>
           </div>
-          <div class="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-            <button class="bg-white border border-charcoal w-8 h-8 flex items-center justify-center hover:bg-charcoal hover:text-white transition-colors cursor-pointer" [routerLink]="['/admin/editor', log.slug || log.id]" title="Edit">
+          <div class="log-actions">
+            <button class="btn-action-icon" [routerLink]="['/admin/editor', log.slug || log.id]" title="Edit">
               <span class="material-symbols-outlined text-[16px]">edit</span>
             </button>
-            <button (click)="deleteLog(log.id)" class="bg-white border border-charcoal w-8 h-8 flex items-center justify-center hover:bg-red-500 hover:text-white transition-colors cursor-pointer" title="Delete">
+            <button (click)="deleteLog(log.id)" class="btn-action-icon btn-action-icon-delete" title="Delete">
               <span class="material-symbols-outlined text-[16px]">delete</span>
             </button>
           </div>

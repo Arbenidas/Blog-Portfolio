@@ -1,6 +1,6 @@
-<main *ngIf="log" class="relative min-h-screen pt-24 pb-12 w-full max-w-[1000px] mx-auto px-4 md:px-8">
-  <div class="coffee-stain top-32 -left-10 opacity-50"></div>
-  <div class="fixed inset-0 z-0 bg-grid-pattern opacity-30 pointer-events-none" style="background-size: 20px 20px;"></div>
+<main *ngIf="log" class="field-log-main">
+  <div class="coffee-stain" style="top: 8rem; left: -2.5rem; opacity: 0.5;"></div>
+  <div class="field-log-bg"></div>
 
   <!-- FLUID WIDGET LAYER (Outside the white paper) -->
   <div class="absolute inset-0 pointer-events-none z-50 overflow-visible hidden md:block">
@@ -15,88 +15,88 @@
     </ng-container>
   </div>
 
-  <div class="relative z-10 w-full mb-6">
-    <a class="inline-flex items-center gap-2 font-mono text-xs font-bold text-charcoal hover:text-accent-orange transition-colors no-underline cursor-pointer" routerLink="/logs">
-      <span class="material-symbols-outlined text-[16px]">arrow_back</span>
+  <div class="field-log-nav">
+    <a class="btn-back-nav" routerLink="/logs">
+      <span class="material-symbols-outlined" style="font-size: 16px;">arrow_back</span>
       RETURN_TO_ARCHIVES
     </a>
   </div>
 
-  <article class="bg-paper-white border-2 border-charcoal p-1 shadow-sketch-lg relative z-20">
-    <div class="bg-paper-cream border border-charcoal p-6 md:p-12 relative overflow-hidden">
+  <article class="article-container">
+    <div class="article-inner">
       <!-- Decoratives -->
-      <div class="tape-strip top-[-10px] left-[5%] rotate-[-2deg]"></div>
-      <div class="absolute top-4 right-4 flex flex-col items-end opacity-50 select-none">
-        <span class="font-nixie text-4xl leading-none">{{ (log.id || 'PRV').slice(0, 3) | uppercase }}</span>
-        <span class="font-mono text-[8px] uppercase font-bold text-center border-t border-charcoal mt-1 pt-1">FILE_REF</span>
+      <div class="tape-strip" style="top: -10px; left: 5%; transform: rotate(-2deg);"></div>
+      <div class="file-ref-badge">
+        <span class="file-ref-val">{{ (log.id || 'PRV').slice(0, 3) | uppercase }}</span>
+        <span class="file-ref-label">FILE_REF</span>
       </div>
       
       <!-- Meta Header -->
-      <header class="mb-10 pb-6 border-b-2 border-dashed border-charcoal/50 relative">
-        <div *ngIf="log.coverPhoto" class="mb-8 w-full h-48 sm:h-64 border-2 border-charcoal bg-gray-100 relative overflow-hidden group shadow-sketch">
-           <img [src]="log.coverPhoto" class="w-full h-full object-cover" />
+      <header class="log-header">
+        <div *ngIf="log.coverPhoto" class="cover-photo-box">
+           <img [src]="log.coverPhoto" class="cover-photo-img" />
         </div>
-        <div class="flex flex-wrap gap-2 mb-4">
-          <span class="font-mono text-[10px] font-bold border border-charcoal px-2 py-0.5 bg-accent-orange text-white uppercase shadow-[2px_2px_0_#1a1a1a]">STATUS: LOGGED</span>
-          <span class="font-mono text-[10px] font-bold border border-charcoal px-2 py-0.5 bg-white uppercase">{{ log.createdAt | date:'MMM.dd.yyyy' }}</span>
+        <div class="meta-badges">
+          <span class="meta-badge meta-badge-status">STATUS: LOGGED</span>
+          <span class="meta-badge meta-badge-date">{{ log.createdAt | date:'MMM.dd.yyyy' }}</span>
         </div>
-        <h1 class="font-display font-black text-4xl md:text-5xl lg:text-6xl text-charcoal leading-[0.9] uppercase tracking-tighter m-0 mb-4 inline-block transform -rotate-1">
+        <h1 class="log-title">
           {{ log.title }}
         </h1>
-        <div class="flex gap-2">
-          <a *ngFor="let tag of log.tags" class="text-[10px] font-mono font-bold tracking-widest text-charcoal hover:text-primary transition-colors cursor-pointer no-underline block" href="#">#{{ tag }}</a>
+        <div class="log-tags">
+          <a *ngFor="let tag of log.tags" class="log-tag" href="#">#{{ tag }}</a>
         </div>
       </header>
 
       <!-- Content Body -->
-      <div class="font-body text-charcoal/90 leading-relaxed space-y-6 text-lg prose prose-lg max-w-none">
+      <div class="log-content">
         
         <ng-container *ngFor="let block of log.blocks; let first = first">
           
           <p *ngIf="block.type === 'p'" 
-             [ngClass]="first ? 'font-bold text-xl drop-cap font-display text-charcoal first-letter:text-5xl first-letter:font-black first-letter:float-left first-letter:pr-2 pl-4 border-l-4 border-primary' : ''">
+             [ngClass]="first ? 'block-p-first' : ''">
              {{ block.content }}
           </p>
 
-          <h2 *ngIf="block.type === 'h1'" class="font-display font-black text-3xl uppercase border-b-2 border-charcoal pb-1 mt-12 mb-6 transform rotate-1 inline-block">
+          <h2 *ngIf="block.type === 'h1'" class="block-h1">
             {{ block.content }}
           </h2>
 
-          <h3 *ngIf="block.type === 'h2'" class="font-display font-black text-2xl uppercase border-b border-charcoal pb-1 mt-10 mb-4 transform -rotate-1 inline-block">
+          <h3 *ngIf="block.type === 'h2'" class="block-h2">
             {{ block.content }}
           </h3>
 
-          <div *ngIf="block.type === 'code'" class="code-block my-8 transform -rotate-1 text-sm md:text-base">
+          <div *ngIf="block.type === 'code'" class="block-code">
             <pre><code>{{ block.content }}</code></pre>
           </div>
 
-          <div *ngIf="block.type === 'image'" class="my-8 relative group">
-             <div class="tape-strip right-[-10px] top-[-10px] rotate-12 bg-white/80 border-2 border-dashed border-gray-300 w-24 h-8 z-20"></div>
-             <img [src]="block.content" class="w-full h-auto border-2 border-charcoal riso-print shadow-sketch">
+          <div *ngIf="block.type === 'image'" class="block-image">
+             <div class="block-image-tape"></div>
+             <img [src]="block.content" class="block-image-img riso-print">
           </div>
 
-          <div *ngIf="block.type === 'video'" class="my-8 relative">
-            <div class="tape-strip right-[-10px] top-[-10px] rotate-12 bg-white/80 border-2 border-dashed border-gray-300 w-24 h-8 z-20"></div>
+          <div *ngIf="block.type === 'video'" class="block-video">
+            <div class="block-image-tape"></div>
             <!-- YouTube embed -->
-            <div *ngIf="isYoutubeUrl(block.content)" class="w-full aspect-video border-2 border-charcoal overflow-hidden shadow-sketch">
-              <iframe [src]="getSafeVideoUrl(block.content)" class="w-full h-full" frameborder="0" allowfullscreen allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"></iframe>
+            <div *ngIf="isYoutubeUrl(block.content)" class="block-video-embed">
+              <iframe [src]="getSafeVideoUrl(block.content)" style="width: 100%; height: 100%;" frameborder="0" allowfullscreen allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"></iframe>
             </div>
             <!-- Direct video -->
             <div *ngIf="!isYoutubeUrl(block.content)">
-              <video [src]="block.content" controls class="w-full border-2 border-charcoal shadow-sketch"></video>
+              <video [src]="block.content" controls class="block-video-direct"></video>
             </div>
           </div>
 
-          <div *ngIf="block.type === 'diagram'" class="w-full my-12">
-            <div class="border-4 border-charcoal bg-paper-cream p-4 relative shadow-[8px_8px_0_#1a1a1a] w-full">
-              <div class="absolute top-0 right-0 -mt-3 -mr-3 rotate-3 bg-white border border-charcoal px-2 py-1 flex items-center gap-1 shadow-sm text-accent-orange font-mono text-[10px] font-bold z-10">
-                <span class="material-symbols-outlined text-[12px]">account_tree</span> SYSTEM_DIAGRAM
+          <div *ngIf="block.type === 'diagram'" class="block-diagram">
+            <div class="block-diagram-box">
+              <div class="block-diagram-label">
+                <span class="material-symbols-outlined" style="font-size: 12px;">account_tree</span> SYSTEM_DIAGRAM
               </div>
               
-              <div class="w-full h-[400px] relative bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMiIgY3k9IjIiIHI9IjEiIGZpbGw9IiNjY2MiLz48L3N2Zz4=')] border border-dashed border-gray-400">
+              <div class="block-diagram-canvas">
 
                 <!-- SVG Arrow Overlay -->
-                <svg class="absolute inset-0 w-full h-full pointer-events-none z-10">
+                <svg style="position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10;">
                   <defs>
                     <marker id="fl-arrowhead-solid" markerWidth="12" markerHeight="8" refX="10" refY="4" orient="auto"><polygon points="0 0, 12 4, 0 8" fill="#1a1a1a" /></marker>
                     <marker id="fl-arrowhead-dashed" markerWidth="12" markerHeight="8" refX="10" refY="4" orient="auto"><polygon points="0 0, 12 4, 0 8" fill="#1a1a1a" /></marker>
@@ -106,39 +106,39 @@
                   </defs>
                   <ng-container *ngFor="let arrow of block.data?.arrows">
                     <line
-                      [attr.x1]="getNodeCenter(block, arrow.from).x"
-                      [attr.y1]="getNodeCenter(block, arrow.from).y"
-                      [attr.x2]="getNodeCenter(block, arrow.to).x"
-                      [attr.y2]="getNodeCenter(block, arrow.to).y"
+                      [attr.x1]="getNodeEdgePoint(block, arrow.from, arrow.to).x"
+                      [attr.y1]="getNodeEdgePoint(block, arrow.from, arrow.to).y"
+                      [attr.x2]="getNodeEdgePoint(block, arrow.to, arrow.from).x"
+                      [attr.y2]="getNodeEdgePoint(block, arrow.to, arrow.from).y"
                       [attr.stroke]="arrow.type === 'zigzag' ? '#d94e1e' : '#1a1a1a'"
                       [attr.stroke-width]="getArrowStrokeWidth(arrow.type)"
                       [attr.stroke-dasharray]="getArrowDashArray(arrow.type) === 'none' ? null : getArrowDashArray(arrow.type)"
-                      [attr.marker-end]="'url(#fl-arrowhead-' + arrow.type + ')'"
+                      [attr.marker-end]="getMarkerUrl(arrow.type)"
                       [attr.opacity]="arrow.type === 'graffiti' ? 0.6 : 1"
                       stroke-linecap="round"
                     />
                   </ng-container>
                 </svg>
-                <div *ngFor="let node of block.data?.nodes" class="absolute pointer-events-none" [style.left.px]="node.x" [style.top.px]="node.y">
-                  <div *ngIf="node.type === 'postgres'" class="bg-white border-2 border-charcoal p-3 flex flex-col items-center justify-center min-w-[120px] shadow-[4px_4px_0_#e5e7eb]">
-                    <span class="material-symbols-outlined text-gray-500 mb-1">database</span>
-                    <div class="text-[10px] font-mono font-bold text-center w-full truncate">{{node.label || 'Database'}}</div>
+                <div *ngFor="let node of block.data?.nodes" class="diagram-node" [style.left.px]="node.x" [style.top.px]="node.y">
+                  <div *ngIf="node.type === 'postgres'" class="diagram-node-postgres">
+                    <span class="material-symbols-outlined diagram-node-icon-gray">database</span>
+                    <div class="diagram-node-label">{{node.label || 'Database'}}</div>
                   </div>
-                  <div *ngIf="node.type === 'api'" class="bg-accent-orange text-white border-2 border-charcoal w-20 h-20 rounded-full flex flex-col items-center justify-center shadow-[4px_4px_0_#1a1a1a]">
-                    <span class="material-symbols-outlined mb-1">hub</span>
-                    <div class="text-[9px] font-mono font-bold text-center w-full px-1 truncate">{{node.label || 'API'}}</div>
+                  <div *ngIf="node.type === 'api'" class="diagram-node-api">
+                    <span class="material-symbols-outlined diagram-node-icon-white">hub</span>
+                    <div class="diagram-node-label-small">{{node.label || 'API'}}</div>
                   </div>
-                  <div *ngIf="node.type === 'client' || node.type === 'mobile'" class="bg-white border-2 border-charcoal p-3 flex flex-col items-center justify-center min-w-[100px] shadow-[4px_4px_0_#e5e7eb]">
-                    <span class="material-symbols-outlined text-teal-600 mb-1">{{ node.type === 'client' ? 'devices' : 'phone_iphone' }}</span>
-                    <div class="text-[10px] font-mono font-bold text-center w-full truncate">{{node.label || 'Client'}}</div>
+                  <div *ngIf="node.type === 'client' || node.type === 'mobile'" class="diagram-node-client">
+                    <span class="material-symbols-outlined diagram-node-icon-teal">{{ node.type === 'client' ? 'devices' : 'phone_iphone' }}</span>
+                    <div class="diagram-node-label">{{node.label || 'Client'}}</div>
                   </div>
-                  <div *ngIf="node.type === 'text'" class="transform -rotate-2">
-                    <div class="bg-transparent font-hand text-xl text-charcoal whitespace-pre-wrap">{{node.label || 'Note'}}</div>
+                  <div *ngIf="node.type === 'text'" class="diagram-node-text">
+                    <div class="diagram-node-text-inner">{{node.label || 'Note'}}</div>
                   </div>
 
                   <!-- Custom Node from Design Studio -->
                   <div *ngIf="node.type === 'custom' && node.config"
-                    class="p-3 flex flex-col items-center justify-center min-w-[100px]"
+                    class="diagram-node-custom"
                     [style.background-color]="getBgColor(node.config.bg_color)"
                     [style.color]="getTextColor(node.config.text_color)"
                     [style.border]="getBorderCss(node.config.border_style)"
@@ -146,8 +146,8 @@
                     [style.border-radius]="node.config.shape === 'circle' ? '50%' : '0'"
                     [style.width]="node.config.shape === 'circle' ? '100px' : 'auto'"
                     [style.height]="node.config.shape === 'circle' ? '100px' : 'auto'">
-                    <span *ngIf="node.config.icon" class="material-symbols-outlined mb-1">{{ node.config.icon }}</span>
-                    <span class="text-[10px] font-mono font-bold text-center w-full">{{ node.label }}</span>
+                    <span *ngIf="node.config.icon" class="material-symbols-outlined" style="margin-bottom: 0.25rem;">{{ node.config.icon }}</span>
+                    <span class="diagram-node-label" style="font-size: 10px;">{{ node.label }}</span>
                   </div>
                 </div>
               </div>
@@ -159,38 +159,45 @@
 
       </div>
 
+      <!-- Social Sharing -->
+      <app-share-buttons 
+        [title]="log.title" 
+        [description]="log.blocks[0].type === 'p' ? log.blocks[0].content : ''" 
+        [image]="log.coverPhoto || ''">
+      </app-share-buttons>
+
       <!-- Footer / Author Block -->
-      <footer class="mt-16 pt-8 border-t-4 border-charcoal flex flex-col md:flex-row justify-between items-center gap-6">
-        <div class="flex items-center gap-4">
-          <div class="w-12 h-12 bg-gray-300 border-2 border-charcoal rounded-full overflow-hidden grayscale contrast-125">
-            <span class="material-symbols-outlined text-3xl flex items-center justify-center w-full h-full text-white bg-charcoal">person</span>
+      <footer class="log-footer">
+        <div class="author-info">
+          <div class="author-avatar">
+            <span class="material-symbols-outlined author-icon">person</span>
           </div>
           <div>
-            <span class="block font-mono text-xs font-bold text-gray-500 uppercase tracking-widest">LOGGED_BY</span>
-            <span class="block font-display font-black text-xl uppercase">ADMIN</span>
+            <span class="author-label">LOGGED_BY</span>
+            <span class="author-name">ADMIN</span>
           </div>
         </div>
         
-        <div class="bg-charcoal text-white px-4 py-2 font-mono text-xs shadow-sketch transform rotate-2">
-          SIGNED: <span class="font-hand text-lg ml-2 text-primary-light">Admin</span>
+        <div class="signed-badge">
+          SIGNED: <span class="signed-name">Admin</span>
         </div>
       </footer>
     </div>
   </article>
 
   <!-- Navigation -->
-  <div class="mt-8 flex justify-between items-center px-4 w-full">
-    <a class="font-mono text-xs font-bold text-charcoal uppercase hover:text-primary transition-colors flex items-center gap-1 cursor-pointer no-underline" routerLink="/logs">
-      <span class="material-symbols-outlined text-[14px]">arrow_back</span>
+  <div class="bottom-nav">
+    <a class="btn-bottom-nav" routerLink="/logs">
+      <span class="material-symbols-outlined" style="font-size: 14px;">arrow_back</span>
       ARCHIVES
     </a>
-    <span class="font-mono text-gray-300 text-xs">EOF</span>
+    <span class="eof-label">EOF</span>
   </div>
 </main>
 
-<main *ngIf="!log" class="relative min-h-screen pt-24 pb-12 w-full flex items-center justify-center">
-  <div class="text-center font-mono">
-    <h2 class="text-2xl font-bold text-charcoal mb-4">LOG NOT FOUND</h2>
-    <a routerLink="/logs" class="text-primary hover:underline">Return to Archives</a>
+<main *ngIf="!log" class="not-found-main">
+  <div class="not-found-content">
+    <h2 class="not-found-title">LOG NOT FOUND</h2>
+    <a routerLink="/logs" class="not-found-link">Return to Archives</a>
   </div>
 </main>

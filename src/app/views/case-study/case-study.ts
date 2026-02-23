@@ -6,9 +6,11 @@ import { DomSanitizer, SafeHtml, SafeResourceUrl } from '@angular/platform-brows
 import { SeoService } from '../../services/seo.service';
 import { environment } from '../../../environments/environment';
 
+import { ShareButtons } from '../../components/share-buttons/share-buttons.component';
+
 @Component({
   selector: 'app-case-study',
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, ShareButtons],
   templateUrl: './case-study.html',
   styleUrl: './case-study.css',
 })
@@ -21,9 +23,11 @@ export class CaseStudy implements OnInit {
 
   work: DocumentEntry | undefined;
   availableWidgets: CustomWidget[] = [];
+  isLoading = true;
 
   ngOnInit() {
     this.route.paramMap.subscribe(async params => {
+      this.isLoading = true;
       const slug = params.get('slug');
       if (slug) {
         this.availableWidgets = await this.contentService.getCustomWidgets();
@@ -34,6 +38,7 @@ export class CaseStudy implements OnInit {
             const raw = localStorage.getItem('portfolio_preview');
             if (raw) {
               this.work = JSON.parse(raw);
+              this.isLoading = false;
               this.cdr.detectChanges();
               return;
             }
@@ -49,6 +54,10 @@ export class CaseStudy implements OnInit {
             type: 'article'
           });
         }
+        this.isLoading = false;
+        this.cdr.detectChanges();
+      } else {
+        this.isLoading = false;
         this.cdr.detectChanges();
       }
     });
@@ -82,15 +91,39 @@ export class CaseStudy implements OnInit {
     const m: Record<string, string> = { 'font-mono': "'Space Mono',monospace", 'font-display': "'Space Grotesk',sans-serif", 'font-hand': "'Caveat',cursive", 'font-body': "'Inter',sans-serif", 'font-nixie': "'Nixie One',system-ui" };
     return m[id] || "'Space Mono',monospace";
   }
-  getNodeCenter(block: any, nodeId: string): { x: number, y: number } {
+  getNodeSize(node: any): { w: number, h: number } {
+    switch (node.type) {
+      case 'postgres': return { w: 180, h: 80 };
+      case 'api': return { w: 96, h: 96 };
+      case 'client': case 'mobile': return { w: 160, h: 70 };
+      case 'text': return { w: 200, h: 40 };
+      case 'custom': return node.config?.shape === 'circle' ? { w: 100, h: 100 } : { w: 120, h: 60 };
+      default: return { w: 120, h: 60 };
+    }
+  }
+  getNodeEdgePoint(block: any, nodeId: string, otherNodeId: string): { x: number, y: number } {
     const node = block.data?.nodes?.find((n: any) => n.id === nodeId);
-    return node ? { x: node.x + 60, y: node.y + 40 } : { x: 0, y: 0 };
+    const other = block.data?.nodes?.find((n: any) => n.id === otherNodeId);
+    if (!node) return { x: 0, y: 0 };
+    const size = this.getNodeSize(node);
+    const cx = node.x + size.w / 2, cy = node.y + size.h / 2;
+    if (!other) return { x: cx, y: cy };
+    const os = this.getNodeSize(other);
+    const dx = (other.x + os.w / 2) - cx, dy = (other.y + os.h / 2) - cy;
+    if (Math.abs(dx) > Math.abs(dy)) {
+      return dx > 0 ? { x: node.x + size.w, y: cy } : { x: node.x, y: cy };
+    }
+    return dy > 0 ? { x: cx, y: node.y + size.h } : { x: cx, y: node.y };
   }
   getArrowDashArray(type: string): string {
     switch (type) { case 'dashed': return '12,6'; case 'zigzag': return '4,4'; case 'dotted': return '3,8'; case 'graffiti': return '2,3,8,3'; default: return 'none'; }
   }
   getArrowStrokeWidth(type: string): number {
     switch (type) { case 'graffiti': return 4; case 'zigzag': return 3; default: return 2.5; }
+  }
+  getMarkerUrl(type: string, prefix = 'pub-arrowhead-'): string {
+    const base = window.location.href.split('?')[0].split('#')[0];
+    return `url(${base}#${prefix}${type})`;
   }
 
   getSafeVideoUrl(url: string): SafeResourceUrl {

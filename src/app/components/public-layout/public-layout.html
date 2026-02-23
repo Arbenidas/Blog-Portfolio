@@ -1,29 +1,29 @@
 <div class="noise-overlay"></div>
-<div class="fixed inset-0 z-[1] bg-blueprint opacity-40 pointer-events-none"></div>
+<div class="public-layout-bg bg-blueprint"></div>
 
-<nav class="fixed top-0 z-[60] w-full border-b-2 border-charcoal bg-paper-white/95 backdrop-blur-md shadow-sm">
-  <div class="px-6 lg:px-12 py-3 flex items-center justify-between">
-    <a routerLink="/" class="flex items-center gap-3 group cursor-pointer no-underline">
-      <div class="p-1 bg-charcoal text-white border border-charcoal shadow-[2px_2px_0px_#d94e1e]">
-        <span class="material-symbols-outlined text-xl font-black">architecture</span>
+<nav class="public-navbar">
+  <div class="public-nav-container">
+    <a routerLink="/" class="public-brand">
+      <div class="public-brand-logo">
+        <img src="logo.png" alt="Arbe Logo" class="public-brand-img" />
       </div>
-      <h2 class="text-charcoal text-lg font-bold tracking-widest font-mono uppercase hidden sm:block m-0">Arbe_Workshop_Rev.A</h2>
+      <h2 class="public-brand-text">arbe_Workshop_Rev</h2>
     </a>
 
-    <div class="flex items-center gap-2 md:gap-6">
-      <div class="hidden lg:flex items-center space-x-1 font-mono text-[11px] font-bold tracking-tight">
-        <a routerLink="/" routerLinkActive="bg-charcoal text-white border-charcoal shadow-sm opacity-100" [routerLinkActiveOptions]="{exact: true}" class="px-3 py-1 hover:bg-charcoal hover:text-white transition-colors border border-transparent hover:border-charcoal no-underline text-charcoal opacity-60">HOME_HUB</a>
-        <span class="text-gray-300">/</span>
-        <a routerLink="/works" routerLinkActive="bg-charcoal text-white border-charcoal shadow-sm opacity-100" class="px-3 py-1 hover:bg-charcoal hover:text-white transition-colors border border-transparent hover:border-charcoal no-underline text-charcoal opacity-60">WORKS_DATABASE</a>
-        <span class="text-gray-300">/</span>
-        <a routerLink="/logs" routerLinkActive="bg-charcoal text-white border-charcoal shadow-sm opacity-100" class="px-3 py-1 hover:bg-charcoal hover:text-white transition-colors border border-transparent hover:border-charcoal no-underline text-charcoal opacity-60">FIELD_LOGS</a>
-        <span class="text-gray-300">/</span>
-        <a routerLink="/contact" routerLinkActive="bg-charcoal text-white border-charcoal shadow-sm opacity-100" class="px-3 py-1 hover:bg-charcoal hover:text-white transition-colors border border-transparent hover:border-charcoal no-underline text-charcoal opacity-60">PERSONNEL_COMM</a>
+    <div class="public-nav-right">
+      <div class="public-nav-links">
+        <a routerLink="/" routerLinkActive="active-link" [routerLinkActiveOptions]="{exact: true}" class="public-nav-link">HOME_HUB</a>
+        <span class="public-nav-separator">/</span>
+        <a routerLink="/works" routerLinkActive="active-link" class="public-nav-link">WORKS_DATABASE</a>
+        <span class="public-nav-separator">/</span>
+        <a routerLink="/logs" routerLinkActive="active-link" class="public-nav-link">FIELD_LOGS</a>
+        <span class="public-nav-separator">/</span>
+        <a routerLink="/contact" routerLinkActive="active-link" class="public-nav-link">PERSONNEL_COMM</a>
       </div>
 
-      <div class="flex items-center gap-2 border border-primary/50 px-3 py-1 bg-primary-light">
-        <span class="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
-        <span class="text-[10px] text-primary font-mono tracking-wider font-bold m-0">SYS_ACTIVE</span>
+      <div class="public-status">
+        <span class="public-status-dot"></span>
+        <span class="public-status-text">SYS_ACTIVE</span>
       </div>
     </div>
   </div>

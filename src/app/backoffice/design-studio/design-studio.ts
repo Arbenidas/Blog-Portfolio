@@ -49,16 +49,32 @@ export class DesignStudio implements OnInit {
   selectedShadow = 'shadow-[4px_4px_0_#1a1a1a]';
   selectedFont = 'font-mono';
 
-  // Icon gallery for quick selection
+  // Icon gallery for quick selection (comprehensive subset of Material Symbols)
   popularIcons: string[] = [
-    'database', 'hub', 'devices', 'phone_iphone', 'cloud', 'storage',
-    'dns', 'router', 'terminal', 'code', 'api', 'webhook',
-    'lock', 'shield', 'security', 'key', 'vpn_key',
-    'memory', 'developer_board', 'settings', 'build', 'architecture',
-    'analytics', 'monitoring', 'speed', 'rocket_launch', 'deployed_code',
-    'language', 'public', 'wifi', 'bluetooth', 'usb',
-    'folder', 'description', 'inventory_2', 'token', 'fingerprint',
-    'person', 'group', 'engineering', 'support_agent', 'smart_toy'
+    // Tech & IT
+    'database', 'hub', 'devices', 'phone_iphone', 'cloud', 'storage', 'dns', 'router', 'terminal', 'code', 'api', 'webhook', 'data_object', 'bug_report', 'integration_instructions', 'memory', 'developer_board', 'developer_mode', 'devices_other', 'laptop_mac', 'laptop_windows', 'desktop_mac', 'desktop_windows', 'smartphone', 'tablet_mac', 'keyboard', 'mouse', 'headphones', 'watch', 'gamepad', 'sd_card', 'sim_card', 'battery_full', 'usb', 'bluetooth', 'wifi', 'cast',
+    // Security
+    'lock', 'lock_open', 'shield', 'security', 'key', 'vpn_key', 'fingerprint', 'token', 'enhanced_encryption', 'no_encryption', 'password', 'policy', 'privacy_tip',
+    // Work & Business
+    'work', 'business', 'business_center', 'apartment', 'corporate_fare', 'store', 'engineering', 'precision_manufacturing', 'biotech', 'science', 'architecture', 'plumbing', 'construction', 'gavel', 'lightbulb', 'emoji_objects', 'rocket', 'rocket_launch',
+    // Analytics & Metrics
+    'analytics', 'monitoring', 'speed', 'trending_up', 'trending_down', 'bar_chart', 'pie_chart', 'timeline', 'show_chart', 'insights', 'query_stats', 'stacked_bar_chart', 'waterfall_chart',
+    // Files & Folders
+    'folder', 'folder_open', 'create_new_folder', 'description', 'article', 'note', 'inventory_2', 'inventory', 'archive', 'unarchive', 'attachment', 'cloud_download', 'cloud_upload', 'cloud_done', 'cloud_off', 'cloud_sync',
+    // Editor & Text
+    'edit', 'edit_square', 'drive_file_rename_outline', 'format_bold', 'format_italic', 'format_underlined', 'format_quote', 'format_list_bulleted', 'format_list_numbered', 'title', 'text_fields', 'translate', 'spellcheck', 'content_copy', 'content_paste', 'content_cut',
+    // Social & People
+    'person', 'person_add', 'person_remove', 'group', 'group_add', 'diversity_1', 'diversity_2', 'diversity_3', 'support_agent', 'smart_toy', 'face', 'sentiment_satisfied', 'sentiment_dissatisfied', 'thumb_up', 'thumb_down', 'favorite', 'favorite_border', 'star', 'star_border', 'star_half', 'share', 'share_location',
+    // Navigation & Map
+    'home', 'search', 'menu', 'more_vert', 'more_horiz', 'arrow_back', 'arrow_forward', 'arrow_upward', 'arrow_downward', 'chevron_left', 'chevron_right', 'expand_less', 'expand_more', 'location_on', 'map', 'my_location', 'navigation', 'explore', 'flight', 'local_shipping', 'directions_car', 'directions_bus', 'directions_railway', 'two_wheeler', 'pedal_bike',
+    // UI Actions
+    'add', 'remove', 'close', 'check', 'check_circle', 'cancel', 'delete', 'delete_outline', 'done', 'done_all', 'refresh', 'sync', 'update', 'settings', 'tune', 'filter_list', 'sort', 'view_list', 'view_module', 'view_quilt', 'view_column', 'view_array', 'grid_view', 'list', 'apps', 'more',
+    // Communication
+    'email', 'mail', 'mark_email_read', 'mark_email_unread', 'chat', 'forum', 'message', 'comment', 'call', 'call_end', 'phone', 'contact_phone', 'rss_feed', 'notifications', 'notifications_active', 'notifications_off',
+    // AV & Media
+    'play_arrow', 'pause', 'stop', 'play_circle', 'pause_circle', 'skip_next', 'skip_previous', 'fast_forward', 'fast_rewind', 'volume_up', 'volume_down', 'volume_off', 'mic', 'mic_off', 'videocam', 'videocam_off', 'camera_alt', 'image', 'photo', 'photo_library', 'portrait', 'music_note',
+    // Alerts & Status
+    'warning', 'error', 'info', 'help', 'help_outline', 'new_releases', 'report', 'report_problem', 'dangerous', 'brightness_1'
   ];
 
   // === CONFIG OPTIONS ===

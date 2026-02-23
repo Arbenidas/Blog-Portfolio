@@ -13,13 +13,16 @@ export class WorksVaultAdmin implements OnInit {
   private contentService = inject(ContentService);
   private cdr = inject(ChangeDetectorRef);
   works: DocumentEntry[] = [];
+  isLoading = true;
 
   ngOnInit() {
     this.loadWorks();
   }
 
   async loadWorks() {
+    this.isLoading = true;
     this.works = await this.contentService.getAllWorks();
+    this.isLoading = false;
     this.cdr.detectChanges();
   }
 

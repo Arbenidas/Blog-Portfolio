@@ -1,143 +1,146 @@
-<main class="relative min-h-screen pt-24 pb-12 px-4 md:px-8 max-w-[1800px] mx-auto" id="works">
-  <div class="coffee-stain top-32 right-20 opacity-40"></div>
-  <div class="coffee-stain bottom-20 left-10 opacity-60 transform scale-75 rotate-45"></div>
+<main class="works-main" id="works">
+  <div class="coffee-stain" style="top: 8rem; right: 5rem; opacity: 0.4;"></div>
+  <div class="coffee-stain" style="bottom: 5rem; left: 2.5rem; opacity: 0.6; transform: scale(0.75) rotate(45deg);"></div>
 
-  <div class="flex flex-col md:flex-row justify-between items-end mb-12 border-b-4 border-charcoal pb-4 relative">
-    <div class="absolute -bottom-[2px] right-0 w-32 h-1 bg-accent-orange"></div>
+  <div class="works-header">
+    <div class="works-header-line"></div>
     <div>
-      <div class="flex items-center gap-3 mb-2">
-        <span class="material-symbols-outlined text-4xl">folder_managed</span>
-        <h1 class="text-5xl md:text-7xl font-black text-charcoal uppercase tracking-tighter leading-none m-0">
-          Works<br/>Database
-        </h1>
+      <div class="works-title-container">
+        <span class="material-symbols-outlined works-title-icon">folder_managed</span>
+        <h1 class="works-title">Works<br/>Database</h1>
       </div>
-      <p class="font-mono text-charcoal/70 mt-2 max-w-md border-l-2 border-accent-orange pl-3 text-sm">
+      <p class="works-subtitle">
         // ACCESSING ARCHIVED PROJECT FILES...<br/>
         // DISPLAYING RELEVANT CASE STUDIES AND EXPERIMENTS.
       </p>
     </div>
-    <div class="mt-6 md:mt-0 flex flex-col items-end gap-2">
-      <div class="bg-white border-2 border-charcoal p-2 shadow-sketch transform rotate-1">
-        <div class="flex items-center gap-2">
-          <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
-          <span class="font-mono text-xs font-bold m-0">SYSTEM STATUS: ONLINE</span>
+    <div class="works-status-container">
+      <div class="works-status-box">
+        <div class="works-status-inner">
+          <span class="works-status-dot"></span>
+          <span class="works-status-text">SYSTEM STATUS: ONLINE</span>
         </div>
       </div>
-      <div class="font-mono text-[10px] text-right text-gray-500">
+      <div class="works-meta">
         LAST UPDATE: 2024.11.08<br/>
         FILES LOADED: 12/12
       </div>
     </div>
   </div>
 
-  <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 relative z-20">
+  <div class="works-content-grid">
     <!-- LEFT SIDEBAR FILTER -->
-    <aside class="lg:col-span-3 space-y-8 sticky top-32 h-fit">
-      <div class="bg-charcoal p-4 shadow-[8px_8px_0_rgba(0,0,0,0.2)] transform -rotate-1">
-        <label class="block text-accent-orange font-mono text-xs font-bold mb-2 uppercase tracking-widest border-b border-gray-700 pb-1">
-          &gt; Search_Query_Input
-        </label>
-        <div class="relative">
-          <input class="w-full bg-black/50 border border-gray-600 text-green-400 font-nixie text-xl p-2 focus:border-green-400 focus:ring-0 placeholder-gray-700 outline-none" placeholder="Start typing..." type="text"/>
-          <span class="absolute right-2 top-1/2 -translate-y-1/2 text-green-400 animate-pulse">_</span>
+    <aside class="works-sidebar">
+      <div class="search-box">
+        <label class="search-label">&gt; Search_Query_Input</label>
+        <div class="search-input-wrapper">
+          <input class="search-input" placeholder="Start typing..." type="text" [(ngModel)]="searchQuery" (ngModelChange)="applyFilters()"/>
+          <span class="search-cursor" *ngIf="!searchQuery">_</span>
         </div>
       </div>
 
-      <div class="bg-paper-white border-2 border-charcoal p-5 shadow-sketch relative">
-        <div class="absolute -top-3 left-4 bg-white border border-charcoal px-2 text-[10px] font-mono font-bold uppercase tracking-widest z-10">
-          Filter_Protocols
-        </div>
-        <div class="space-y-4 pt-2">
-          <div class="flex items-center justify-between group">
-            <span class="font-mono text-xs font-bold uppercase">Frontend_Dev</span>
-            <label class="flex items-center cursor-pointer">
-              <input checked="" class="switch-toggle" type="checkbox"/>
+      <div class="filter-box">
+        <div class="filter-box-label">Filter_Protocols</div>
+        <div class="filter-list">
+          <div class="filter-item">
+            <span class="filter-item-name">Frontend_Dev</span>
+            <label style="display:flex; cursor:pointer;">
+              <input class="switch-toggle" type="checkbox" [(ngModel)]="filters.frontend" (ngModelChange)="applyFilters()"/>
             </label>
           </div>
-          <div class="flex items-center justify-between group">
-            <span class="font-mono text-xs font-bold uppercase">Backend_Sys</span>
-            <label class="flex items-center cursor-pointer">
-              <input class="switch-toggle" type="checkbox"/>
+          <div class="filter-item">
+            <span class="filter-item-name">Backend_Sys</span>
+            <label style="display:flex; cursor:pointer;">
+              <input class="switch-toggle" type="checkbox" [(ngModel)]="filters.backend" (ngModelChange)="applyFilters()"/>
             </label>
           </div>
-          <div class="flex items-center justify-between group">
-            <span class="font-mono text-xs font-bold uppercase">UI_Design</span>
-            <label class="flex items-center cursor-pointer">
-              <input class="switch-toggle" type="checkbox"/>
+          <div class="filter-item">
+            <span class="filter-item-name">UI_Design</span>
+            <label style="display:flex; cursor:pointer;">
+              <input class="switch-toggle" type="checkbox" [(ngModel)]="filters.design" (ngModelChange)="applyFilters()"/>
             </label>
           </div>
-          <div class="flex items-center justify-between group">
-            <span class="font-mono text-xs font-bold uppercase">Exp_Research</span>
-            <label class="flex items-center cursor-pointer">
-              <input class="switch-toggle" type="checkbox"/>
+          <div class="filter-item">
+            <span class="filter-item-name">Exp_Research</span>
+            <label style="display:flex; cursor:pointer;">
+              <input class="switch-toggle" type="checkbox" [(ngModel)]="filters.research" (ngModelChange)="applyFilters()"/>
             </label>
           </div>
-          <div class="border-t-2 border-dashed border-charcoal my-4"></div>
-          <div class="text-[10px] font-mono text-gray-500 text-center">
+          <div class="filter-divider"></div>
+          <div class="filter-note">
             // ADJUST TOGGLES TO REFINE<br/>DATA VISUALIZATION
           </div>
         </div>
         <!-- Decorative corner screws -->
-        <div class="absolute top-2 right-2 w-2 h-2 rounded-full border border-charcoal bg-gray-200 flex items-center justify-center"><div class="w-full h-[1px] bg-charcoal rotate-45"></div></div>
-        <div class="absolute bottom-2 left-2 w-2 h-2 rounded-full border border-charcoal bg-gray-200 flex items-center justify-center"><div class="w-full h-[1px] bg-charcoal rotate-45"></div></div>
-        <div class="absolute bottom-2 right-2 w-2 h-2 rounded-full border border-charcoal bg-gray-200 flex items-center justify-center"><div class="w-full h-[1px] bg-charcoal rotate-45"></div></div>
-        <div class="absolute top-2 left-2 w-2 h-2 rounded-full border border-charcoal bg-gray-200 flex items-center justify-center"><div class="w-full h-[1px] bg-charcoal rotate-45"></div></div>
+        <div class="screw" style="top:0.5rem; right:0.5rem;"><div class="screw-line"></div></div>
+        <div class="screw" style="bottom:0.5rem; left:0.5rem;"><div class="screw-line"></div></div>
+        <div class="screw" style="bottom:0.5rem; right:0.5rem;"><div class="screw-line"></div></div>
+        <div class="screw" style="top:0.5rem; left:0.5rem;"><div class="screw-line"></div></div>
       </div>
 
-      <div class="bg-paper-cream border-2 border-charcoal p-4 shadow-sketch transform rotate-1">
-        <h3 class="font-mono text-xs font-bold border-b-2 border-charcoal mb-3 pb-1">TECH_STACK_DENSITY</h3>
-        <div class="flex flex-wrap gap-2">
-          <span class="border border-charcoal px-1 text-[10px] font-mono bg-white hover:bg-charcoal hover:text-white cursor-pointer transition-colors">REACT.JS (12)</span>
-          <span class="border border-charcoal px-1 text-[10px] font-mono bg-white hover:bg-charcoal hover:text-white cursor-pointer transition-colors">TAILWIND (08)</span>
-          <span class="border border-charcoal px-1 text-[10px] font-mono bg-white hover:bg-charcoal hover:text-white cursor-pointer transition-colors">NODE (05)</span>
-          <span class="border border-charcoal px-1 text-[10px] font-mono bg-white hover:bg-charcoal hover:text-white cursor-pointer transition-colors">TYPESCRIPT (07)</span>
-          <span class="border border-charcoal px-1 text-[10px] font-mono bg-white hover:bg-charcoal hover:text-white cursor-pointer transition-colors">WEBGL (03)</span>
-          <span class="border border-charcoal px-1 text-[10px] font-mono bg-white hover:bg-charcoal hover:text-white cursor-pointer transition-colors">THREE.JS (02)</span>
+      <div class="tech-stack-box">
+        <h3 class="tech-stack-title">TECH_STACK_DENSITY</h3>
+        <div class="tech-tags">
+          <span *ngFor="let tech of techStackDensity" class="tech-tag">{{ tech.name }} ({{ tech.count | number:'2.0' }})</span>
         </div>
       </div>
     </aside>
 
     <!-- RIGHT GRID RESULTS -->
-    <section class="lg:col-span-9">
-      <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 auto-rows-fr mt-4 lg:mt-0">
-        <!-- DYNAMIC ITEMS -->
-        <div *ngFor="let work of works" class="group relative bg-white border-2 border-charcoal p-0 shadow-sketch hover:-translate-y-1 hover:shadow-sketch-lg transition-all duration-300 flex flex-col h-full mt-8">
-          <div class="absolute -top-8 left-0 h-8 w-32 bg-charcoal folder-tab flex items-center justify-center">
-            <span class="text-white font-mono text-[10px] font-bold tracking-widest">REF: {{ work.id.slice(0, 5) | uppercase }}</span>
+    <section class="works-list-container">
+
+      <!-- LOADING STATE -->
+      <div *ngIf="isLoading" class="works-list-grid" style="opacity: 0.7;">
+        <div *ngFor="let i of [1,2,3,4,5,6]" class="work-card skeleton-card">
+          <div class="work-card-inner" style="background-color: #f3f4f6; animation: pulse 2s infinite;">
+            <div class="work-image-container" style="background-color: #e5e7eb; border-bottom: 2px solid var(--charcoal);"></div>
+            <div style="height: 24px; background-color: #d1d5db; margin-bottom: 8px; width: 80%;"></div>
+            <div style="height: 12px; background-color: #e5e7eb; margin-bottom: 16px; width: 100%;"></div>
+            <div style="height: 12px; background-color: #e5e7eb; margin-bottom: 16px; width: 60%;"></div>
           </div>
-          <div class="p-4 flex flex-col h-full relative z-10 bg-white">
-            <div class="relative w-full aspect-[4/3] border-2 border-charcoal mb-4 bg-gray-100 overflow-hidden">
-              <div class="absolute inset-0 halftone-dots pointer-events-none opacity-40"></div>
-              <div class="tape-strip-sm top-2 right-2 rotate-6 flex items-center justify-center shadow-md">
-                <span class="font-marker text-[10px] text-charcoal rotate-[-4deg] m-0">v1.0</span>
+        </div>
+      </div>
+
+      <div *ngIf="!isLoading" class="works-list-grid">
+        <!-- DYNAMIC ITEMS -->
+        <div *ngFor="let work of filteredWorks; let i = index" class="work-card fade-in-card" [style.animation-delay]="(i * 0.1) + 's'">
+          <div class="work-ref-tab">
+            <span class="work-ref-text">REF: {{ work.id.slice(0, 5) | uppercase }}</span>
+          </div>
+          <div class="work-card-inner">
+            <div class="work-image-container">
+              <img *ngIf="work.coverPhoto" [src]="work.coverPhoto" class="work-image-img" alt="Cover" />
+              <div class="halftone-dots" style="position:absolute; inset:0; pointer-events:none; opacity:0.4;"></div>
+              <div class="tape-strip-sm work-version-tape shadow-sketch" style="display:flex; align-items:center; justify-content:center;">
+                <p class="work-version-text">v1.0</p>
               </div>
             </div>
-            <h3 class="font-display font-black text-2xl leading-none mb-1 group-hover:text-primary transition-colors cursor-pointer" [routerLink]="['/works', work.slug]">
+            <h3 class="work-title" [routerLink]="['/works', work.slug]">
               {{ work.title }}
             </h3>
-            <p class="font-mono text-xs text-gray-500 mb-4 border-b border-dashed border-gray-300 pb-2">
+            <p class="work-preview">
               {{ work.blocks.length > 0 ? work.blocks[0].content : 'No content' | slice:0:60 }}...
             </p>
-            <div class="mt-auto space-y-3">
-              <div class="flex flex-wrap gap-2">
-                <span *ngFor="let tag of work.tags" class="text-[9px] font-mono bg-gray-100 border border-charcoal px-1 uppercase">{{ tag }}</span>
+            <div class="work-footer">
+              <div class="work-tags">
+                <span *ngFor="let tag of work.tags" class="work-tag">{{ tag }}</span>
               </div>
-              <button [routerLink]="['/works', work.slug]" class="w-full bg-charcoal text-white font-mono text-xs py-2 uppercase border border-charcoal hover:bg-accent-orange hover:border-accent-orange transition-colors flex items-center justify-center gap-2 group/btn">
-                Inspect File <span class="material-symbols-outlined text-[14px] group-hover/btn:translate-x-1 transition-transform">arrow_forward</span>
+              <button [routerLink]="['/works', work.slug]" class="btn-inspect group/btn">
+                Inspect File <span class="material-symbols-outlined btn-inspect-icon">arrow_forward</span>
               </button>
             </div>
           </div>
         </div>
         
-        <div *ngIf="works.length === 0" class="col-span-full text-center py-12 border-2 border-dashed border-charcoal mt-8">
-           <span class="font-mono text-charcoal">No works available. Create one in the admin panel.</span>
+        <div *ngIf="filteredWorks.length === 0" class="empty-state">
+           <span class="empty-state-text">No works match your search criteria.</span>
         </div>
       </div>
 
-      <div class="mt-12 flex justify-center pb-8 lg:pb-0">
-        <button class="bg-paper-white border-2 border-charcoal px-8 py-3 shadow-sketch hover:shadow-none hover:translate-y-[2px] hover:translate-x-[2px] transition-all flex items-center gap-3 group cursor-pointer">
-          <span class="w-4 h-4 border-2 border-charcoal border-t-transparent rounded-full animate-spin"></span>
-          <span class="font-mono font-bold uppercase tracking-widest text-sm m-0 text-charcoal">Load_More_Archives</span>
+      <div class="load-more-container">
+        <button class="btn-load-more">
+          <span class="btn-loader"></span>
+          <p class="btn-load-more-text">Load_More_Archives</p>
         </button>
       </div>
     </section>

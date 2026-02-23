@@ -1,86 +1,133 @@
-<div class="max-w-6xl mx-auto space-y-8">
-  <div class="flex justify-between items-end border-b-2 border-charcoal pb-4">
+<div class="admin-dashboard-container">
+  <div class="dashboard-header">
     <div>
-      <h1 class="font-display font-black text-4xl uppercase m-0 text-charcoal">Control_Center</h1>
-      <p class="font-mono text-sm text-gray-500 m-0 mt-1">Manage Works Database directly from the core.</p>
+      <h1 class="dashboard-title">Control_Center</h1>
+      <p class="dashboard-subtitle">Manage Works Database directly from the core.</p>
     </div>
     
-    <a routerLink="/admin/editor" class="bg-accent-orange text-white font-mono font-bold text-sm uppercase px-6 py-2 shadow-sketch border-2 border-charcoal hover:translate-y-1 hover:shadow-none transition-all cursor-pointer no-underline flex items-center gap-2">
-      <span class="material-symbols-outlined text-[16px]">add</span> Create New
+    <a routerLink="/admin/editor" class="btn-create-new">
+      <span class="material-symbols-outlined btn-create-new-icon">add</span> Create New
     </a>
   </div>
 
   <!-- STATS -->
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-    <div class="bg-white border-2 border-charcoal p-6 shadow-[4px_4px_0_#1a1a1a] transform -rotate-1">
-      <div class="flex items-center gap-3 mb-4">
-        <span class="material-symbols-outlined text-3xl text-primary">folder_managed</span>
-        <h2 class="font-mono font-bold text-sm uppercase text-gray-500 m-0">Total Works</h2>
+  <div class="stats-grid">
+    <div class="stat-card stat-card-total">
+      <div class="stat-header">
+        <span class="material-symbols-outlined stat-icon stat-icon-primary">folder_managed</span>
+        <h2 class="stat-title">Total Works</h2>
       </div>
-      <span class="font-nixie text-6xl leading-none">12</span>
+      <span class="stat-val" *ngIf="!loading">{{ worksCount }}</span>
+      <span class="stat-val-loading" *ngIf="loading">--</span>
     </div>
-    <div class="bg-white border-2 border-charcoal p-6 shadow-[4px_4px_0_#1a1a1a] transform rotate-1">
-      <div class="flex items-center gap-3 mb-4">
-        <span class="material-symbols-outlined text-3xl text-accent-orange">article</span>
-        <h2 class="font-mono font-bold text-sm uppercase text-gray-500 m-0">Field Logs</h2>
+    <div class="stat-card stat-card-logs">
+      <div class="stat-header">
+        <span class="material-symbols-outlined stat-icon stat-icon-orange">article</span>
+        <h2 class="stat-title">Field Logs</h2>
       </div>
-      <span class="font-nixie text-6xl leading-none">42</span>
+      <span class="stat-val" *ngIf="!loading">{{ logsCount }}</span>
+      <span class="stat-val-loading" *ngIf="loading">--</span>
     </div>
-    <div class="bg-white border-2 border-charcoal p-6 shadow-[4px_4px_0_#1a1a1a]">
-      <div class="flex items-center gap-3 mb-4">
-        <span class="material-symbols-outlined text-3xl text-green-600">visibility</span>
-        <h2 class="font-mono font-bold text-sm uppercase text-gray-500 m-0">System Status</h2>
+    <div class="stat-card">
+      <div class="stat-header">
+        <span class="material-symbols-outlined stat-icon stat-icon-green">visibility</span>
+        <h2 class="stat-title">System Status</h2>
       </div>
-      <span class="font-display font-black text-3xl text-green-600 leading-none">ONLINE</span>
+      <span class="stat-val-online">ONLINE</span>
     </div>
   </div>
 
   <!-- RECENT ENTRIES -->
-  <div class="bg-paper-white border-2 border-charcoal p-1 shadow-sketch-lg">
-    <div class="bg-white border border-charcoal p-6">
-      <h2 class="font-display font-black text-xl border-b-2 border-charcoal pb-2 mb-6 uppercase flex items-center gap-2 m-0 text-charcoal">
+  <div class="recent-entries-container">
+    <div class="recent-entries-inner">
+      <h2 class="recent-entries-title">
         <span class="material-symbols-outlined">history</span> Recent_Updates
       </h2>
       
-      <div class="space-y-4">
-        <!-- Item -->
-        <div class="flex items-center justify-between p-4 border border-gray-200 hover:border-charcoal hover:bg-gray-50 transition-colors group">
-          <div class="flex items-center gap-4">
-            <div class="bg-gray-200 px-2 py-1 font-mono text-[9px] font-bold border border-charcoal">WORK</div>
-            <div>
-              <h3 class="font-display font-bold text-lg m-0 group-hover:text-primary transition-colors cursor-pointer" routerLink="/admin/editor/1">Neural_Net Dashboard</h3>
-              <p class="font-mono text-xs text-gray-500 m-0 mt-1">Edited 2 hours ago by Arbe</p>
-            </div>
-          </div>
-          <div class="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-            <button class="bg-white border border-charcoal w-8 h-8 flex items-center justify-center hover:bg-charcoal hover:text-white transition-colors cursor-pointer" routerLink="/admin/editor/1">
-              <span class="material-symbols-outlined text-[16px]">edit</span>
-            </button>
-            <button class="bg-white border border-charcoal w-8 h-8 flex items-center justify-center hover:bg-red-500 hover:text-white transition-colors cursor-pointer">
-              <span class="material-symbols-outlined text-[16px]">delete</span>
-            </button>
+      <!-- Loading state -->
+      <div *ngIf="loading" class="skeleton-list">
+        <div *ngFor="let _ of [1,2,3]" class="skeleton-row">
+          <div class="skeleton-icon"></div>
+          <div class="skeleton-content">
+            <div class="skeleton-text-1"></div>
+            <div class="skeleton-text-2"></div>
           </div>
         </div>
-        
-        <!-- Item -->
-        <div class="flex items-center justify-between p-4 border border-gray-200 hover:border-charcoal hover:bg-gray-50 transition-colors group">
-          <div class="flex items-center gap-4">
-            <div class="bg-gray-200 px-2 py-1 font-mono text-[9px] font-bold border border-charcoal">LOG</div>
-            <div>
-              <h3 class="font-display font-bold text-lg m-0 group-hover:text-accent-orange transition-colors cursor-pointer">AI Integration Protocols</h3>
-              <p class="font-mono text-xs text-gray-500 m-0 mt-1">Edited 1 day ago by Arbe</p>
+      </div>
+
+      <!-- Empty state -->
+      <div *ngIf="!loading && recentEntries.length === 0" class="empty-state-box">
+        No entries found. Create your first document.
+      </div>
+
+      <div *ngIf="!loading" class="entries-list">
+        <div *ngFor="let entry of recentEntries" class="entry-row">
+          <div class="entry-info">
+            <div class="entry-badge"
+              [ngClass]="entry.category === 'work' ? 'entry-badge-work' : 'entry-badge-log'">
+              {{ entry.category === 'work' ? 'WORK' : 'LOG' }}
+            </div>
+            <div class="entry-details">
+              <h3 class="entry-title"
+                [ngClass]="entry.category === 'work' ? 'entry-title-work' : 'entry-title-log'"
+                [routerLink]="'/admin/editor/' + entry.slug">{{ entry.title }}</h3>
+              <p class="entry-meta">Edited {{ timeAgo(entry.updatedAt) }}</p>
             </div>
           </div>
-          <div class="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-            <button class="bg-white border border-charcoal w-8 h-8 flex items-center justify-center hover:bg-charcoal hover:text-white transition-colors cursor-pointer">
-              <span class="material-symbols-outlined text-[16px]">edit</span>
+          <div class="entry-actions">
+            <button class="btn-action btn-action-edit"
+              [routerLink]="'/admin/editor/' + entry.slug">
+              <span class="material-symbols-outlined btn-action-icon">edit</span>
             </button>
-            <button class="bg-white border border-charcoal w-8 h-8 flex items-center justify-center hover:bg-red-500 hover:text-white transition-colors cursor-pointer">
-              <span class="material-symbols-outlined text-[16px]">delete</span>
+            <button (click)="deleteEntry(entry)" class="btn-action btn-action-delete">
+              <span class="material-symbols-outlined btn-action-icon">delete</span>
             </button>
           </div>
         </div>
       </div>
     </div>
+  <!-- TAG MANAGER -->
+  <div class="tech-stack-dictionary-container">
+    <div class="dictionary-header">
+      <h2 class="dictionary-title">
+        <span class="material-symbols-outlined">label</span> Tech_Stack Dictionary
+      </h2>
+      <p class="dictionary-subtitle">Manage global tags used for Works Database filtering and assignments.</p>
+    </div>
+    
+    <div class="dictionary-input-group">
+      <input 
+        [(ngModel)]="newTagInput" 
+        (keyup.enter)="addTag()"
+        [disabled]="savingTags"
+        type="text" 
+        placeholder="Add new tag (e.g. Next.js)" 
+        class="dictionary-input" />
+      <button (click)="addTag()" [disabled]="savingTags || !newTagInput.trim()" class="btn-add-tag">
+        <span *ngIf="!savingTags" class="material-symbols-outlined">add</span>
+        <span *ngIf="savingTags" class="material-symbols-outlined" style="animation: spin 1s linear infinite;">progress_activity</span>
+      </button>
+    </div>
+
+    <!-- Loading tags -->
+    <div *ngIf="loading" class="dictionary-tags-grid">
+      <div *ngFor="let _ of [1,2,3,4]" class="skeleton-tag"></div>
+    </div>
+
+    <!-- Empty tags -->
+    <div *ngIf="!loading && systemTags.length === 0" class="empty-state-box" style="margin-top: 1rem;">
+      No tags defined. Add one above.
+    </div>
+
+    <!-- Tag List -->
+    <div *ngIf="!loading && systemTags.length > 0" class="dictionary-tags-grid">
+      <div *ngFor="let tag of systemTags" class="tag-pill">
+        <span class="tag-pill-text">{{ tag }}</span>
+        <button (click)="removeTag(tag)" [disabled]="savingTags" class="btn-remove-tag">
+          <span class="material-symbols-outlined text-[14px]">close</span>
+        </button>
+      </div>
+    </div>
   </div>
+
 </div>

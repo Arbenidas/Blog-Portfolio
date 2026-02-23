@@ -1,0 +1,230 @@
+/* works-vault.css */
+
+.vault-container {
+    max-width: 72rem;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.vault-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    border-bottom: 2px solid var(--charcoal);
+    padding-bottom: 1rem;
+}
+
+.vault-title {
+    font-family: var(--font-display);
+    font-weight: 900;
+    font-size: 2.25rem;
+    text-transform: uppercase;
+    margin: 0;
+    color: var(--charcoal);
+}
+
+.vault-subtitle {
+    font-family: var(--font-mono);
+    font-size: 0.875rem;
+    color: #6b7280;
+    margin: 0;
+    margin-top: 0.25rem;
+}
+
+.btn-create-work {
+    background-color: var(--accent-orange);
+    color: white;
+    font-family: var(--font-mono);
+    font-weight: bold;
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    padding: 0.5rem 1.5rem;
+    box-shadow: var(--shadow-sketch);
+    border: 2px solid var(--charcoal);
+    transition: all 0.3s;
+    cursor: pointer;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.btn-create-work:hover {
+    transform: translateY(4px);
+    box-shadow: none;
+}
+
+.vault-box-outer {
+    background-color: var(--paper-white);
+    border: 2px solid var(--charcoal);
+    padding: 0.25rem;
+    box-shadow: var(--shadow-sketch-lg);
+}
+
+.vault-box-inner {
+    background-color: white;
+    border: 1px solid var(--charcoal);
+    padding: 1.5rem;
+}
+
+.vault-empty-state {
+    text-align: center;
+    padding: 3rem 0;
+    border: 2px dashed #d1d5db;
+}
+
+.vault-empty-icon {
+    font-size: 2.25rem;
+    color: #9ca3af;
+    margin-bottom: 0.5rem;
+}
+
+.vault-empty-title {
+    font-family: var(--font-display);
+    font-weight: bold;
+    font-size: 1.25rem;
+    color: #6b7280;
+    margin: 0;
+}
+
+.vault-empty-text {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: #9ca3af;
+    margin-top: 0.5rem;
+}
+
+.works-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.work-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem;
+    border: 1px solid #e5e7eb;
+    transition: border-color 0.3s, background-color 0.3s;
+}
+
+.work-item:hover {
+    border-color: var(--charcoal);
+    background-color: #f9fafb;
+}
+
+.work-info-group {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.work-cover-thumb {
+    width: 4rem;
+    height: 3rem;
+    border: 1px solid var(--charcoal);
+    background-color: #f3f4f6;
+    flex-shrink: 0;
+    overflow: hidden;
+    display: none;
+}
+
+@media (min-width: 640px) {
+    .work-cover-thumb {
+        display: block;
+    }
+}
+
+.work-cover-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: grayscale(100%);
+    transition: all 0.3s;
+}
+
+.work-item:hover .work-cover-img {
+    filter: grayscale(0%);
+}
+
+.work-cover-fallback {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #d1d5db;
+}
+
+.work-title {
+    font-family: var(--font-display);
+    font-weight: bold;
+    font-size: 1.125rem;
+    margin: 0;
+    transition: color 0.3s;
+    cursor: pointer;
+    text-decoration: none;
+    color: var(--charcoal);
+}
+
+.work-item:hover .work-title {
+    color: var(--primary);
+}
+
+.work-meta {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: #6b7280;
+    margin: 0;
+    margin-top: 0.25rem;
+}
+
+.work-tags-list {
+    display: flex;
+    gap: 0.25rem;
+    margin-top: 0.5rem;
+}
+
+.work-tag {
+    font-size: 9px;
+    font-family: var(--font-mono);
+    background-color: #e5e7eb;
+    padding: 0 0.25rem;
+    border: 1px solid #d1d5db;
+}
+
+.work-actions {
+    display: flex;
+    gap: 0.5rem;
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.work-item:hover .work-actions {
+    opacity: 1;
+}
+
+.btn-action-icon {
+    background-color: white;
+    border: 1px solid var(--charcoal);
+    width: 2rem;
+    height: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.3s, color 0.3s;
+    cursor: pointer;
+}
+
+.btn-action-icon:hover {
+    background-color: var(--charcoal);
+    color: white;
+}
+
+.btn-action-icon-delete:hover {
+    background-color: #ef4444;
+    color: white;
+}

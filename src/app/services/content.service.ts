@@ -87,8 +87,8 @@ export class ContentService {
     }
 
     private loadPreviewFromStorage() {
-        if (typeof sessionStorage !== 'undefined') {
-            const previewStored = sessionStorage.getItem('portfolio_preview');
+        if (typeof localStorage !== 'undefined') {
+            const previewStored = localStorage.getItem('portfolio_preview');
             if (previewStored) {
                 try {
                     this.previewDocSignal.set(JSON.parse(previewStored));
@@ -119,6 +119,7 @@ export class ContentService {
             .from('documents')
             .select('*')
             .eq('category', 'work')
+            .neq('slug', 'system-settings')
             .order('created_at', { ascending: false });
         if (error) console.error(error);
         return data ? data.map(this.mapToEntry) : [];
@@ -170,6 +171,28 @@ export class ContentService {
         if (typeof localStorage !== 'undefined') {
             localStorage.setItem('portfolio_preview', JSON.stringify(previewDoc));
         }
+    }
+
+    // --- SYSTEM SETTINGS (TAG MANAGER) ---
+    async getSystemTags(): Promise<string[]> {
+        const doc = await this.getDocument('system-settings');
+        return doc ? doc.tags : [];
+    }
+
+    async saveSystemTags(tags: string[]): Promise<void> {
+        const doc = await this.getDocument('system-settings');
+        // Filter out empty tag strings and duplicates just in case
+        const cleanTags = Array.from(new Set(tags.filter(t => t.trim().length > 0)));
+
+        const payload: Partial<DocumentEntry> = {
+            id: doc?.id, // undefined means it will be created if not exists
+            title: 'System Settings',
+            slug: 'system-settings',
+            category: 'work',
+            tags: cleanTags,
+            blocks: []
+        };
+        await this.saveDocument(payload);
     }
 
     async saveDocument(doc: Partial<DocumentEntry>): Promise<string> {

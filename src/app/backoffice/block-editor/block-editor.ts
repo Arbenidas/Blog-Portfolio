@@ -27,10 +27,12 @@ export class BlockEditor implements OnInit {
   tags = '';
   category: 'work' | 'log' = 'work';
   indexLog = '';
+  deployStatus = 'LIVE_PRODUCTION';
   showPublishSticker = false;
   showWidgetGallery = false;
   isUploadingVideo = false;
 
+  systemTags: string[] = [];
   availableWidgets = signal<CustomWidget[]>([]);
   availableDiagramNodes = signal<DiagramNodeConfig[]>([]);
 
@@ -70,12 +72,14 @@ export class BlockEditor implements OnInit {
   }
 
   async loadWidgets() {
-    const [widgets, diagramNodes] = await Promise.all([
+    const [widgets, diagramNodes, sysTags] = await Promise.all([
       this.contentService.getCustomWidgets(),
-      this.contentService.getDiagramNodes()
+      this.contentService.getDiagramNodes(),
+      this.contentService.getSystemTags()
     ]);
     this.availableWidgets.set(widgets);
     this.availableDiagramNodes.set(diagramNodes);
+    this.systemTags = sysTags;
   }
 
   async loadDocument(slug: string) {
@@ -88,8 +92,14 @@ export class BlockEditor implements OnInit {
       this.category = doc.category;
       this.tags = doc.tags.join(', ');
       this.indexLog = doc.indexLog || '';
-      // Separating standard blocks from widgets
-      this.contentBlocks = JSON.parse(JSON.stringify(doc.blocks.filter((b: EditorBlock) => b.type !== 'widget')));
+
+      const techBlock = doc.blocks.find((b: EditorBlock) => b.type === 'tech-stack');
+      if (techBlock && techBlock.data?.status) {
+        this.deployStatus = techBlock.data.status;
+      }
+
+      // Separating standard blocks from widgets and tech-stack
+      this.contentBlocks = JSON.parse(JSON.stringify(doc.blocks.filter((b: EditorBlock) => b.type !== 'widget' && b.type !== 'tech-stack')));
       this.widgetBlocks = JSON.parse(JSON.stringify(doc.blocks.filter((b: EditorBlock) => b.type === 'widget')));
       this.cdr.detectChanges();
     } else {
@@ -102,7 +112,7 @@ export class BlockEditor implements OnInit {
     this.updateIndexLogLive();
   }
 
-  addBlock(type: 'h1' | 'h2' | 'p' | 'image' | 'video' | 'code' | 'objective-header' | 'objectives' | 'divider' | 'tech-stack' | 'diagram') {
+  addBlock(type: 'h1' | 'h2' | 'p' | 'image' | 'video' | 'code' | 'objective-header' | 'objectives' | 'divider' | 'diagram') {
     const block: EditorBlock = {
       id: Math.random().toString(36).substr(2, 9),
       type,
@@ -119,10 +129,6 @@ export class BlockEditor implements OnInit {
           { label: 'OBJ_BETA', title: 'Modular Design', desc: 'Create a drag-and-drop grid system.', progress: 40 },
           { label: 'OBJ_GAMMA', title: 'Accessibility', desc: 'Ensure WCAG 2.1 AA compliance.', progress: 95 }
         ];
-        break;
-      case 'tech-stack':
-        block.content = 'REACT.JS, D3.JS, TAILWIND, NODE.JS';
-        block.data = { status: 'LIVE_PRODUCTION' };
         break;
       case 'diagram':
         block.data = { nodes: [] };
@@ -229,11 +235,47 @@ export class BlockEditor implements OnInit {
     }
   }
 
-  getNodeCenter(block: EditorBlock, nodeId: string): { x: number; y: number } {
+  getNodeSize(node: any): { w: number; h: number } {
+    switch (node.type) {
+      case 'postgres': return { w: 140, h: 70 };
+      case 'api': return { w: 80, h: 80 };
+      case 'client': case 'mobile': return { w: 120, h: 60 };
+      case 'text': return { w: 150, h: 40 };
+      case 'custom':
+        if (node.config?.shape === 'circle') return { w: 100, h: 100 };
+        return { w: 120, h: 60 };
+      default: return { w: 120, h: 60 };
+    }
+  }
+
+  getNodeEdgePoint(block: EditorBlock, nodeId: string, otherNodeId: string): { x: number; y: number } {
     const node = block.data?.nodes?.find((n: any) => n.id === nodeId);
+    const other = block.data?.nodes?.find((n: any) => n.id === otherNodeId);
     if (!node) return { x: 0, y: 0 };
-    // Estimate center based on node position + rough half-size
-    return { x: node.x + 60, y: node.y + 40 };
+    const size = this.getNodeSize(node);
+    const cx = node.x + size.w / 2;
+    const cy = node.y + size.h / 2;
+    if (!other) return { x: cx, y: cy };
+
+    const otherSize = this.getNodeSize(other);
+    const ocx = other.x + otherSize.w / 2;
+    const ocy = other.y + otherSize.h / 2;
+
+    const dx = ocx - cx;
+    const dy = ocy - cy;
+
+    // Pick edge based on dominant direction
+    if (Math.abs(dx) > Math.abs(dy)) {
+      // Horizontal dominant
+      return dx > 0
+        ? { x: node.x + size.w, y: cy }   // right edge
+        : { x: node.x, y: cy };             // left edge
+    } else {
+      // Vertical dominant
+      return dy > 0
+        ? { x: cx, y: node.y + size.h }    // bottom edge
+        : { x: cx, y: node.y };             // top edge
+    }
   }
 
   getArrowDashArray(type: string): string {
@@ -252,6 +294,11 @@ export class BlockEditor implements OnInit {
       case 'zigzag': return 3;
       default: return 2.5;
     }
+  }
+
+  getMarkerUrl(type: string, prefix = 'arrowhead-'): string {
+    const base = window.location.href.split('?')[0].split('#')[0];
+    return `url(${base}#${prefix}${type})`;
   }
 
   getFontFamily(id: string): string {
@@ -374,6 +421,14 @@ export class BlockEditor implements OnInit {
     this.updateIndexLogLive();
   }
 
+  appendSystemTag(t: string) {
+    const currentTags = this.tags.split(',').map(tag => tag.trim()).filter(Boolean);
+    if (!currentTags.includes(t)) {
+      currentTags.push(t);
+      this.tags = currentTags.join(', ');
+    }
+  }
+
   async save() {
     this.formatHeadings();
     const tagArray = this.tags.split(',').map(t => t.trim()).filter(t => t.length > 0);
@@ -383,6 +438,15 @@ export class BlockEditor implements OnInit {
     }
 
     const allBlocks = [...this.contentBlocks, ...this.widgetBlocks];
+    if (this.category === 'work') {
+      const techStackBlock: EditorBlock = {
+        id: 'tech-stack-static',
+        type: 'tech-stack',
+        content: this.tags, // Keep tags in content for backwards compatibility
+        data: { status: this.deployStatus }
+      };
+      allBlocks.unshift(techStackBlock);
+    }
 
     const savedSlug = await this.contentService.saveDocument({
       id: this.documentId || undefined,
@@ -416,8 +480,17 @@ export class BlockEditor implements OnInit {
     const tagArray = this.tags.split(',').map(t => t.trim()).filter(t => t.length > 0);
 
     const allBlocks = [...this.contentBlocks, ...this.widgetBlocks];
+    if (this.category === 'work') {
+      const techStackBlock: EditorBlock = {
+        id: 'tech-stack-static',
+        type: 'tech-stack',
+        content: this.tags,
+        data: { status: this.deployStatus }
+      };
+      allBlocks.unshift(techStackBlock);
+    }
 
-    // Save to the temporary preview memory
+    // Save to the temporary preview memory synchronously
     this.contentService.setPreviewDocument({
       title: this.title,
       coverPhoto: this.coverPhoto,
@@ -427,7 +500,7 @@ export class BlockEditor implements OnInit {
       blocks: allBlocks
     });
 
-    // Open in new tab
+    // Open in new tab using a simple URL string
     const url = this.category === 'work' ? '/works/preview' : '/logs/preview';
     window.open(url, '_blank');
   }

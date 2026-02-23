@@ -1,63 +1,51 @@
 import { Injectable, inject } from '@angular/core';
 import { Title, Meta } from '@angular/platform-browser';
-import { DOCUMENT } from '@angular/common';
 
-interface SeoTags {
-    title: string;
-    description: string;
+export interface MetaConfig {
+    title?: string;
+    description?: string;
     image?: string;
     url?: string;
-    type?: 'website' | 'article';
+    type?: string;
 }
 
 @Injectable({
     providedIn: 'root'
 })
 export class SeoService {
-    private title = inject(Title);
-    private meta = inject(Meta);
-    private doc = inject(DOCUMENT);
+    private titleService = inject(Title);
+    private metaService = inject(Meta);
 
-    private readonly siteName = "Arbe's Digital Workshop";
-    private readonly defaultImage = '/assets/og-default.jpg';
+    private readonly DEFAULT_TITLE = "Arbe's Digital Workshop - Portfolio";
+    private readonly DEFAULT_DESC = "A showcase of industrial design, engineering projects, and creative logs.";
+    private readonly DEFAULT_IMAGE = "https://arbe.blog/logo.png";
+    private readonly DEFAULT_URL = "https://arbe.blog/";
 
-    updateMetaTags(tags: SeoTags): void {
-        const fullTitle = `${tags.title} | ${this.siteName}`;
-        const description = tags.description.slice(0, 160); // Google truncates at 160 chars
-        const image = tags.image || this.defaultImage;
-        const type = tags.type || 'website';
+    updateMetaTags(config: MetaConfig) {
+        const title = config.title ? `${config.title} | Arbe_Workshop` : this.DEFAULT_TITLE;
+        const description = config.description || this.DEFAULT_DESC;
+        const image = config.image || this.DEFAULT_IMAGE;
+        const url = config.url ? `https://arbe.blog${config.url}` : this.DEFAULT_URL;
+        const type = config.type || 'website';
 
-        // Standard SEO tags
-        this.title.setTitle(fullTitle);
-        this.meta.updateTag({ name: 'description', content: description });
+        // Standard Tags
+        this.titleService.setTitle(title);
+        this.metaService.updateTag({ name: 'description', content: description });
 
-        // Open Graph (Facebook, LinkedIn, WhatsApp previews)
-        this.meta.updateTag({ property: 'og:title', content: fullTitle });
-        this.meta.updateTag({ property: 'og:description', content: description });
-        this.meta.updateTag({ property: 'og:image', content: image });
-        this.meta.updateTag({ property: 'og:type', content: type });
-        this.meta.updateTag({ property: 'og:site_name', content: this.siteName });
-        if (tags.url) {
-            this.meta.updateTag({ property: 'og:url', content: tags.url });
-            this.updateCanonicalUrl(tags.url);
-        }
+        // Open Graph
+        this.metaService.updateTag({ property: 'og:title', content: title });
+        this.metaService.updateTag({ property: 'og:description', content: description });
+        this.metaService.updateTag({ property: 'og:image', content: image });
+        this.metaService.updateTag({ property: 'og:url', content: url });
+        this.metaService.updateTag({ property: 'og:type', content: type });
 
-        // Twitter Card
-        this.meta.updateTag({ name: 'twitter:card', content: 'summary_large_image' });
-        this.meta.updateTag({ name: 'twitter:title', content: fullTitle });
-        this.meta.updateTag({ name: 'twitter:description', content: description });
-        this.meta.updateTag({ name: 'twitter:image', content: image });
+        // Twitter
+        this.metaService.updateTag({ name: 'twitter:title', content: title });
+        this.metaService.updateTag({ name: 'twitter:description', content: description });
+        this.metaService.updateTag({ name: 'twitter:image', content: image });
     }
 
-    private updateCanonicalUrl(url: string): void {
-        let link: HTMLLinkElement = this.doc.querySelector("link[rel='canonical']") as HTMLLinkElement;
-        if (link) {
-            link.href = url;
-        } else {
-            link = this.doc.createElement('link');
-            link.rel = 'canonical';
-            link.href = url;
-            this.doc.head.appendChild(link);
-        }
+    resetMetaTags() {
+        this.updateMetaTags({});
     }
 }

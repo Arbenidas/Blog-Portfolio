@@ -1,77 +1,75 @@
-<div class="max-w-6xl mx-auto pb-24">
+<div class="design-studio-container">
   <!-- === HEADER === -->
-  <div class="flex justify-between items-center mb-8">
+  <div class="ds-header">
     <div>
-      <h1 class="font-display font-black text-3xl uppercase text-charcoal leading-none">Design_Studio</h1>
-      <p class="font-mono text-xs text-gray-500 mt-1">CREATE STICKERS & DIAGRAM NODES // MINI_FIGMA_PROTOCOL</p>
+      <h1 class="ds-title">Design_Studio</h1>
+      <p class="ds-subtitle">CREATE STICKERS & DIAGRAM NODES // MINI_FIGMA_PROTOCOL</p>
     </div>
   </div>
 
   <!-- === MODE TOGGLE === -->
-  <div class="flex gap-0 mb-8 border-2 border-charcoal inline-flex shadow-[4px_4px_0_#1a1a1a]">
+  <div class="ds-mode-toggle">
     <button (click)="setMode('sticker')"
-      [class]="mode() === 'sticker' ? 'bg-charcoal text-white' : 'bg-white text-charcoal hover:bg-gray-100'"
-      class="px-6 py-3 font-mono text-sm font-bold uppercase flex items-center gap-2 transition-colors cursor-pointer">
-      <span class="material-symbols-outlined text-[18px]">sticky_note_2</span>
+      [class]="mode() === 'sticker' ? 'btn-mode-active' : 'btn-mode-inactive'"
+      class="btn-mode">
+      <span class="material-symbols-outlined btn-mode-icon">sticky_note_2</span>
       Sticker
     </button>
     <button (click)="setMode('node')"
-      [class]="mode() === 'node' ? 'bg-charcoal text-white' : 'bg-white text-charcoal hover:bg-gray-100'"
-      class="px-6 py-3 font-mono text-sm font-bold uppercase flex items-center gap-2 transition-colors border-l-2 border-charcoal cursor-pointer">
-      <span class="material-symbols-outlined text-[18px]">account_tree</span>
+      [class]="mode() === 'node' ? 'btn-mode-active' : 'btn-mode-inactive btn-mode-border-l'"
+      class="btn-mode">
+      <span class="material-symbols-outlined btn-mode-icon">account_tree</span>
       Diagram Node
     </button>
   </div>
 
-  <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+  <div class="ds-grid">
     <!-- ==================== -->
     <!-- LEFT: EDITOR PANEL   -->
     <!-- ==================== -->
-    <div class="lg:col-span-8">
-      <div class="bg-white border-2 border-charcoal shadow-[8px_8px_0_#1a1a1a] relative overflow-hidden">
-        <div class="tape-strip top-[-15px] left-[20%] transform rotate-[-3deg]"></div>
+    <div class="ds-panel-left">
+      <div class="ds-panel-box">
+        <div class="tape-strip" style="top: -15px; left: 20%; transform: rotate(-3deg);"></div>
 
         <!-- Header Bar -->
-        <div class="border-b-2 border-charcoal p-4 bg-gray-50 flex items-center justify-between">
-          <div class="flex items-center gap-2">
-            <span class="material-symbols-outlined text-accent-orange">{{ mode() === 'sticker' ? 'sticky_note_2' : 'account_tree' }}</span>
-            <h2 class="font-display font-bold text-lg uppercase leading-none">
+        <div class="ds-panel-header">
+          <div class="ds-panel-title-group">
+            <span class="material-symbols-outlined ds-panel-title-icon">{{ mode() === 'sticker' ? 'sticky_note_2' : 'account_tree' }}</span>
+            <h2 class="ds-panel-title">
               {{ mode() === 'sticker' ? 'Sticker_Workbench' : 'Node_Workbench' }}
             </h2>
           </div>
-          <span class="font-mono text-[10px] bg-charcoal text-white px-2 py-0.5 font-bold">LIVE_PREVIEW</span>
+          <span class="ds-panel-badge">LIVE_PREVIEW</span>
         </div>
 
         <!-- =============================== -->
         <!-- STICKER MODE EDITOR             -->
         <!-- =============================== -->
-        <div *ngIf="mode() === 'sticker'" class="p-6 space-y-6">
-          <div>
-            <label class="block font-mono text-xs font-bold uppercase text-gray-500 mb-2">Sticker Name</label>
-            <input [(ngModel)]="editingWidget().name" class="w-full font-mono text-sm border-2 border-charcoal p-2 outline-none focus:border-accent-orange" placeholder="e.g. Draft Tag" type="text" />
+        <div *ngIf="mode() === 'sticker'" class="ds-editor-content">
+          <div class="ds-form-group">
+            <label class="ds-label">Sticker Name</label>
+            <input [(ngModel)]="editingWidget().name" class="ds-input" placeholder="e.g. Draft Tag" type="text" />
           </div>
 
-          <div>
-            <label class="block font-mono text-xs font-bold uppercase text-gray-500 mb-2">HTML / CSS Content</label>
-            <textarea [(ngModel)]="editingWidget().html_content" class="w-full font-mono text-xs border-2 border-charcoal p-3 outline-none focus:border-accent-orange resize-none bg-gray-50" rows="8" placeholder='<div style="...">Your Sticker</div>'></textarea>
+          <div class="ds-form-group">
+            <label class="ds-label">HTML / CSS Content</label>
+            <textarea [(ngModel)]="editingWidget().html_content" class="ds-textarea" rows="8" placeholder='<div style="...">Your Sticker</div>'></textarea>
           </div>
 
           <!-- Sticker Live Preview -->
-          <div>
-            <label class="block font-mono text-xs font-bold uppercase text-gray-500 mb-2">Preview</label>
-            <div class="min-h-[120px] border-2 border-dashed border-gray-300 bg-[url('https://www.transparenttextures.com/patterns/cardboard.png')] flex items-center justify-center p-6">
+          <div class="ds-form-group">
+            <label class="ds-label">Preview</label>
+            <div class="ds-preview-box">
               <div [innerHTML]="getSafeHtml(editingWidget().html_content)"></div>
             </div>
           </div>
 
-          <div class="flex gap-4">
-            <button (click)="saveSticker()" [disabled]="isSaving()"
-              class="bg-green-500 text-white border-2 border-charcoal font-mono font-bold text-sm uppercase px-6 py-2 shadow-sketch hover:translate-y-1 hover:shadow-none transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50">
-              <span class="material-symbols-outlined text-[18px]">save</span>
+          <div class="ds-actions">
+            <button (click)="saveSticker()" [disabled]="isSaving()" class="btn-save">
+              <span class="material-symbols-outlined" style="font-size: 18px;">save</span>
               {{ isSaving() ? 'Saving...' : 'Save Sticker' }}
             </button>
-            <button (click)="createNewSticker()"
-              class="bg-white border-2 border-charcoal font-mono font-bold text-sm uppercase px-6 py-2 hover:bg-gray-100 transition-colors cursor-pointer">
+            <button (click)="createNewSticker()" class="btn-reset">
               Reset
             </button>
           </div>
@@ -80,33 +78,33 @@
         <!-- =============================== -->
         <!-- NODE MODE EDITOR                -->
         <!-- =============================== -->
-        <div *ngIf="mode() === 'node'" class="p-6 space-y-6">
+        <div *ngIf="mode() === 'node'" class="ds-editor-content">
           <!-- Node Name -->
-          <div>
-            <label class="block font-mono text-xs font-bold uppercase text-gray-500 mb-2">Node Name / Label</label>
-            <input [(ngModel)]="nodeName" class="w-full font-mono text-sm border-2 border-charcoal p-2 outline-none focus:border-accent-orange" placeholder="e.g. Postgres Cluster" type="text" />
+          <div class="ds-form-group">
+            <label class="ds-label">Node Name / Label</label>
+            <input [(ngModel)]="nodeName" class="ds-input" placeholder="e.g. Postgres Cluster" type="text" />
           </div>
 
           <!-- Shape -->
-          <div>
-            <label class="block font-mono text-xs font-bold uppercase text-gray-500 mb-3">Shape</label>
-            <div class="flex gap-3 flex-wrap">
+          <div class="ds-form-group">
+            <label class="ds-label ds-label-mb">Shape</label>
+            <div class="ds-btn-group">
               <button *ngFor="let s of shapes" (click)="selectedShape = s.id"
-                [class]="selectedShape === s.id ? 'bg-charcoal text-white' : 'bg-white text-charcoal'"
-                class="border-2 border-charcoal px-4 py-2 font-mono text-xs font-bold uppercase flex items-center gap-2 shadow-[2px_2px_0_#1a1a1a] hover:translate-y-0.5 hover:shadow-none transition-all cursor-pointer">
-                <span class="material-symbols-outlined text-[16px]">{{ s.icon }}</span>
+                [class]="selectedShape === s.id ? 'btn-shape-active' : 'btn-shape-inactive'"
+                class="btn-shape">
+                <span class="material-symbols-outlined" style="font-size: 16px;">{{ s.icon }}</span>
                 {{ s.label }}
               </button>
             </div>
           </div>
 
           <!-- Background Color -->
-          <div>
-            <label class="block font-mono text-xs font-bold uppercase text-gray-500 mb-3">Background</label>
-            <div class="flex gap-2 flex-wrap">
+          <div class="ds-form-group">
+            <label class="ds-label ds-label-mb">Background</label>
+            <div class="ds-btn-group">
               <button *ngFor="let c of bgColors" (click)="selectedBg = c.id"
-                [class]="selectedBg === c.id ? 'ring-2 ring-accent-orange ring-offset-2' : ''"
-                class="w-10 h-10 border-2 border-charcoal cursor-pointer transition-all hover:scale-110"
+                [class]="selectedBg === c.id ? 'btn-color-active' : ''"
+                class="btn-color"
                 [style.background-color]="c.preview"
                 [title]="c.label">
               </button>
@@ -114,12 +112,12 @@
           </div>
 
           <!-- Text Color -->
-          <div>
-            <label class="block font-mono text-xs font-bold uppercase text-gray-500 mb-3">Text Color</label>
-            <div class="flex gap-2 flex-wrap">
+          <div class="ds-form-group">
+            <label class="ds-label ds-label-mb">Text Color</label>
+            <div class="ds-btn-group">
               <button *ngFor="let tc of textColors" (click)="selectedText = tc.id"
-                [class]="selectedText === tc.id ? 'ring-2 ring-accent-orange ring-offset-2' : ''"
-                class="w-10 h-10 border-2 border-charcoal cursor-pointer transition-all hover:scale-110 flex items-center justify-center font-bold text-lg"
+                [class]="selectedText === tc.id ? 'btn-color-active' : ''"
+                class="btn-text-color"
                 [style.background-color]="tc.preview"
                 [title]="tc.label">
                 A
@@ -128,36 +126,36 @@
           </div>
 
           <!-- Border -->
-          <div>
-            <label class="block font-mono text-xs font-bold uppercase text-gray-500 mb-3">Border</label>
-            <div class="flex gap-3 flex-wrap">
+          <div class="ds-form-group">
+            <label class="ds-label ds-label-mb">Border</label>
+            <div class="ds-btn-group">
               <button *ngFor="let b of borders" (click)="selectedBorder = b.id"
-                [class]="selectedBorder === b.id ? 'bg-charcoal text-white' : 'bg-white text-charcoal'"
-                class="border-2 border-charcoal px-4 py-2 font-mono text-xs font-bold uppercase shadow-[2px_2px_0_#1a1a1a] hover:translate-y-0.5 hover:shadow-none transition-all cursor-pointer">
+                [class]="selectedBorder === b.id ? 'btn-border-active' : 'btn-border-inactive'"
+                class="btn-border">
                 {{ b.label }}
               </button>
             </div>
           </div>
 
           <!-- Shadow -->
-          <div>
-            <label class="block font-mono text-xs font-bold uppercase text-gray-500 mb-3">Shadow</label>
-            <div class="flex gap-3 flex-wrap">
+          <div class="ds-form-group">
+            <label class="ds-label ds-label-mb">Shadow</label>
+            <div class="ds-btn-group">
               <button *ngFor="let sh of shadows" (click)="selectedShadow = sh.id"
-                [class]="selectedShadow === sh.id ? 'bg-charcoal text-white' : 'bg-white text-charcoal'"
-                class="border-2 border-charcoal px-4 py-2 font-mono text-xs font-bold uppercase shadow-[2px_2px_0_#1a1a1a] hover:translate-y-0.5 hover:shadow-none transition-all cursor-pointer">
+                [class]="selectedShadow === sh.id ? 'btn-border-active' : 'btn-border-inactive'"
+                class="btn-border">
                 {{ sh.label }}
               </button>
             </div>
           </div>
 
           <!-- Typography -->
-          <div>
-            <label class="block font-mono text-xs font-bold uppercase text-gray-500 mb-3">Typography</label>
-            <div class="flex gap-3 flex-wrap">
+          <div class="ds-form-group">
+            <label class="ds-label ds-label-mb">Typography</label>
+            <div class="ds-btn-group">
               <button *ngFor="let f of fonts" (click)="selectedFont = f.id"
-                [class]="selectedFont === f.id ? 'bg-charcoal text-white' : 'bg-white text-charcoal'"
-                class="border-2 border-charcoal px-4 py-2 text-xs font-bold uppercase shadow-[2px_2px_0_#1a1a1a] hover:translate-y-0.5 hover:shadow-none transition-all cursor-pointer"
+                [class]="selectedFont === f.id ? 'btn-font-active' : 'btn-font-inactive'"
+                class="btn-font"
                 [style.font-family]="f.family">
                 {{ f.label }}
               </button>
@@ -165,21 +163,21 @@
           </div>
 
           <!-- Icon Gallery -->
-          <div>
-            <label class="block font-mono text-xs font-bold uppercase text-gray-500 mb-2">Icon (click to select)</label>
-            <div class="flex items-center gap-3 mb-3">
-              <input [(ngModel)]="nodeIcon" class="flex-grow font-mono text-sm border-2 border-charcoal p-2 outline-none focus:border-accent-orange" placeholder="Type or pick below..." type="text" />
-              <span *ngIf="nodeIcon" class="material-symbols-outlined text-3xl text-charcoal">{{ nodeIcon }}</span>
-              <button *ngIf="nodeIcon" (click)="nodeIcon = ''" class="text-red-400 hover:text-red-600 cursor-pointer">
-                <span class="material-symbols-outlined text-[18px]">close</span>
+          <div class="ds-form-group">
+            <label class="ds-label">Icon (click to select)</label>
+            <div class="ds-icon-input-group">
+              <input [(ngModel)]="nodeIcon" class="ds-input" style="flex-grow: 1;" placeholder="Type or pick below..." type="text" />
+              <span *ngIf="nodeIcon" class="material-symbols-outlined" style="font-size: 30px; color: var(--charcoal);">{{ nodeIcon }}</span>
+              <button *ngIf="nodeIcon" (click)="nodeIcon = ''" class="btn-icon-clear">
+                <span class="material-symbols-outlined" style="font-size: 18px;">close</span>
               </button>
             </div>
-            <div class="grid grid-cols-8 gap-1 p-3 border border-dashed border-gray-300 bg-gray-50 max-h-[160px] overflow-y-auto">
+            <div class="ds-icon-grid">
               <button *ngFor="let ic of popularIcons" (click)="nodeIcon = ic"
-                [class]="nodeIcon === ic ? 'bg-charcoal text-white' : 'bg-white text-charcoal hover:bg-gray-100'"
-                class="w-9 h-9 flex items-center justify-center border border-charcoal cursor-pointer transition-colors"
+                [class]="nodeIcon === ic ? 'btn-icon-grid-active' : 'btn-icon-grid-inactive'"
+                class="btn-icon-grid"
                 [title]="ic">
-                <span class="material-symbols-outlined text-[18px]">{{ ic }}</span>
+                <span class="material-symbols-outlined" style="font-size: 18px;">{{ ic }}</span>
               </button>
             </div>
           </div>
@@ -187,31 +185,26 @@
           <!-- =========================== -->
           <!--    LIVE NODE PREVIEW         -->
           <!-- =========================== -->
-          <div>
-            <label class="block font-mono text-xs font-bold uppercase text-gray-500 mb-3">Live Preview</label>
-            <div class="min-h-[200px] border-2 border-dashed border-gray-300 flex items-center justify-center p-8"
-              style="background-image: radial-gradient(#d1cfcb 1.5px, transparent 1px); background-size: 20px 20px;">
-              
-              <div class="flex flex-col items-center justify-center p-4 transition-all duration-300"
+          <div class="ds-form-group">
+            <label class="ds-label ds-label-mb">Live Preview</label>
+            <div class="ds-preview-node-box">
+              <div class="ds-node-preview-item"
                 [ngStyle]="getNodePreviewStyle()">
-                <span *ngIf="nodeIcon" class="material-symbols-outlined mb-1" [style.font-size]="selectedShape === 'circle' ? '24px' : '28px'">{{ nodeIcon }}</span>
-                <span class="text-xs font-bold text-center leading-tight" [class]="selectedShape === 'text' ? 'text-xl' : ''">
+                <span *ngIf="nodeIcon" class="material-symbols-outlined ds-node-preview-icon" [style.font-size]="selectedShape === 'circle' ? '24px' : '28px'">{{ nodeIcon }}</span>
+                <span class="ds-node-preview-label" [class.ds-node-preview-label-lg]="selectedShape === 'text'">
                   {{ nodeName || 'Node Label' }}
                 </span>
               </div>
-
             </div>
           </div>
 
           <!-- Save / Reset -->
-          <div class="flex gap-4">
-            <button (click)="saveNode()" [disabled]="isSaving() || !nodeName"
-              class="bg-green-500 text-white border-2 border-charcoal font-mono font-bold text-sm uppercase px-6 py-2 shadow-sketch hover:translate-y-1 hover:shadow-none transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50">
-              <span class="material-symbols-outlined text-[18px]">save</span>
+          <div class="ds-actions">
+            <button (click)="saveNode()" [disabled]="isSaving() || !nodeName" class="btn-save">
+              <span class="material-symbols-outlined" style="font-size: 18px;">save</span>
               {{ isSaving() ? 'Saving...' : 'Save Node Protocol' }}
             </button>
-            <button (click)="resetNode()"
-              class="bg-white border-2 border-charcoal font-mono font-bold text-sm uppercase px-6 py-2 hover:bg-gray-100 transition-colors cursor-pointer">
+            <button (click)="resetNode()" class="btn-reset">
               Reset
             </button>
           </div>
@@ -222,61 +215,60 @@
     <!-- ==================== -->
     <!-- RIGHT: SAVED ITEMS   -->
     <!-- ==================== -->
-    <div class="lg:col-span-4">
-      <div class="bg-white border-2 border-charcoal shadow-sketch relative">
-        <div class="border-b-2 border-charcoal p-4 bg-gray-50">
-          <h3 class="font-display font-bold text-sm uppercase leading-none">
+    <div class="ds-panel-right">
+      <div class="ds-panel-box ds-panel-box-right">
+        <div class="ds-panel-header">
+          <h3 class="ds-panel-subtitle">
             {{ mode() === 'sticker' ? 'Saved Stickers' : 'Saved Nodes' }}
           </h3>
-          <span class="font-mono text-[10px] text-gray-400">
+          <span class="ds-panel-meta">
             {{ mode() === 'sticker' ? widgets().length : nodes().length }} ITEMS
           </span>
         </div>
 
         <!-- STICKER LIST -->
-        <div *ngIf="mode() === 'sticker'" class="p-4 space-y-3 max-h-[60vh] overflow-y-auto">
-          <div *ngIf="widgets().length === 0" class="text-center py-8 font-mono text-xs text-gray-400">
+        <div *ngIf="mode() === 'sticker'" class="ds-list-container">
+          <div *ngIf="widgets().length === 0" class="ds-list-empty">
             NO_STICKERS_FOUND
           </div>
-          <div *ngFor="let w of widgets()" class="border border-charcoal p-3 bg-gray-50 group hover:bg-white transition-colors relative">
-            <div class="flex justify-between items-start mb-2">
-              <span class="font-mono text-xs font-bold text-charcoal truncate">{{ w.name }}</span>
-              <div class="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                <button (click)="editSticker(w)" class="text-gray-500 hover:text-charcoal cursor-pointer">
-                  <span class="material-symbols-outlined text-[16px]">edit</span>
+          <div *ngFor="let w of widgets()" class="ds-list-item group">
+            <div class="ds-list-item-header">
+              <span class="ds-list-item-title">{{ w.name }}</span>
+              <div class="ds-list-item-actions">
+                <button (click)="editSticker(w)" class="btn-list-action btn-list-action-edit">
+                  <span class="material-symbols-outlined" style="font-size: 16px;">edit</span>
                 </button>
-                <button (click)="deleteSticker(w.id!)" class="text-red-400 hover:text-red-600 cursor-pointer">
-                  <span class="material-symbols-outlined text-[16px]">delete</span>
+                <button (click)="deleteSticker(w.id!)" class="btn-list-action btn-list-action-delete">
+                  <span class="material-symbols-outlined" style="font-size: 16px;">delete</span>
                 </button>
               </div>
             </div>
-            <div class="transform scale-75 origin-top-left pointer-events-none max-h-[80px] overflow-hidden" [innerHTML]="getSafeHtml(w.html_content)"></div>
+            <div class="ds-sticker-preview-sm" [innerHTML]="getSafeHtml(w.html_content)"></div>
           </div>
         </div>
 
         <!-- NODE LIST -->
-        <div *ngIf="mode() === 'node'" class="p-4 space-y-3 max-h-[60vh] overflow-y-auto">
-          <div *ngIf="nodes().length === 0" class="text-center py-8 font-mono text-xs text-gray-400">
+        <div *ngIf="mode() === 'node'" class="ds-list-container">
+          <div *ngIf="nodes().length === 0" class="ds-list-empty">
             NO_NODES_FOUND
           </div>
-          <div *ngFor="let n of nodes()" class="border border-charcoal p-3 bg-gray-50 group hover:bg-white transition-colors relative flex items-center gap-3">
+          <div *ngFor="let n of nodes()" class="ds-list-item ds-node-preview-sm-container group">
             <!-- Mini preview swatch -->
-            <div class="w-10 h-10 border border-charcoal flex items-center justify-center flex-shrink-0"
+            <div class="ds-node-preview-sm"
               [style.background-color]="getBgPreview(n.bg_color)"
               [style.border-radius]="n.shape === 'circle' ? '50%' : '0'">
-              <span *ngIf="n.icon" class="material-symbols-outlined text-[16px]"
-                [style.color]="getTextPreview(n.text_color)">{{ n.icon }}</span>
+              <span *ngIf="n.icon" class="material-symbols-outlined" style="font-size: 16px;" [style.color]="getTextPreview(n.text_color)">{{ n.icon }}</span>
             </div>
-            <div class="flex-grow min-w-0">
-              <span class="font-mono text-xs font-bold text-charcoal block truncate">{{ n.name }}</span>
-              <span class="font-mono text-[9px] text-gray-400">{{ n.shape | uppercase }}</span>
+            <div class="ds-node-info-sm">
+              <span class="ds-node-title-sm">{{ n.name }}</span>
+              <span class="ds-node-shape-sm">{{ n.shape | uppercase }}</span>
             </div>
-            <div class="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
-              <button (click)="editNode(n)" class="text-gray-500 hover:text-charcoal cursor-pointer">
-                <span class="material-symbols-outlined text-[16px]">edit</span>
+            <div class="ds-list-item-actions shrink-0">
+              <button (click)="editNode(n)" class="btn-list-action btn-list-action-edit">
+                <span class="material-symbols-outlined" style="font-size: 16px;">edit</span>
               </button>
-              <button (click)="deleteNode(n.id!)" class="text-red-400 hover:text-red-600 cursor-pointer">
-                <span class="material-symbols-outlined text-[16px]">delete</span>
+              <button (click)="deleteNode(n.id!)" class="btn-list-action btn-list-action-delete">
+                <span class="material-symbols-outlined" style="font-size: 16px;">delete</span>
               </button>
             </div>
           </div>

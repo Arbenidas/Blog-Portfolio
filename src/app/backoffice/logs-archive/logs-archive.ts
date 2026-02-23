@@ -13,13 +13,16 @@ export class LogsArchiveAdmin implements OnInit {
   private contentService = inject(ContentService);
   private cdr = inject(ChangeDetectorRef);
   logs: DocumentEntry[] = [];
+  isLoading = true;
 
   ngOnInit() {
     this.loadLogs();
   }
 
   async loadLogs() {
+    this.isLoading = true;
     this.logs = await this.contentService.getAllLogs();
+    this.isLoading = false;
     this.cdr.detectChanges();
   }
 

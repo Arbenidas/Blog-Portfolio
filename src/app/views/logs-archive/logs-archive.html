@@ -1,102 +1,115 @@
-<main class="relative min-h-screen pt-24 pb-12 flex flex-col items-center" id="logs">
-  <div class="coffee-stain top-32 left-10 opacity-70"></div>
-  <div class="coffee-stain top-96 right-20 opacity-40 transform scale-125"></div>
+<main class="logs-main" id="logs">
+  <div class="coffee-stain" style="top: 8rem; left: 2.5rem; opacity: 0.7;"></div>
+  <div class="coffee-stain" style="top: 24rem; right: 5rem; opacity: 0.4; transform: scale(1.25);"></div>
 
-  <div class="relative z-10 w-full max-w-[1400px] px-4 md:px-8 grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+  <div class="logs-content-grid">
     <!-- LEFT SIDEBAR -->
-    <div class="lg:col-span-3 order-2 lg:order-1 sticky top-24">
-      <div class="relative bg-white p-6 ink-border shadow-sketch transform -rotate-1 w-full mx-auto">
+    <aside class="logs-sidebar">
+      <div class="topic-matrix-card ink-border">
         <div class="tape-strip" style="top: -12px; left: 40%;"></div>
-        <h3 class="font-display font-black text-xl uppercase mb-4 border-b-2 border-charcoal pb-2 flex items-center gap-2 m-0 text-charcoal">
+        <h3 class="topic-title">
           <span class="material-symbols-outlined">tag</span> Topic Matrix
         </h3>
-        <div class="flex flex-wrap gap-2 font-mono text-xs">
-          <a class="px-2 py-1 border border-charcoal bg-primary/10 hover:bg-primary hover:text-white transition-colors cursor-pointer transform hover:-rotate-2 inline-block no-underline font-bold">#DESIGN_SYS</a>
-          <a class="px-2 py-1 border border-charcoal bg-paper-cream hover:bg-charcoal hover:text-white transition-colors cursor-pointer transform hover:rotate-2 inline-block no-underline font-bold text-charcoal">#RETRO_UI</a>
-          <a class="px-2 py-1 border border-charcoal bg-accent-orange/10 hover:bg-accent-orange hover:text-white transition-colors cursor-pointer inline-block no-underline font-bold text-charcoal">#DEV_LOG</a>
-          <a class="px-2 py-1 border border-charcoal bg-paper-cream hover:bg-charcoal hover:text-white transition-colors cursor-pointer transform hover:-rotate-1 inline-block no-underline font-bold text-charcoal">#TAILWIND</a>
-          <a class="px-2 py-1 border border-charcoal bg-paper-cream hover:bg-charcoal hover:text-white transition-colors cursor-pointer inline-block no-underline font-bold text-charcoal">#REACT</a>
+        <div class="tag-list">
+          <a *ngFor="let tag of popularTags" [ngClass]="tag.class" class="tag-item">{{ tag.name }}</a>
+          <span *ngIf="popularTags.length === 0" style="font-family: var(--font-mono); font-size: 10px;">AWAITING DATA...</span>
         </div>
         
-        <div class="mt-6 border-t border-dashed border-charcoal pt-4">
-          <p class="font-hand text-sm text-gray-500 leading-tight transform rotate-1 m-0">
+        <div class="topic-note-container">
+          <p class="topic-note">
             "Note to self: The #DESIGN_SYS tags need cleanup. Too much clutter." - Arbe
           </p>
         </div>
       </div>
 
-      <div class="mt-8 relative bg-paper-white border-2 border-charcoal p-4 shadow-[4px_4px_0px_#d94e1e] transform rotate-1">
-        <div class="absolute -top-3 -right-3 bg-accent-orange text-white text-[10px] font-bold px-2 py-1 transform rotate-6 border border-charcoal">LIVE DATA</div>
-        <h3 class="font-mono font-bold text-sm uppercase mb-3">Log Frequency</h3>
+      <div class="frequency-card">
+        <div class="frequency-live-badge">LIVE DATA</div>
+        <h3 class="frequency-title">Log Frequency</h3>
         
-        <div class="relative h-32 w-full border-l-2 border-b-2 border-charcoal flex items-end justify-between px-1 pb-1 gap-1">
-          <div class="w-full bg-charcoal h-[30%] opacity-80 relative group">
-            <div class="absolute -top-6 left-1/2 -translate-x-1/2 bg-white border border-charcoal text-[9px] px-1 opacity-0 group-hover:opacity-100">AUG</div>
+        <div class="chart-container">
+          <div *ngFor="let data of chartData; let i = index" class="chart-bar group" [ngClass]="'chart-bar-' + (i + 1)" [style.height.%]="data.height">
+            <div class="chart-bar-tooltip">{{ data.month }}</div>
           </div>
-          <div class="w-full bg-charcoal h-[55%] opacity-90 relative group">
-            <div class="absolute -top-6 left-1/2 -translate-x-1/2 bg-white border border-charcoal text-[9px] px-1 opacity-0 group-hover:opacity-100">SEP</div>
-          </div>
-          <div class="w-full bg-accent-orange h-[85%] border-t border-r border-l border-charcoal relative group">
-            <div class="absolute -top-6 left-1/2 -translate-x-1/2 bg-white border border-charcoal text-[9px] px-1 opacity-0 group-hover:opacity-100">OCT</div>
-          </div>
-          <div class="w-full bg-primary h-[60%] border-t border-r border-l border-charcoal relative group">
-            <div class="absolute -top-6 left-1/2 -translate-x-1/2 bg-white border border-charcoal text-[9px] px-1 opacity-0 group-hover:opacity-100">NOV</div>
-          </div>
-          <svg class="absolute inset-0 w-full h-full pointer-events-none overflow-visible" preserveAspectRatio="none" viewBox="0 0 100 100">
-            <path d="M0,70 Q25,60 33,45 T66,15 T100,40" fill="none" stroke="#d94e1e" stroke-dasharray="3,3" stroke-width="2"></path>
-            <circle cx="33" cy="45" fill="#fff" r="2" stroke="#d94e1e" stroke-width="1"></circle>
-            <circle cx="66" cy="15" fill="#fff" r="2" stroke="#d94e1e" stroke-width="1"></circle>
+          <svg class="frequency-chart-svg" preserveAspectRatio="none" viewBox="0 0 100 100">
+            <path [attr.d]="chartPath" class="svg-path-anim" fill="none" stroke="#d94e1e" stroke-dasharray="3,3" stroke-width="2"></path>
+            <circle *ngFor="let p of chartData" [attr.cx]="p.cx" [attr.cy]="p.cy" fill="#fff" r="2" stroke="#d94e1e" stroke-width="1"></circle>
           </svg>
         </div>
-        <div class="flex justify-between text-[9px] font-mono mt-1 text-gray-500 font-bold m-0">
-          <span>Q3 Start</span>
-          <span>Q4 Current</span>
+        <div class="chart-labels" *ngIf="chartData.length > 0">
+          <span>{{ chartData[0].month }} Start</span>
+          <span>{{ chartData[3].month }} Current</span>
         </div>
       </div>
-    </div>
+    </aside>
 
     <!-- MAIN TIMELINE -->
-    <div class="lg:col-span-9 order-1 lg:order-2">
-      <div class="mb-10 flex flex-col md:flex-row items-start md:items-end justify-between gap-4 border-b-4 border-charcoal pb-4">
+    <section class="logs-timeline-section">
+      <div class="logs-header">
         <div>
-          <h1 class="text-4xl md:text-6xl font-black text-charcoal uppercase font-display leading-[0.85] tracking-tight m-0">
+          <h1 class="logs-title">
             Field Logs<br/>
-            <span class="text-transparent" style="-webkit-text-stroke: 1px #1a1a1a;">Archive DB</span>
+            <span class="transparent-stroke">Archive DB</span>
           </h1>
         </div>
-        <div class="flex flex-col items-end">
-          <div class="bg-charcoal text-white font-mono text-xs px-3 py-1 mb-2 transform rotate-1 inline-block shadow-[2px_2px_0_#d94e1e]">
+        <div class="logs-stats">
+          <div class="logs-total-badge">
             TOTAL_ENTRIES: 42
           </div>
-          <p class="font-mono text-[11px] text-gray-600 text-right m-0">
+          <p class="logs-meta">
             Last Decryption: 2024.11.08<br/>
-            Status: <span class="text-green-600 font-bold">ONLINE</span>
+            Status: <span class="logs-status-online">ONLINE</span>
           </p>
         </div>
       </div>
 
-      <div class="relative py-8">
-        <div class="timeline-line hidden md:block"></div>
+      <div class="timeline-container">
+        <div class="logs-timeline-line"></div>
 
-        <div *ngFor="let log of logs; let i = index" class="relative mb-16 md:w-full flex flex-col items-center md:items-start group cursor-pointer md:justify-between" [ngClass]="i % 2 === 0 ? 'md:flex-row' : 'md:flex-row-reverse'" [routerLink]="['/logs', log.slug]">
-          <div class="mb-4 md:mb-0 relative order-1 self-start md:self-auto ml-12 md:ml-0"
-               [ngClass]="i % 2 === 0 ? 'md:w-1/2 md:pr-12 md:text-right' : 'md:w-1/2 md:pl-12 md:text-left self-end mr-12 md:mr-0'">
-            <div class="bg-white border-2 border-charcoal inline-block p-2 shadow-sketch relative z-20 group-hover:scale-105 transition-transform text-center"
-                 [ngClass]="i % 2 === 0 ? 'transform -rotate-1' : 'transform rotate-2'">
-              <span class="block font-mono text-xl font-bold text-charcoal leading-none">{{ log.createdAt | date:'dd' }}</span>
-              <span class="block font-mono text-[10px] font-bold uppercase leading-none mt-1"
-                    [ngClass]="i % 2 === 0 ? 'text-accent-orange' : 'text-primary'">{{ log.createdAt | date:'MMM.yyyy' }}</span>
+        <!-- LOADING SKELETON -->
+        <div *ngIf="isLoading" style="opacity: 0.7;">
+          <div *ngFor="let i of [1,2,3]" class="timeline-item group timeline-item-even">
+            <div class="timeline-date-wrapper">
+              <div class="timeline-date-box tag-item-rotate-neg" style="background-color: #e5e7eb; width: 60px; height: 60px;"></div>
+            </div>
+            
+            <div class="timeline-point">
+              <div class="timeline-point-inner" style="background-color: #d1d5db;"></div>
+            </div>
+            
+            <div class="timeline-content-wrapper">
+              <div class="timeline-content-box" style="transform: rotate(1deg);">
+                <div class="timeline-content-inner" style="background-color: #f3f4f6; animation: pulse 2s infinite;">
+                  <div style="height: 12px; background-color: #d1d5db; margin-bottom: 24px; width: 40%;"></div>
+                  <div style="height: 24px; background-color: #d1d5db; margin-bottom: 16px; width: 80%;"></div>
+                  <div style="height: 12px; background-color: #e5e7eb; margin-bottom: 8px; width: 100%;"></div>
+                  <div style="height: 12px; background-color: #e5e7eb; margin-bottom: 24px; width: 60%;"></div>
+                  <div style="height: 20px; background-color: #d1d5db; width: 100px;"></div>
+                </div>
+              </div>
             </div>
           </div>
-          <div class="hidden md:block absolute left-[20px] md:left-1/2 top-6 md:top-6 w-4 h-4 rounded-full bg-paper-cream border-2 border-charcoal z-20 -translate-x-1/2 shadow-[0_0_0_4px_#f2f0e4]">
-            <div class="w-full h-full rounded-full transform scale-50"
-                 [ngClass]="i % 2 === 0 ? 'bg-accent-orange' : 'bg-primary'"></div>
+        </div>
+
+        <ng-container *ngIf="!isLoading">
+          <div *ngFor="let log of logs; let i = index" 
+               class="timeline-item group" 
+               [ngClass]="i % 2 === 0 ? 'timeline-item-even' : 'timeline-item-odd'" 
+               [routerLink]="['/logs', log.slug]">
+             
+          <div class="timeline-date-wrapper">
+            <div class="timeline-date-box" [ngClass]="i % 2 === 0 ? 'tag-item-rotate-neg' : 'tag-item-rotate-pos'">
+              <span class="timeline-date-day">{{ log.createdAt | date:'dd' }}</span>
+              <span class="timeline-date-month" [style.color]="i % 2 === 0 ? 'var(--accent-orange)' : 'var(--primary)'">{{ log.createdAt | date:'MMM.yyyy' }}</span>
+            </div>
           </div>
-          <div class="w-full md:w-1/2 order-2"
-               [ngClass]="i % 2 === 0 ? 'md:pl-12' : 'md:pr-12'">
-            <div class="bg-paper-white border-2 border-charcoal p-1 shadow-sketch-lg hover:rotate-0 transition-transform duration-300"
-                 [ngClass]="i % 2 === 0 ? 'transform md:rotate-1' : 'transform md:-rotate-1'">
-              <div class="bg-paper-cream border border-charcoal p-6 relative overflow-hidden">
+          
+          <div class="timeline-point">
+            <div class="timeline-point-inner" [style.background-color]="i % 2 === 0 ? 'var(--accent-orange)' : 'var(--primary)'"></div>
+          </div>
+          
+          <div class="timeline-content-wrapper">
+            <div class="timeline-content-box" [ngStyle]="{'transform': i % 2 === 0 ? 'rotate(1deg)' : 'rotate(-1deg)'}">
+              <div class="timeline-content-inner">
                 
                 <ng-container *ngIf="i % 2 === 0; else alternativeTape">
                   <div class="tape-strip-long" style="top: -15px; right: -40px; transform: rotate(35deg);"></div>
@@ -105,28 +118,29 @@
                   <div class="tape-strip" style="bottom: -10px; left: 10px; transform: rotate(-5deg); top: auto;"></div>
                 </ng-template>
 
-                <div class="flex justify-between items-start mb-3 border-b border-dashed border-gray-400 pb-2">
-                  <span class="font-mono text-[10px] bg-charcoal text-white px-2 py-0.5">LOG_{{ log.id.slice(0, 5) | uppercase }}</span>
-                  <div class="flex gap-2">
-                    <span class="font-mono text-[9px] border border-charcoal px-1"
-                          [ngClass]="i % 2 === 0 ? 'text-green-700 bg-green-50' : 'text-primary bg-primary-light font-bold'">
+                <div class="timeline-meta-row">
+                  <span class="timeline-log-id">LOG_{{ log.id.slice(0, 5) | uppercase }}</span>
+                  <div style="display: flex; gap: 0.5rem;">
+                    <span class="timeline-status" [ngClass]="i % 2 === 0 ? 'timeline-status-deployed' : 'timeline-status-analyzed'">
                       {{ i % 2 === 0 ? 'DEPLOYED' : 'ANALYZED' }}
                     </span>
                   </div>
                 </div>
-                <h2 class="font-display font-black text-2xl text-charcoal leading-tight mb-3 transition-colors m-0"
-                    [ngClass]="i % 2 === 0 ? 'group-hover:text-primary' : 'group-hover:text-accent-orange'">
+                
+                <h2 class="timeline-log-title" [ngStyle]="{'color': ''}" style="transition: color 0.3s;"
+                    [style.color]="'var(--charcoal)'">
                   {{ log.title }}
                 </h2>
-                <p class="font-mono text-sm leading-relaxed text-charcoal/80 mb-4 line-clamp-3">
+                
+                <p class="timeline-log-preview">
                   {{ log.blocks.length > 0 ? log.blocks[0].content : 'No content' }}
                 </p>
-                <div class="flex justify-between items-center mt-4 pt-3 border-t-2 border-charcoal">
-                  <div class="flex gap-2">
-                    <span *ngFor="let tag of log.tags" class="text-[9px] font-mono text-gray-500 font-bold tracking-widest uppercase">#{{ tag }}</span>
+                
+                <div class="timeline-footer">
+                  <div class="timeline-tags">
+                    <span *ngFor="let tag of log.tags" class="timeline-tag">#{{ tag }}</span>
                   </div>
-                  <button class="text-xs font-bold font-mono text-charcoal uppercase px-2 py-1 transition-colors border border-transparent hover:border-charcoal bg-transparent cursor-pointer"
-                          [ngClass]="i % 2 === 0 ? 'hover:bg-accent-orange hover:text-white' : 'hover:bg-primary hover:text-white'">
+                  <button class="btn-decrypt">
                     Decrypt_Full_Log &gt;
                   </button>
                 </div>
@@ -135,10 +149,11 @@
           </div>
         </div>
         
-        <div *ngIf="logs.length === 0" class="text-center py-12 border-2 border-dashed border-charcoal w-full mt-8">
-           <span class="font-mono text-charcoal">No logs available. Create one in the admin panel.</span>
-        </div>
+          <div *ngIf="logs.length === 0" class="empty-logs">
+             <span class="empty-logs-text">No logs available. Create one in the admin panel.</span>
+          </div>
+        </ng-container>
       </div>
-    </div>
+    </section>
   </div>
 </main>

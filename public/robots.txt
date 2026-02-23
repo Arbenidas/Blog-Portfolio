@@ -6,4 +6,4 @@ Allow: /contact
 Disallow: /admin
 Disallow: /admin/
 
-Sitemap: https://tudominio.com/sitemap.xml
+Sitemap: https://arbe.blog/sitemap.xml
