@@ -1,4 +1,5 @@
-import { Injectable, signal, inject } from '@angular/core';
+import { Injectable, signal, inject, PLATFORM_ID } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import { SupabaseService } from './supabase.service';
 
 export interface EditorBlock {
@@ -67,6 +68,7 @@ export interface DocumentEntry {
 })
 export class ContentService {
     private supabase = inject(SupabaseService);
+    private platformId = inject(PLATFORM_ID);
     private previewDocSignal = signal<DocumentEntry | null>(null);
 
     constructor() {
@@ -87,7 +89,7 @@ export class ContentService {
     }
 
     private loadPreviewFromStorage() {
-        if (typeof localStorage !== 'undefined') {
+        if (isPlatformBrowser(this.platformId)) {
             const previewStored = localStorage.getItem('portfolio_preview');
             if (previewStored) {
                 try {
@@ -180,7 +182,7 @@ export class ContentService {
             updatedAt: now
         };
         this.previewDocSignal.set(previewDoc);
-        if (typeof localStorage !== 'undefined') {
+        if (isPlatformBrowser(this.platformId)) {
             localStorage.setItem('portfolio_preview', JSON.stringify(previewDoc));
         }
     }

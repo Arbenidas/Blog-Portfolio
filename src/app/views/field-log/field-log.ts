@@ -31,7 +31,7 @@ export class FieldLog implements OnInit {
         this.availableWidgets = await this.contentService.getCustomWidgets();
 
         if (slug === 'preview') {
-          if (typeof localStorage !== 'undefined') {
+          if (isPlatformBrowser(this.platformId)) {
             const raw = localStorage.getItem('portfolio_preview');
             if (raw) {
               this.log = JSON.parse(raw);

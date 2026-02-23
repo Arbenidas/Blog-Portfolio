@@ -1,4 +1,5 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject, PLATFORM_ID } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import { createClient, SupabaseClient, User } from '@supabase/supabase-js';
 import { environment } from '../../environments/environment';
 
@@ -7,9 +8,14 @@ import { environment } from '../../environments/environment';
 })
 export class SupabaseService {
     private supabase: SupabaseClient;
+    private platformId = inject(PLATFORM_ID);
 
     constructor() {
-        this.supabase = createClient(environment.supabaseUrl, environment.supabaseKey);
+        this.supabase = createClient(environment.supabaseUrl, environment.supabaseKey, {
+            auth: {
+                persistSession: isPlatformBrowser(this.platformId)
+            }
+        });
     }
 
     get auth() {

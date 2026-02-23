@@ -35,7 +35,7 @@ export class CaseStudy implements OnInit {
 
         if (slug === 'preview') {
           // Load from localStorage preview data (localStorage is shared across tabs)
-          if (typeof localStorage !== 'undefined') {
+          if (isPlatformBrowser(this.platformId)) {
             const raw = localStorage.getItem('portfolio_preview');
             if (raw) {
               this.work = JSON.parse(raw);
