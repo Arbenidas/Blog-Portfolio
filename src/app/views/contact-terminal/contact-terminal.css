@@ -678,3 +678,72 @@
         opacity: .5;
     }
 }
+
+/* Transmission Status Overlays */
+.terminal-status-overlay {
+    position: absolute;
+    inset: 0;
+    background-color: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    padding: 2rem;
+    text-align: center;
+}
+
+.terminal-status-overlay.success {
+    border: 2px solid #22c55e;
+}
+
+.terminal-status-overlay.error {
+    border: 2px solid #ef4444;
+}
+
+.terminal-status-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+}
+
+.terminal-status-title {
+    font-family: var(--font-display);
+    font-weight: 900;
+    font-size: 1.5rem;
+    text-transform: uppercase;
+    margin: 0;
+}
+
+.success .terminal-status-title {
+    color: #166534;
+}
+
+.error .terminal-status-title {
+    color: #991b1b;
+}
+
+.terminal-status-content p {
+    font-family: var(--font-mono);
+    font-size: 0.875rem;
+    color: #4b5563;
+    margin: 0;
+}
+
+.terminal-status-btn {
+    margin-top: 1rem;
+    background-color: var(--charcoal);
+    color: white;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: bold;
+    padding: 0.5rem 1.5rem;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.terminal-status-btn:hover {
+    background-color: var(--accent-orange);
+}

@@ -114,23 +114,35 @@ export class ContentService {
         };
     }
 
-    async getAllWorks(): Promise<DocumentEntry[]> {
-        const { data, error } = await this.supabase
+    async getAllWorks(limitCount?: number): Promise<DocumentEntry[]> {
+        let query = this.supabase
             .from('documents')
             .select('*')
             .eq('category', 'work')
             .neq('slug', 'system-settings')
             .order('created_at', { ascending: false });
+
+        if (limitCount) {
+            query = query.limit(limitCount);
+        }
+
+        const { data, error } = await query;
         if (error) console.error(error);
         return data ? data.map(this.mapToEntry) : [];
     }
 
-    async getAllLogs(): Promise<DocumentEntry[]> {
-        const { data, error } = await this.supabase
+    async getAllLogs(limitCount?: number): Promise<DocumentEntry[]> {
+        let query = this.supabase
             .from('documents')
             .select('*')
             .eq('category', 'log')
             .order('created_at', { ascending: false });
+
+        if (limitCount) {
+            query = query.limit(limitCount);
+        }
+
+        const { data, error } = await query;
         if (error) console.error(error);
         return data ? data.map(this.mapToEntry) : [];
     }

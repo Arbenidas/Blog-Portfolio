@@ -65,14 +65,15 @@ export class HomeView implements OnInit, OnDestroy {
   }
 
   async loadData() {
-    const allWorks = await this.contentService.getAllWorks();
-    const allLogs = await this.contentService.getAllLogs();
-    const profileObj = await this.contentService.getProfile();
-    const customWidgets = await this.contentService.getCustomWidgets();
+    const [allWorks, allLogs, profileObj, customWidgets] = await Promise.all([
+      this.contentService.getAllWorks(4),
+      this.contentService.getAllLogs(3),
+      this.contentService.getProfile(),
+      this.contentService.getCustomWidgets()
+    ]);
 
-    // Only show latest 4 works and latest 3 logs on home page
-    this.works = allWorks.slice(0, 4);
-    this.logs = allLogs.slice(0, 3);
+    this.works = allWorks;
+    this.logs = allLogs;
 
     if (profileObj) {
       this.profile.set(profileObj);

@@ -159,14 +159,6 @@
 
       </div>
 
-      <!-- Social Sharing -->
-      <app-share-buttons 
-        [title]="log.title" 
-        [description]="log.blocks[0].type === 'p' ? log.blocks[0].content : ''" 
-        [image]="log.coverPhoto || ''">
-      </app-share-buttons>
-
-      <!-- Footer / Author Block -->
       <footer class="log-footer">
         <div class="author-info">
           <div class="author-avatar">
@@ -182,6 +174,15 @@
           SIGNED: <span class="signed-name">Admin</span>
         </div>
       </footer>
+
+      <!-- Social Sharing -->
+      <div class="mt-8">
+        <app-share-buttons 
+          [title]="log.title" 
+          [description]="log.blocks[0].type === 'p' ? log.blocks[0].content : ''" 
+          [image]="log.coverPhoto || ''">
+        </app-share-buttons>
+      </div>
     </div>
   </article>
 

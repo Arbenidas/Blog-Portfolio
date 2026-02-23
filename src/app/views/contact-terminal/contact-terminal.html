@@ -78,49 +78,73 @@
                             </div>
                             <p class="terminal-form-subtitle">Fill all mandated fields to initiate uplink.</p>
                         </div>
-                        <form class="terminal-form">
+                        <form name="contact" data-netlify="true" netlify-honeypot="bot-field" (submit)="onSubmit($event)" class="terminal-form">
+                            <p class="hidden" style="display: none;">
+                                <label>Don’t fill this out if you're human: <input name="bot-field" /></label>
+                            </p>
+                            <input type="hidden" name="form-name" value="contact" />
                             <div class="terminal-form-grid">
                                 <div class="terminal-field">
                                     <label class="terminal-label">
                                         &gt; Agent_Name
                                     </label>
-                                    <input class="terminal-input" placeholder="IDENTIFY_YOURSELF..." type="text"/>
+                                    <input class="terminal-input" name="name" placeholder="IDENTIFY_YOURSELF..." type="text" required/>
                                 </div>
                                 <div class="terminal-field">
                                     <label class="terminal-label">
                                         &gt; Contact_Frequency (Email)
                                     </label>
-                                    <input class="terminal-input" placeholder="RETURN_ADDRESS..." type="email"/>
+                                    <input class="terminal-input" name="email" placeholder="RETURN_ADDRESS..." type="email" required/>
                                 </div>
                             </div>
                             <div class="terminal-field">
                                 <label class="terminal-label">
                                     &gt; Encryption_Key (Subject)
                                 </label>
-                                <input class="terminal-input" placeholder="PURPOSE_OF_CONTACT..." type="text"/>
+                                <input class="terminal-input" name="subject" placeholder="PURPOSE_OF_CONTACT..." type="text" required/>
                             </div>
                             <div class="terminal-field">
                                 <label class="terminal-label">
                                     &gt; Message_Body
                                 </label>
                                 <div style="position: relative;">
-                                    <textarea class="terminal-input" style="resize: none;" placeholder="INITIALIZING TEXT STREAM...&#10;TYPE MESSAGE HERE..." rows="6"></textarea>
+                                    <textarea class="terminal-input" name="message" style="resize: none;" placeholder="INITIALIZING TEXT STREAM...&#10;TYPE MESSAGE HERE..." rows="6" required></textarea>
                                     <div class="terminal-char-count">
                                         CHARS: 000
                                     </div>
                                 </div>
                             </div>
-                            <div class="terminal-form-footer">
-                                <div class="terminal-form-meta">
-                                    <span>PROTOCOL: HTTP/3</span>
-                                    <span>LATENCY: 12ms</span>
+                                <div class="terminal-form-footer">
+                                    <div class="terminal-form-meta">
+                                        <span>PROTOCOL: HTTP/3</span>
+                                        <span>STATUS: {{ status() | uppercase }}</span>
+                                    </div>
+                                    <button class="btn-transmit" type="submit" [disabled]="status() === 'sending'">
+                                        <span style="position: relative; z-index: 10;">
+                                            {{ status() === 'sending' ? 'TRANSMITTING...' : 'Initiate Transmission' }}
+                                        </span>
+                                        <span class="material-symbols-outlined btn-transmit-icon">
+                                            {{ status() === 'success' ? 'check_circle' : 'send' }}
+                                        </span>
+                                        <div class="btn-transmit-overlay"></div>
+                                    </button>
                                 </div>
-                                <button class="btn-transmit" type="button">
-                                    <span style="position: relative; z-index: 10;">Initiate Transmission</span>
-                                    <span class="material-symbols-outlined btn-transmit-icon">send</span>
-                                    <div class="btn-transmit-overlay"></div>
-                                </button>
-                            </div>
+
+                                <div *ngIf="status() === 'success'" class="terminal-status-overlay success">
+                                    <div class="terminal-status-content">
+                                        <h3 class="terminal-status-title">TRANSMISSION SUCCESSFUL</h3>
+                                        <p>Uplink established. Signal confirmed.</p>
+                                        <button type="button" (click)="status.set('idle')" class="terminal-status-btn">DISMISS</button>
+                                    </div>
+                                </div>
+
+                                <div *ngIf="status() === 'error'" class="terminal-status-overlay error">
+                                    <div class="terminal-status-content">
+                                        <h3 class="terminal-status-title">TRANSMISSION FAILURE</h3>
+                                        <p>Signal lost. Check frequency alignment.</p>
+                                        <button type="button" (click)="status.set('idle')" class="terminal-status-btn">RETRY</button>
+                                    </div>
+                                </div>
                         </form>
                     </div>
                 </div>

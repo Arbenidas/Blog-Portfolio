@@ -292,14 +292,17 @@
 
         </div>
 
-        <!-- Social Sharing -->
+      </section>
+      
+      <!-- Social Sharing - Added more margin and consistent padding -->
+      <div class="px-6 pt-8 pb-12 md:px-12 md:pb-20">
         <app-share-buttons 
           [title]="work.title" 
           [description]="work.blocks[0]?.type === 'p' ? work.blocks[0].content : ''" 
           [image]="work.coverPhoto || ''">
         </app-share-buttons>
-      </section>
-      
+      </div>
+
     </div>
   </article>
 
