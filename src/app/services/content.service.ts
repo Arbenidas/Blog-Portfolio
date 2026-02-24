@@ -4,7 +4,7 @@ import { SupabaseService } from './supabase.service';
 
 export interface EditorBlock {
     id: string;
-    type: 'h1' | 'h2' | 'p' | 'image' | 'video' | 'code' | 'objective-header' | 'objectives' | 'divider' | 'tech-stack' | 'diagram' | 'widget';
+    type: 'h1' | 'h2' | 'p' | 'image' | 'video' | 'code' | 'objective-header' | 'objectives' | 'divider' | 'tech-stack' | 'diagram' | 'widget' | 'comparison';
     content: string;
     data?: any;
 }
@@ -59,6 +59,7 @@ export interface DocumentEntry {
     tags: string[];
     indexLog?: string;
     blocks: EditorBlock[];
+    status?: 'draft' | 'published';
     createdAt: string;
     updatedAt: string;
 }
@@ -111,6 +112,7 @@ export class ContentService {
             tags: d.tags || [],
             indexLog: d.index_log,
             blocks: d.blocks || [],
+            status: d.status || 'published',
             createdAt: d.created_at,
             updatedAt: d.updated_at
         };
@@ -121,6 +123,7 @@ export class ContentService {
             .from('documents')
             .select('*')
             .eq('category', 'work')
+            .eq('status', 'published')
             .neq('slug', 'system-settings')
             .order('created_at', { ascending: false });
 
@@ -138,6 +141,7 @@ export class ContentService {
             .from('documents')
             .select('*')
             .eq('category', 'log')
+            .eq('status', 'published')
             .order('created_at', { ascending: false });
 
         if (limitCount) {
@@ -145,6 +149,17 @@ export class ContentService {
         }
 
         const { data, error } = await query;
+        if (error) console.error(error);
+        return data ? data.map(this.mapToEntry) : [];
+    }
+
+    async getDraftDocuments(): Promise<DocumentEntry[]> {
+        const { data, error } = await this.supabase
+            .from('documents')
+            .select('*')
+            .eq('status', 'draft')
+            .order('updated_at', { ascending: false });
+
         if (error) console.error(error);
         return data ? data.map(this.mapToEntry) : [];
     }
@@ -221,6 +236,7 @@ export class ContentService {
             tags: doc.tags || [],
             index_log: doc.indexLog || '',
             blocks: doc.blocks || [],
+            status: doc.status || 'published',
             updated_at: new Date().toISOString()
         };
 

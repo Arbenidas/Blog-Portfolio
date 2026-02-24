@@ -2,59 +2,64 @@
   <div class="noise-overlay"></div>
   
   <!-- ADMIN SIDEBAR -->
-  <aside class="admin-sidebar">
+  <aside class="admin-sidebar" [class.collapsed]="isSidebarCollapsed">
     <div class="admin-sidebar-header">
-      <div class="admin-sidebar-title">
+      <div class="admin-sidebar-title" *ngIf="!isSidebarCollapsed">
         System_Admin //
       </div>
-      <div class="admin-status-dot"></div>
+      <button class="btn-collapse" (click)="toggleSidebar()">
+        <span class="material-symbols-outlined">
+          {{ isSidebarCollapsed ? 'menu' : 'menu_open' }}
+        </span>
+      </button>
+      <div class="admin-status-dot" *ngIf="!isSidebarCollapsed"></div>
     </div>
     
     <nav class="admin-nav">
-      <a routerLink="/admin" routerLinkActive="active-link" [routerLinkActiveOptions]="{exact: true}" class="admin-nav-link">
+      <a routerLink="/admin" routerLinkActive="active-link" [routerLinkActiveOptions]="{exact: true}" class="admin-nav-link" [title]="isSidebarCollapsed ? 'Dashboard' : ''">
         <span class="material-symbols-outlined admin-nav-icon">dashboard</span>
-        Dashboard
+        <span *ngIf="!isSidebarCollapsed">Dashboard</span>
       </a>
       
-      <div class="admin-nav-section">
+      <div class="admin-nav-section" *ngIf="!isSidebarCollapsed">
         <span class="admin-nav-section-title">Content Core</span>
       </div>
       
-      <a routerLink="/admin/editor" routerLinkActive="active-link" class="admin-nav-link">
+      <a routerLink="/admin/editor" routerLinkActive="active-link" class="admin-nav-link" [title]="isSidebarCollapsed ? 'New Entry' : ''">
         <span class="material-symbols-outlined admin-nav-icon">add_box</span>
-        New Entry
+        <span *ngIf="!isSidebarCollapsed">New Entry</span>
       </a>
-      <a routerLink="/admin/works" routerLinkActive="active-link" class="admin-nav-link">
+      <a routerLink="/admin/works" routerLinkActive="active-link" class="admin-nav-link" [title]="isSidebarCollapsed ? 'Works Vault' : ''">
         <span class="material-symbols-outlined admin-nav-icon">folder_open</span>
-        Works Vault
+        <span *ngIf="!isSidebarCollapsed">Works Vault</span>
       </a>
-      <a routerLink="/admin/logs" routerLinkActive="active-link" class="admin-nav-link">
+      <a routerLink="/admin/logs" routerLinkActive="active-link" class="admin-nav-link" [title]="isSidebarCollapsed ? 'Logs Archive' : ''">
         <span class="material-symbols-outlined admin-nav-icon">article</span>
-        Logs Archive
+        <span *ngIf="!isSidebarCollapsed">Logs Archive</span>
       </a>
       
-      <div class="admin-nav-section">
+      <div class="admin-nav-section" *ngIf="!isSidebarCollapsed">
         <span class="admin-nav-section-title">Configuration</span>
       </div>
       
-      <a routerLink="/admin/profile" routerLinkActive="active-link" class="admin-nav-link">
+      <a routerLink="/admin/profile" routerLinkActive="active-link" class="admin-nav-link" [title]="isSidebarCollapsed ? 'Personnel File' : ''">
         <span class="material-symbols-outlined admin-nav-icon">badge</span>
-        Personnel File
+        <span *ngIf="!isSidebarCollapsed">Personnel File</span>
       </a>
-      <a routerLink="/admin/design-studio" routerLinkActive="active-link" class="admin-nav-link">
+      <a routerLink="/admin/design-studio" routerLinkActive="active-link" class="admin-nav-link" [title]="isSidebarCollapsed ? 'Design Studio' : ''">
         <span class="material-symbols-outlined admin-nav-icon">extension</span>
-        Design Studio
+        <span *ngIf="!isSidebarCollapsed">Design Studio</span>
       </a>
     </nav>
     
     <div class="admin-sidebar-footer">
-      <button (click)="logout()" class="btn-logout">
+      <button (click)="logout()" class="btn-logout" [title]="isSidebarCollapsed ? 'Logout' : ''">
         <span class="material-symbols-outlined" style="font-size: 16px;">logout</span>
-        Logout
+        <span *ngIf="!isSidebarCollapsed">Logout</span>
       </button>
-      <a class="btn-public-site" routerLink="/">
+      <a class="btn-public-site" routerLink="/" [title]="isSidebarCollapsed ? 'Public Site' : ''">
         <span class="material-symbols-outlined" style="font-size: 14px;">public</span>
-        Go to Public Site
+        <span *ngIf="!isSidebarCollapsed">Go to Public Site</span>
       </a>
     </div>
   </aside>

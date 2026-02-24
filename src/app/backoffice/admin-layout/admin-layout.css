@@ -18,7 +18,7 @@
 
 .admin-sidebar {
     width: 16rem;
-    /* 64 * 0.25rem */
+    /* 256px */
     background-color: var(--charcoal);
     color: var(--paper-cream);
     border-right: 2px solid var(--charcoal);
@@ -26,15 +26,44 @@
     flex-direction: column;
     position: relative;
     z-index: 20;
+    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow-x: hidden;
+}
+
+.admin-sidebar.collapsed {
+    width: 4rem;
+    /* 64px - Enough for icons */
 }
 
 .admin-sidebar-header {
     padding: 1rem;
     border-bottom: 1px solid #374151;
-    /* gray-700 */
     display: flex;
     align-items: center;
     justify-content: space-between;
+    height: 3.5rem;
+    box-sizing: border-box;
+}
+
+.admin-sidebar.collapsed .admin-sidebar-header {
+    justify-content: center;
+    padding: 0.5rem;
+}
+
+.btn-collapse {
+    background: transparent;
+    border: none;
+    color: var(--accent-orange);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.25rem;
+    transition: transform 0.2s;
+}
+
+.btn-collapse:hover {
+    color: white;
 }
 
 .admin-sidebar-title {
@@ -44,6 +73,7 @@
     font-weight: bold;
     letter-spacing: 0.1em;
     color: var(--accent-orange);
+    white-space: nowrap;
 }
 
 .admin-status-dot {
@@ -51,7 +81,6 @@
     height: 0.5rem;
     border-radius: 50%;
     background-color: #22c55e;
-    /* green-500 */
     animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
@@ -64,6 +93,10 @@
     gap: 0.5rem;
 }
 
+.admin-sidebar.collapsed .admin-nav {
+    align-items: center;
+}
+
 .admin-nav-section {
     padding: 0.5rem 1.5rem;
     margin-top: 1rem;
@@ -73,7 +106,6 @@
     font-family: var(--font-mono);
     font-size: 10px;
     color: #6b7280;
-    /* gray-500 */
     text-transform: uppercase;
     font-weight: bold;
     letter-spacing: 0.1em;
@@ -86,7 +118,7 @@
     font-family: var(--font-display);
     font-weight: bold;
     text-transform: uppercase;
-    transition: background-color 0.3s;
+    transition: all 0.3s;
     display: flex;
     align-items: center;
     gap: 0.75rem;
@@ -95,18 +127,29 @@
     cursor: pointer;
     border-left: 4px solid transparent;
     box-sizing: border-box;
+    white-space: nowrap;
+}
+
+.admin-sidebar.collapsed .admin-nav-link {
+    padding: 0.75rem 0;
+    justify-content: center;
+    border-left-width: 0;
+    border-right: 4px solid transparent;
 }
 
 .admin-nav-link:hover {
     background-color: rgba(255, 255, 255, 0.05);
-    /* white/5 */
 }
 
 .admin-nav-link.active-link {
     background-color: rgba(255, 255, 255, 0.1);
-    /* white/10 */
     color: white;
     border-left-color: var(--accent-orange);
+}
+
+.admin-sidebar.collapsed .admin-nav-link.active-link {
+    border-left-color: transparent;
+    border-right-color: var(--accent-orange);
 }
 
 .admin-nav-icon {
@@ -116,11 +159,15 @@
 .admin-sidebar-footer {
     padding: 1.5rem;
     border-top: 1px solid #374151;
-    /* gray-700 */
     margin-top: auto;
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
+}
+
+.admin-sidebar.collapsed .admin-sidebar-footer {
+    padding: 1rem 0;
+    align-items: center;
 }
 
 .btn-logout {
@@ -139,6 +186,13 @@
     gap: 0.5rem;
     cursor: pointer;
     background-color: transparent;
+    white-space: nowrap;
+}
+
+.admin-sidebar.collapsed .btn-logout {
+    border: none;
+    width: auto;
+    padding: 0.5rem;
 }
 
 .btn-logout:hover {
@@ -150,7 +204,6 @@
     width: 100%;
     border: 2px solid transparent;
     color: #9ca3af;
-    /* gray-400 */
     font-family: var(--font-mono);
     font-size: 10px;
     text-transform: uppercase;
@@ -162,6 +215,11 @@
     gap: 0.5rem;
     text-decoration: none;
     cursor: pointer;
+    white-space: nowrap;
+}
+
+.admin-sidebar.collapsed .btn-public-site {
+    justify-content: center;
 }
 
 .btn-public-site:hover {
@@ -282,14 +340,17 @@
     pointer-events: none;
     z-index: -10;
 }
+
 /* Custom Scrollbar for Admin Main Content */
 .admin-main-content::-webkit-scrollbar {
     width: 8px;
 }
+
 .admin-main-content::-webkit-scrollbar-track {
     background: var(--paper-cream);
     border-left: 1px solid var(--charcoal);
 }
+
 .admin-main-content::-webkit-scrollbar-thumb {
     background: var(--charcoal);
     border: 1px solid var(--paper-cream);

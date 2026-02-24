@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, ChangeDetectorRef, PLATFORM_ID } from '@angular/core';
+import { Component, inject, OnInit, ChangeDetectorRef, PLATFORM_ID, PendingTasks } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { ContentService, DocumentEntry, CustomWidget } from '../../services/content.service';
@@ -6,10 +6,12 @@ import { DomSanitizer, SafeHtml, SafeResourceUrl } from '@angular/platform-brows
 import { SeoService } from '../../services/seo.service';
 
 import { ShareButtons } from '../../components/share-buttons/share-buttons.component';
+import { FFlowModule } from '@foblex/flow';
 
 @Component({
   selector: 'app-field-log',
-  imports: [CommonModule, RouterModule, ShareButtons],
+  standalone: true,
+  imports: [CommonModule, RouterModule, ShareButtons, FFlowModule],
   templateUrl: './field-log.html',
   styleUrl: './field-log.css',
 })
@@ -20,6 +22,7 @@ export class FieldLog implements OnInit {
   private cdr = inject(ChangeDetectorRef);
   private sanitizer = inject(DomSanitizer);
   private platformId = inject(PLATFORM_ID);
+  private pendingTasks = inject(PendingTasks);
 
   log: DocumentEntry | undefined;
   availableWidgets: CustomWidget[] = [];
@@ -28,31 +31,65 @@ export class FieldLog implements OnInit {
     this.route.paramMap.subscribe(async params => {
       const slug = params.get('slug');
       if (slug) {
-        this.availableWidgets = await this.contentService.getCustomWidgets();
+        const removeTask = this.pendingTasks.add();
+        try {
+          this.availableWidgets = await this.contentService.getCustomWidgets();
 
-        if (slug === 'preview') {
-          if (isPlatformBrowser(this.platformId)) {
-            const raw = localStorage.getItem('portfolio_preview');
-            if (raw) {
-              this.log = JSON.parse(raw);
-              this.cdr.detectChanges();
-              return;
+          if (slug === 'preview') {
+            if (isPlatformBrowser(this.platformId)) {
+              const raw = localStorage.getItem('portfolio_preview');
+              if (raw) {
+                this.log = JSON.parse(raw);
+                this.updateSeo();
+              }
+            }
+          } else {
+            this.log = await this.contentService.getDocument(slug);
+            if (this.log) {
+              this.updateSeo();
             }
           }
+          this.cdr.detectChanges();
+        } finally {
+          removeTask();
         }
-
-        this.log = await this.contentService.getDocument(slug);
-        if (this.log) {
-          this.seoService.updateMetaTags({
-            title: this.log.title,
-            description: this.log.blocks.find(b => b.type === 'p')?.content || `Field log: ${this.log.title}`,
-            image: this.log.coverPhoto,
-            type: 'article'
-          });
-        }
-        this.cdr.detectChanges();
       }
     });
+  }
+
+  private updateSeo() {
+    if (this.log) {
+      this.seoService.updateMetaTags({
+        title: this.log.title,
+        description: this.log.blocks.find(b => b.type === 'p')?.content || `Field log: ${this.log.title}`,
+        image: this.getCoverUrl(this.log.coverPhoto),
+        type: 'article'
+      });
+    }
+  }
+
+  // --- BANNER HELPERS ---
+  getCoverUrl(photoStr: string | undefined | null): string {
+    if (!photoStr) return '';
+    return photoStr.split('#')[0]; // Quita los parámetros para obtener la imagen limpia
+  }
+
+  getCoverStyles(photoStr: string | undefined | null): any {
+    if (!photoStr || !photoStr.includes('#')) {
+      // Si no hay recortes, todo se centra por defecto
+      return { 'object-position': '50% 50%', 'transform-origin': '50% 50%', 'transform': 'scale(1)' };
+    }
+    const params = new URLSearchParams(photoStr.split('#')[1]);
+    const x = params.get('x') || '50';
+    const y = params.get('y') || '50';
+    const s = params.get('s') || '100';
+
+    // Le aplicamos el X y el Y tanto a la posición como al origen del zoom
+    return {
+      'object-position': `${x}% ${y}%`,
+      'transform-origin': `${x}% ${y}%`,
+      'transform': `scale(${Number(s) / 100})`
+    };
   }
 
   getWidgetHtml(widgetId: string): SafeHtml {

@@ -19,12 +19,31 @@
     </div>
   </div>
 
-  <div class="editor-header">
+  <div class="editor-header" *ngIf="!zenMode">
     <a routerLink="/admin" class="btn-back-nav">
       <span class="material-symbols-outlined text-[16px]">arrow_back</span>
       Back to Dashboard
     </a>
     <div class="header-actions">
+      <span *ngIf="lastAutoSaveTime" style="font-family: var(--font-mono); font-size: 0.7rem; color: #9ca3af;">
+        Autoguardado: {{ lastAutoSaveTime }}
+      </span>
+
+      <div style="display: flex; align-items: center; border: 2px solid var(--charcoal); background: white; border-radius: 4px; overflow: hidden; margin-right: 0.5rem;">
+        <label [style.background]="documentStatus === 'draft' ? '#fcd34d' : 'transparent'"
+               style="padding: 0.4rem 0.75rem; cursor: pointer; font-family: var(--font-mono); font-size: 0.75rem; font-weight: bold; border-right: 2px solid var(--charcoal); display: flex; align-items: center; gap: 0.25rem; margin: 0;">
+          <input type="radio" [(ngModel)]="documentStatus" value="draft" style="display: none;">
+          <span class="material-symbols-outlined" style="font-size: 14px;">edit_document</span>
+          DRAFT
+        </label>
+        <label [style.background]="documentStatus === 'published' ? '#86efac' : 'transparent'"
+               style="padding: 0.4rem 0.75rem; cursor: pointer; font-family: var(--font-mono); font-size: 0.75rem; font-weight: bold; display: flex; align-items: center; gap: 0.25rem; margin: 0;">
+          <input type="radio" [(ngModel)]="documentStatus" value="published" style="display: none;">
+          <span class="material-symbols-outlined" style="font-size: 14px;">public</span>
+          PUBLISH
+        </label>
+      </div>
+
       <button (click)="preview()" class="btn-preview flex items-center justify-center gap-2">
         <span class="material-symbols-outlined text-[18px]">visibility</span> Preview
       </button>
@@ -34,18 +53,18 @@
     </div>
   </div>
 
-  <div class="workspace-box">
-    <div class="tape-strip" style="top: -15px; left: 50%; transform: translateX(-50%) rotate(1deg);"></div>
+  <div class="workspace-box" [class.zen-mode-active]="zenMode">
+    <div class="tape-strip" *ngIf="!zenMode" style="top: -15px; left: 50%; transform: translateX(-50%) rotate(1deg);"></div>
     
     <!-- Publish Animation Sticker -->
-    <div *ngIf="showPublishSticker" class="publish-stamp-overlay">
+    <div *ngIf="showPublishSticker && !zenMode" class="publish-stamp-overlay">
       <div class="publish-stamp">
         Published
       </div>
     </div>
     
     <!-- Document Meta -->
-    <div class="doc-meta-section">
+    <div class="doc-meta-section" *ngIf="!zenMode">
       <div>
         <label class="meta-label">Document Title</label>
         <input [(ngModel)]="title" (ngModelChange)="!documentId && (slug = contentService.generateSlug(title))" class="meta-input-title" placeholder="Untitled Entry" type="text" />
@@ -60,18 +79,65 @@
       </div>
       
       <div>
-        <label class="meta-label">Cover Photo (URL or File Upload)</label>
-        <div class="meta-cover-box">
-          <div class="meta-cover-input-group">
-            <input [(ngModel)]="coverPhoto" class="meta-cover-input" placeholder="https://example.com/image.jpg" type="text" />
-            <button (click)="fileInput.click()" class="btn-upload" title="Upload File">
+        <label class="meta-label">Cover Photo Banner Preview</label>
+        <div class="meta-cover-box" style="padding: 0; overflow: hidden; border-radius: 4px;">
+          
+          <div class="meta-cover-input-group" style="margin: 1rem; border: 2px solid #1a1a1a;">
+            <input [(ngModel)]="coverPhotoUrl" class="meta-cover-input" placeholder="https://example.com/image.jpg" type="text" style="border: none;" />
+            <button (click)="fileInput.click()" class="btn-upload" style="border-left: 2px solid #1a1a1a; background: #f9fafb;" title="Upload File">
               <span class="material-symbols-outlined text-[20px]">upload_file</span>
             </button>
             <input type="file" #fileInput (change)="onCoverPhotoSelected($event)" accept="image/*" class="hidden" style="display: none;" />
           </div>
-          <div *ngIf="coverPhoto" class="meta-cover-preview">
-            <img [src]="coverPhoto" class="meta-cover-img" alt="Cover Preview" />
+
+          <div *ngIf="coverPhotoUrl" style="padding-top: 1rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+              <span style="color: var(--charcoal); font-family: var(--font-mono); font-size: 0.75rem; font-weight: bold;">
+                {{ category === 'work' ? '16:9 WORK BANNER' : 'FIELD LOG BANNER (16rem)' }} PREVIEW
+              </span>
+              <span style="color: #9ca3af; font-family: var(--font-mono); font-size: 0.65rem;">Click & Drag to reposition</span>
+            </div>
+            
+            <div [style.aspect-ratio]="category === 'work' ? '16/9' : 'unset'"
+                 [style.height]="category === 'log' ? '16rem' : 'auto'"
+                 (mousedown)="onBannerDragStart($event)"
+                 (mousemove)="onBannerDragMove($event)"
+                 (mouseup)="onBannerDragEnd()"
+                 (mouseleave)="onBannerDragEnd()"
+                 (touchstart)="onBannerDragStart($event)"
+                 (touchmove)="onBannerDragMove($event)"
+                 (touchend)="onBannerDragEnd()"
+                 [style.cursor]="isDraggingBanner ? 'grabbing' : 'grab'"
+                 style="width: 100%; overflow: hidden; background-color: #f3f4f6; position: relative; border: 2px solid var(--charcoal); box-shadow: var(--shadow-sketch); touch-action: none; margin-bottom: 1rem;">
+              
+              <img [src]="coverPhotoUrl" 
+                   [style.object-position]="coverPosX + '% ' + coverPosY + '%'"
+                   [style.transform-origin]="coverPosX + '% ' + coverPosY + '%'"
+                   [style.transform]="'scale(' + (coverScale / 100) + ')'"
+                   style="width: 100%; height: 100%; object-fit: cover; display: block; pointer-events: none;" 
+                   alt="Banner Preview" />
+            </div>
+
+            <div style="padding: 1rem; display: flex; flex-wrap: wrap; align-items: center; gap: 1rem; background: var(--paper-cream); border: 1px dashed #d1d5db;">
+               
+               <div style="flex: 1; display: flex; align-items: center; gap: 0.5rem;">
+                 <span class="material-symbols-outlined" style="color: var(--accent-orange); font-size: 20px;">swipe</span>
+                 <span style="font-family: var(--font-mono); font-size: 0.7rem; color: #6b7280; text-transform: uppercase; font-weight: bold;">
+                   Drag image to adjust framing
+                 </span>
+               </div>
+               
+               <div style="flex: 1; min-width: 200px;">
+                 <div style="display: flex; justify-content: space-between; margin-bottom: 0.25rem;">
+                   <label style="font-family: var(--font-mono); font-size: 0.75rem; font-weight: bold; color: var(--charcoal);">Zoom Scale</label>
+                   <span style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--charcoal); font-weight: bold;">{{coverScale}}%</span>
+                 </div>
+                 <input type="range" min="100" max="250" [(ngModel)]="coverScale" style="width: 100%; accent-color: var(--accent-orange);">
+               </div>
+               
+            </div>
           </div>
+
         </div>
       </div>
       
@@ -111,6 +177,14 @@
 
     <!-- Toolbar -->
     <div class="toolbar-container">
+      <button (click)="toggleZenMode()" class="btn-toolbar" [title]="zenMode ? 'Exit Zen Mode' : 'Enter Zen Mode'">
+        <span class="material-symbols-outlined" [style.color]="zenMode ? '#d94e1e' : 'inherit'">
+          {{ zenMode ? 'close_fullscreen' : 'fullscreen' }}
+        </span>
+      </button>
+      
+      <div class="toolbar-divider"></div>
+
       <button (click)="addBlock('h1')" class="btn-toolbar btn-toolbar-h1" title="Add Heading 1">H1</button>
       <button (click)="addBlock('h2')" class="btn-toolbar btn-toolbar-h2" title="Add Heading 2">H2</button>
       <button (click)="addBlock('p')" class="btn-toolbar" title="Add Paragraph">
@@ -136,6 +210,9 @@
       </button>
       <button (click)="addBlock('diagram')" class="btn-toolbar" title="Add Diagram">
         <span class="material-symbols-outlined">account_tree</span>
+      </button>
+      <button (click)="addComparisonBlock()" class="btn-toolbar" title="Insertar Cuadro Comparativo">
+        <span class="material-symbols-outlined">splitscreen</span>
       </button>
       <div class="toolbar-divider"></div>
       <button (click)="openWidgetGallery()" class="btn-toolbar-stickers" title="Add Sticker/Widget">
@@ -166,11 +243,23 @@
 
         <!-- Render by block type -->
         <ng-container [ngSwitch]="block.type">
-          <input *ngSwitchCase="'h1'" [(ngModel)]="block.content" (ngModelChange)="updateIndexLogLive()" placeholder="Heading 1" class="input-h1" />
+          <input *ngSwitchCase="'h1'" [(ngModel)]="block.content" (ngModelChange)="updateIndexLogLive()" 
+                 id="block-input-{{i}}" (keydown)="onBlockKeyDown($event, i)" 
+                 (focus)="centerActiveBlock(i)"
+                 placeholder="Heading 1" class="input-h1" />
           
-          <input *ngSwitchCase="'h2'" [(ngModel)]="block.content" (ngModelChange)="updateIndexLogLive()" placeholder="Heading 2" class="input-h2" />
+          <input *ngSwitchCase="'h2'" [(ngModel)]="block.content" (ngModelChange)="updateIndexLogLive()" 
+                 id="block-input-{{i}}" (keydown)="onBlockKeyDown($event, i)" 
+                 (focus)="centerActiveBlock(i)"
+                 placeholder="Heading 2" class="input-h2" />
           
-          <textarea *ngSwitchCase="'p'" [(ngModel)]="block.content" placeholder="Write something..." class="input-p" rows="2" (input)="autoResize($any($event).target)"></textarea>
+          <textarea *ngSwitchCase="'p'" [(ngModel)]="block.content" 
+                    id="block-input-{{i}}" 
+                    (keydown)="onBlockKeyDown($event, i)"
+                    (input)="onBlockInput($event, i); autoResize($any($event).target)"
+                    (focus)="centerActiveBlock(i)"
+                    placeholder="Escribe algo o teclea '/' para comandos..." 
+                    class="input-p" rows="1"></textarea>
 
           <div *ngSwitchCase="'image'" style="width: 100%;">
             <div *ngIf="!block.content" class="block-image-empty">
@@ -264,249 +353,122 @@
           </div>
 
 
-          <div *ngSwitchCase="'diagram'" class="block-diagram-wrapper">
-            <div class="diagram-preview-badge">
-              <span class="material-symbols-outlined text-[12px]">build</span> SYSTEM_DIAGRAM
-            </div>
+          <div *ngSwitchCase="'diagram'" class="diagram-container">
             
-            <div class="diagram-preview-header">
-              <span class="diagram-preview-title">DIAGRAM PREVIEW</span>
-              <button (click)="openDiagramEditor(block)" class="btn-edit-diagram">
-                <span class="material-symbols-outlined text-[14px]">edit</span> Edit Diagram
-              </button>
-            </div>
-
-            <!-- Diagram Canvas Preview -->
-            <div class="diagram-preview-canvas">
-              <!-- SVG Arrow Overlay for Preview -->
-              <svg style="position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10;">
-                <defs>
-                  <marker id="prev-arrowhead-solid" markerWidth="12" markerHeight="8" refX="10" refY="4" orient="auto"><polygon points="0 0, 12 4, 0 8" fill="#1a1a1a" /></marker>
-                  <marker id="prev-arrowhead-dashed" markerWidth="12" markerHeight="8" refX="10" refY="4" orient="auto"><polygon points="0 0, 12 4, 0 8" fill="#1a1a1a" /></marker>
-                  <marker id="prev-arrowhead-zigzag" markerWidth="14" markerHeight="10" refX="12" refY="5" orient="auto"><polygon points="0 0, 14 5, 0 10" fill="#d94e1e" /></marker>
-                  <marker id="prev-arrowhead-graffiti" markerWidth="16" markerHeight="12" refX="14" refY="6" orient="auto"><circle cx="8" cy="6" r="5" fill="#1a1a1a" opacity="0.7" /></marker>
-                  <marker id="prev-arrowhead-dotted" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><circle cx="5" cy="5" r="4" fill="#1a1a1a" /></marker>
-                </defs>
-                <ng-container *ngFor="let arrow of block.data?.arrows">
-                  <line
-                    [attr.x1]="getNodeEdgePoint(block, arrow.from, arrow.to).x"
-                    [attr.y1]="getNodeEdgePoint(block, arrow.from, arrow.to).y"
-                    [attr.x2]="getNodeEdgePoint(block, arrow.to, arrow.from).x"
-                    [attr.y2]="getNodeEdgePoint(block, arrow.to, arrow.from).y"
-                    [attr.stroke]="arrow.type === 'zigzag' ? '#d94e1e' : '#1a1a1a'"
-                    [attr.stroke-width]="getArrowStrokeWidth(arrow.type)"
-                    [attr.stroke-dasharray]="getArrowDashArray(arrow.type) === 'none' ? null : getArrowDashArray(arrow.type)"
-                    [attr.marker-end]="getMarkerUrl(arrow.type, 'prev-arrowhead-')"
-                    [attr.opacity]="arrow.type === 'graffiti' ? 0.6 : 1"
-                    stroke-linecap="round"
-                  />
-                </ng-container>
-              </svg>
-              <div *ngFor="let node of block.data?.nodes; let ni = index" 
-                   style="position: absolute; pointer-events: auto;" 
-                   [style.left.px]="node.x" [style.top.px]="node.y">
+            <div class="diagram-header" style="justify-content: flex-start; gap: 1rem;">
+              <span style="font-size: 0.75rem; opacity: 0.7;">ADD NODE:</span>
               
-              <div style="position: relative;" class="group/node">
-                 <div *ngIf="node.type === 'postgres'" style="background-color: white; border: 2px solid var(--charcoal); padding: 0.75rem; display: flex; flex-direction: column; align-items: center; justify-content: center; min-width: 120px; box-shadow: 4px 4px 0 #e5e7eb;">
-                    <span class="material-symbols-outlined" style="color: #6b7280; margin-bottom: 0.25rem;">database</span>
-                    <div style="font-size: 10px; font-family: var(--font-mono); font-weight: bold; text-align: center; width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{node.label || 'Database'}}</div>
-                 </div>
-                 
-                 <div *ngIf="node.type === 'api'" style="background-color: var(--accent-orange); color: white; border: 2px solid var(--charcoal); width: 5rem; height: 5rem; border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; box-shadow: 4px 4px 0 var(--charcoal);">
-                    <span class="material-symbols-outlined" style="margin-bottom: 0.25rem;">hub</span>
-                    <div style="font-size: 9px; font-family: var(--font-mono); font-weight: bold; text-align: center; width: 100%; padding: 0 0.25rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{node.label || 'API'}}</div>
-                 </div>
-                 
-                 <div *ngIf="node.type === 'client' || node.type === 'mobile'" style="background-color: white; border: 2px solid var(--charcoal); padding: 0.75rem; display: flex; flex-direction: column; align-items: center; justify-content: center; min-width: 100px; box-shadow: 4px 4px 0 #e5e7eb;">
-                    <span class="material-symbols-outlined" style="color: #0d9488; margin-bottom: 0.25rem;">{{ node.type === 'client' ? 'devices' : 'phone_iphone' }}</span>
-                    <div style="font-size: 10px; font-family: var(--font-mono); font-weight: bold; text-align: center; width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{node.label || 'Client'}}</div>
-                 </div>
-                 
-                 <div *ngIf="node.type === 'text'" style="transform: rotate(-2deg);">
-                   <div style="background-color: transparent; font-family: var(--font-hand); font-size: 1.25rem; color: var(--charcoal);">{{node.label || 'Note'}}</div>
-                 </div>
+              <button *ngFor="let tpl of customNodeTemplates" (click)="addDiagramNode(block, tpl.id)" class="btn-toolbar-node" [title]="tpl.name">
+                <span *ngIf="tpl.icon" class="material-symbols-outlined" style="font-size: 16px;">{{ tpl.icon }}</span>
+                {{ tpl.name }}
+              </button>
+              <button (click)="addDiagramNode(block)" class="btn-toolbar-node" style="opacity: 0.6;">+ Blank</button>
 
-                 <!-- Custom Node from Design Studio -->
-                 <div *ngIf="node.type === 'custom' && node.config"
-                   style="padding: 0.75rem; display: flex; flex-direction: column; align-items: center; justify-content: center; min-width: 100px;"
-                   [style.background-color]="getBgColor(node.config.bg_color)"
-                   [style.color]="getTextColor(node.config.text_color)"
-                   [style.border]="getBorderCss(node.config.border_style)"
-                   [style.box-shadow]="getShadowCss(node.config.shadow_style)"
-                   [style.border-radius]="node.config.shape === 'circle' ? '50%' : '0'"
-                   [style.width]="node.config.shape === 'circle' ? '100px' : 'auto'"
-                   [style.height]="node.config.shape === 'circle' ? '100px' : 'auto'"
-                   [style.font-family]="getFontFamily(node.config.font || 'font-mono')">
-                    <span *ngIf="node.config.icon" class="material-symbols-outlined" style="margin-bottom: 0.25rem;">{{ node.config.icon }}</span>
-                    <div style="font-size: 10px; font-family: var(--font-mono); font-weight: bold; text-align: center; width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{node.label || 'Custom'}}</div>
-                 </div>
+              <div style="margin-left: auto; display: flex; align-items: center; gap: 0.25rem;">
+                <span style="font-size: 0.7rem; opacity: 0.7; margin-right: 0.25rem;">SIZE:</span>
+                
+                <button (click)="block.data.size = 'small'; saveSnapshot()" 
+                        class="btn-size" [class.active]="block.data.size === 'small'">S</button>
+                
+                <button (click)="block.data.size = 'medium'; saveSnapshot()" 
+                        class="btn-size" [class.active]="block.data.size === 'medium'">M</button>
+                
+                <button (click)="block.data.size = 'large'; saveSnapshot()" 
+                        class="btn-size" [class.active]="block.data.size === 'large' || !block.data.size">L</button>
+                
+                <span style="margin-left: 1rem; opacity: 0.5;">[SYSTEM_DIAGRAM]</span>
               </div>
             </div>
 
+            <div class="foblex-canvas-wrapper" 
+                 [ngClass]="'size-' + (block.data.size || 'large')">
+              <f-flow fDraggable (fCreateConnection)="onConnectionCreated($event, block)">
+                <f-canvas>
+                  
+                  <f-connection-for-create fBehavior="floating"></f-connection-for-create>
+
+                  <f-connection *ngFor="let conn of block.data.connections"
+                                [fOutputId]="conn.from"
+                                [fInputId]="conn.to"
+                                fBehavior="floating"
+                                fType="straight">
+                  </f-connection>
+
+                  <div fNode *ngFor="let node of block.data.nodes"
+                          [fNodePosition]="{x: node.x, y: node.y}"
+                          (fNodePositionChange)="onNodeDrag($event, node)"
+                          fDragHandle
+                          class="brutalist-node-strict">
+
+                    <div fNodeInput [fInputId]="node.id" fInputConnectableSide="left" class="f-port f-port-in"></div>
+
+                    <span *ngIf="node.icon" class="material-symbols-outlined strict-icon">
+                      {{ node.icon }}
+                    </span>
+                    
+                    <input [(ngModel)]="node.text" 
+                           (change)="saveSnapshot()" 
+                           (keydown)="$event.stopPropagation()" 
+                           class="strict-input" />
+
+                    <button class="strict-delete-btn" (click)="removeDiagramNode(block, node.id)" title="Delete Node">
+                      <span class="material-symbols-outlined" style="font-size: 14px; font-weight: bold;">close</span>
+                    </button>
+
+                    <div fNodeOutput [fOutputId]="node.id" fOutputConnectableSide="right" class="f-port f-port-out"></div>
+                  </div>
+                </f-canvas>
+              </f-flow>
             </div>
           </div>
+
+          <div *ngSwitchCase="'comparison'" class="comp-box">
+            
+            <div class="comp-header">
+              <span class="material-symbols-outlined">compare_arrows</span>
+              <span>COMPARISON_MATRIX</span>
+            </div>
+
+            <div class="comp-row comp-title-bg">
+              <input [(ngModel)]="block.data.col1Title" (change)="saveSnapshot()" class="comp-input comp-title" placeholder="OPCIÓN A" />
+              <div class="comp-vs">VS</div>
+              <input [(ngModel)]="block.data.col2Title" (change)="saveSnapshot()" class="comp-input comp-title" placeholder="OPCIÓN B" />
+            </div>
+
+            <div class="comp-row" *ngFor="let row of block.data.rows; let i = index">
+              <textarea [(ngModel)]="row.col1" (change)="saveSnapshot()" (input)="autoResize($any($event).target)" class="comp-input comp-text" rows="1" placeholder="Detalle de la opción A..."></textarea>
+              
+              <div class="comp-vs"></div>
+              
+              <textarea [(ngModel)]="row.col2" (change)="saveSnapshot()" (input)="autoResize($any($event).target)" class="comp-input comp-text" rows="1" placeholder="Detalle de la opción B..."></textarea>
+              
+              <button class="comp-delete" (click)="removeComparisonRow(block, i)">
+                <span class="material-symbols-outlined" style="font-size:14px; font-weight:bold;">close</span>
+              </button>
+            </div>
+
+            <button class="comp-add" (click)="addComparisonRow(block)">+ ADD ROW</button>
+          </div>
         </ng-container>
 
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- Diagram Editor Modal -->
-<div *ngIf="editingDiagramBlock" class="modal-overlay modal-overlay-blur">
-  <div class="diagram-modal-box">
-    
-    <!-- Modal Header -->
-    <div class="diagram-modal-header">
-      <div class="diagram-modal-nodes-group">
-        <span class="diagram-modal-label">ADD NODE:</span>
-        <button (click)="addDiagramNode(editingDiagramBlock, 'postgres', 'Postgres Cluster')" class="btn-add-node">Database</button>
-        <button (click)="addDiagramNode(editingDiagramBlock, 'api', 'GQL_API')" class="btn-add-node">API Core</button>
-        <button (click)="addDiagramNode(editingDiagramBlock, 'client', 'Client App')" class="btn-add-node">Client</button>
-        <button (click)="addDiagramNode(editingDiagramBlock, 'mobile', 'Mobile PWA')" class="btn-add-node">Mobile</button>
-        <button (click)="addDiagramNode(editingDiagramBlock, 'text', 'Note Text')" class="btn-add-node">Text Note</button>
-        
-        <!-- Custom Nodes from Design Studio -->
-        <ng-container *ngIf="availableDiagramNodes().length > 0">
-          <div class="toolbar-divider" style="height: 1.5rem;"></div>
-          <button *ngFor="let dn of availableDiagramNodes()" (click)="addCustomDiagramNode(editingDiagramBlock, dn)" class="btn-add-node btn-add-node-custom">
-            <span *ngIf="dn.icon" class="material-symbols-outlined text-[14px]">{{ dn.icon }}</span>
-            {{ dn.name }}
-          </button>
-        </ng-container>
-      </div>
-      
-      <button (click)="closeDiagramEditor()" class="btn-diagram-done">
-        <span class="material-symbols-outlined text-[18px]">check</span> DONE
-      </button>
-    </div>
-
-    <!-- Arrow Toolbar -->
-    <div class="diagram-toolbar">
-      <button (click)="toggleArrowMode()"
-        [class]="arrowMode ? 'btn-arrow-mode-active' : 'btn-arrow-mode-inactive'"
-        class="btn-arrow-mode">
-        <span class="material-symbols-outlined text-[16px]">{{ arrowMode ? 'link_off' : 'link' }}</span>
-        {{ arrowMode ? 'EXIT CONNECT' : 'CONNECT NODES' }}
-      </button>
-
-      <ng-container *ngIf="arrowMode">
-        <div class="diagram-toolbar-divider"></div>
-        <span class="diagram-toolbar-label">STYLE:</span>
-        <button *ngFor="let at of arrowTypes" (click)="selectedArrowType = at.id"
-          [class]="selectedArrowType === at.id ? 'btn-arrow-type-active' : 'btn-arrow-type-inactive'"
-          class="btn-arrow-type"
-          [title]="at.desc">
-          {{ at.label }}
-        </button>
-        <div class="diagram-toolbar-divider"></div>
-        <span *ngIf="arrowFromNode" class="diagram-status-text diagram-status-target">CLICK TARGET NODE...</span>
-        <span *ngIf="!arrowFromNode" class="diagram-status-text diagram-status-source">CLICK SOURCE NODE</span>
-      </ng-container>
-
-      <!-- Arrow List for deletion -->
-      <ng-container *ngIf="editingDiagramBlock.data?.arrows?.length">
-        <div class="diagram-toolbar-divider"></div>
-        <span class="diagram-toolbar-label" style="margin-right:0;">{{ editingDiagramBlock.data!.arrows!.length }} CONNECTIONS</span>
-        <button (click)="editingDiagramBlock.data!.arrows = []" class="btn-clear-arrows">
-          CLEAR ALL
-        </button>
-      </ng-container>
-    </div>
-
-    <!-- Modal Canvas Space -->
-    <div class="diagram-modal-canvas-area">
-      <div class="diagram-modal-canvas-box" id="diagram-editor-canvas">
-        
-        <!-- SVG Arrow Overlay -->
-        <svg style="position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10;">
-          <defs>
-            <!-- Brutalist arrowhead -->
-            <marker id="arrowhead-solid" markerWidth="12" markerHeight="8" refX="10" refY="4" orient="auto">
-              <polygon points="0 0, 12 4, 0 8" fill="#1a1a1a" />
-            </marker>
-            <marker id="arrowhead-dashed" markerWidth="12" markerHeight="8" refX="10" refY="4" orient="auto">
-              <polygon points="0 0, 12 4, 0 8" fill="#1a1a1a" />
-            </marker>
-            <marker id="arrowhead-zigzag" markerWidth="14" markerHeight="10" refX="12" refY="5" orient="auto">
-              <polygon points="0 0, 14 5, 0 10" fill="#d94e1e" />
-            </marker>
-            <marker id="arrowhead-graffiti" markerWidth="16" markerHeight="12" refX="14" refY="6" orient="auto">
-              <circle cx="8" cy="6" r="5" fill="#1a1a1a" opacity="0.7" />
-            </marker>
-            <marker id="arrowhead-dotted" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
-              <circle cx="5" cy="5" r="4" fill="#1a1a1a" />
-            </marker>
-          </defs>
-
-          <ng-container *ngFor="let arrow of editingDiagramBlock.data?.arrows; let ai = index">
-            <line
-              [attr.x1]="getNodeEdgePoint(editingDiagramBlock, arrow.from, arrow.to).x"
-              [attr.y1]="getNodeEdgePoint(editingDiagramBlock, arrow.from, arrow.to).y"
-              [attr.x2]="getNodeEdgePoint(editingDiagramBlock, arrow.to, arrow.from).x"
-              [attr.y2]="getNodeEdgePoint(editingDiagramBlock, arrow.to, arrow.from).y"
-              [attr.stroke]="arrow.type === 'zigzag' ? '#d94e1e' : '#1a1a1a'"
-              [attr.stroke-width]="getArrowStrokeWidth(arrow.type)"
-              [attr.stroke-dasharray]="getArrowDashArray(arrow.type) === 'none' ? null : getArrowDashArray(arrow.type)"
-              [attr.marker-end]="getMarkerUrl(arrow.type)"
-              [attr.opacity]="arrow.type === 'graffiti' ? 0.6 : 1"
-              stroke-linecap="round"
-            />
-          </ng-container>
-        </svg>
-
-        <div *ngFor="let node of editingDiagramBlock.data?.nodes; let ni = index" 
-             cdkDrag [cdkDragBoundary]="'#diagram-editor-canvas'" 
-             [cdkDragFreeDragPosition]="{x: node.x, y: node.y}"
-             class="diagram-node-draggable" 
-             [style.cursor]="arrowMode ? 'crosshair' : 'move'"
-             (cdkDragEnded)="onNodeDragEnded($event, node)"
-             (click)="onNodeClickForArrow(node.id)">
-          
-          <div class="diagram-node-inner"
-            [class.diagram-node-inner-active]="arrowFromNode === node.id"
-            class="group/node">
-             <button (click)="editingDiagramBlock.data!.nodes.splice(ni, 1); $event.stopPropagation()" class="btn-delete-node">×</button>
-             
-             <div *ngIf="node.type === 'postgres'" style="background-color: white; border: 2px solid var(--charcoal); padding: 0.75rem; display: flex; flex-direction: column; align-items: center; justify-content: center; min-width: 120px; box-shadow: 4px 4px 0 #e5e7eb;">
-                <span class="material-symbols-outlined" style="color: #6b7280; margin-bottom: 0.25rem;">database</span>
-                <input [(ngModel)]="node.label" class="input-node-label" />
-             </div>
-             
-             <div *ngIf="node.type === 'api'" style="background-color: var(--accent-orange); color: white; border: 2px solid var(--charcoal); width: 5rem; height: 5rem; border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; box-shadow: 4px 4px 0 var(--charcoal);">
-                <span class="material-symbols-outlined" style="margin-bottom: 0.25rem;">hub</span>
-                <input [(ngModel)]="node.label" class="input-node-label input-node-label-small" />
-             </div>
-             
-             <div *ngIf="node.type === 'client' || node.type === 'mobile'" style="background-color: white; border: 2px solid var(--charcoal); padding: 0.75rem; display: flex; flex-direction: column; align-items: center; justify-content: center; min-width: 100px; box-shadow: 4px 4px 0 #e5e7eb;">
-                <span class="material-symbols-outlined" style="color: #0d9488; margin-bottom: 0.25rem;">{{ node.type === 'client' ? 'devices' : 'phone_iphone' }}</span>
-                <input [(ngModel)]="node.label" class="input-node-label" />
-             </div>
-             
-             <div *ngIf="node.type === 'text'" style="transform: rotate(-2deg);">
-               <textarea [(ngModel)]="node.label" class="input-node-text" placeholder="Type here..." rows="2"></textarea>
-             </div>
-
-             <!-- Custom Node from Design Studio -->
-             <div *ngIf="node.type === 'custom' && node.config" 
-               style="padding: 0.75rem; display: flex; flex-direction: column; align-items: center; justify-content: center; min-width: 100px;"
-               [style.background-color]="getBgColor(node.config.bg_color)"
-               [style.color]="getTextColor(node.config.text_color)"
-               [style.border]="getBorderCss(node.config.border_style)"
-               [style.box-shadow]="getShadowCss(node.config.shadow_style)"
-               [style.border-radius]="node.config.shape === 'circle' ? '50%' : '0'"
-               [style.width]="node.config.shape === 'circle' ? '100px' : 'auto'"
-               [style.height]="node.config.shape === 'circle' ? '100px' : 'auto'"
-               [style.font-family]="getFontFamily(node.config.font || 'font-mono')">
-                <span *ngIf="node.config.icon" class="material-symbols-outlined" style="margin-bottom: 0.25rem;">{{ node.config.icon }}</span>
-                <input [(ngModel)]="node.label" class="input-node-label" />
-             </div>
+        <div *ngIf="showSlashMenu && activeBlockIndex === i" class="slash-menu">
+          <div class="slash-menu-header">Bloques Disponibles</div>
+          <div *ngFor="let cmd of slashCommands; let ci = index"
+               class="slash-menu-item"
+               [class.slash-menu-item-active]="slashMenuSelectedIndex === ci"
+               (click)="executeSlashCommand(cmd.type)"
+               (mouseenter)="slashMenuSelectedIndex = ci">
+            <span class="material-symbols-outlined text-[16px]">{{cmd.icon}}</span>
+            <span>{{cmd.label}}</span>
           </div>
         </div>
+
       </div>
     </div>
   </div>
 </div>
+
+
 
 <!-- Widget Gallery Modal -->
 <div *ngIf="showWidgetGallery" class="modal-overlay modal-overlay-blur">
@@ -539,3 +501,88 @@
     </div>
   </div>
 </div>
+
+<div *ngIf="zenMode" class="zen-help-btn" (click)="toggleZenHelp()" title="Ver atajos de teclado">
+  <span class="material-symbols-outlined">keyboard_command_key</span>
+</div>
+
+<div *ngIf="showZenHelp" class="brutalist-overlay" (click)="toggleZenHelp()">
+  <div class="brutalist-modal cheat-sheet-modal" (click)="$event.stopPropagation()">
+    
+    <div class="modal-header" style="color: var(--charcoal, #1a1a1a);">
+      <span class="material-symbols-outlined" style="font-size: 28px;">keyboard</span>
+      MARKDOWN CHEAT SHEET
+    </div>
+    
+    <div class="modal-body cheat-sheet-grid">
+      <div class="cheat-row">
+        <span class="key-badge">/</span> <span>Abre el Menú Mágico</span>
+      </div>
+      <div class="cheat-row">
+        <span class="key-badge"># + Espacio</span> <span>Título 1 (H1)</span>
+      </div>
+      <div class="cheat-row">
+        <span class="key-badge">## + Espacio</span> <span>Título 2 (H2)</span>
+      </div>
+      <div class="cheat-row">
+        <span class="key-badge">---</span> <span>Línea Separadora</span>
+      </div>
+      <div class="cheat-row">
+        <span class="key-badge">```</span> <span>Bloque de Código</span>
+      </div>
+      <div class="cheat-row">
+        <span class="key-badge">> + Espacio</span> <span>Cabecera de Objetivo</span>
+      </div>
+      <div class="cheat-row" style="margin-top: 1rem; border-top: 2px dashed #e5e7eb; padding-top: 1rem;">
+        <span class="key-badge">Ctrl + Z</span> <span>Deshacer (Máquina del tiempo)</span>
+      </div>
+    </div>
+    
+    <div class="modal-actions">
+      <button (click)="toggleZenHelp()" class="btn-discard" style="width: 100%;">
+        CLOSE / RETURN TO ZEN
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<div *ngIf="showToast" class="toast-container">
+  <div class="brutalist-toast" [ngClass]="toastType === 'live' ? 'toast-live' : 'toast-draft'">
+    
+    <span class="material-symbols-outlined" style="font-size: 28px; font-weight: 900;">
+      {{ toastType === 'live' ? 'rocket_launch' : 'edit_document' }}
+    </span>
+    
+    <span>{{ toastMessage }}</span>
+
+  </div>
+</div>
+
+<div *ngIf="showDraftModal" class="brutalist-overlay">
+  <div class="brutalist-modal">
+    
+    <div class="modal-header">
+      <span class="material-symbols-outlined" style="font-size: 28px;">warning</span>
+      UNSAVED DRAFT DETECTED
+    </div>
+    
+    <div class="modal-body">
+      <p>System found an unsaved local draft for this entry.</p>
+      <p>Do you want to recover your previous progress or start a completely fresh document?</p>
+    </div>
+    
+    <div class="modal-actions">
+      <button (click)="discardDraft()" class="btn-discard">
+        START FRESH
+      </button>
+      
+      <button (click)="acceptDraft()" class="btn-recover">
+        RECOVER DRAFT
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<div *ngIf="isExiting" class="page-transition-curtain"></div>

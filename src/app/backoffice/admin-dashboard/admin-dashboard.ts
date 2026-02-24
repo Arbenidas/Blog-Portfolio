@@ -17,6 +17,7 @@ export class AdminDashboard {
   worksCount = 0;
   logsCount = 0;
   recentEntries: DocumentEntry[] = [];
+  drafts: DocumentEntry[] = [];
   loading = true;
 
   systemTags: string[] = [];
@@ -30,14 +31,16 @@ export class AdminDashboard {
   }
 
   async loadData() {
-    const [works, logs, systemTags] = await Promise.all([
+    const [works, logs, drafts, systemTags] = await Promise.all([
       this.contentService.getAllWorks(),
       this.contentService.getAllLogs(),
+      this.contentService.getDraftDocuments(),
       this.contentService.getSystemTags()
     ]);
 
     this.worksCount = works.length;
     this.logsCount = logs.length;
+    this.drafts = drafts;
     this.systemTags = systemTags;
 
     // Merge and sort by updatedAt descending, take latest 6

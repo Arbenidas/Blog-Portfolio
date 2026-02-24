@@ -13,16 +13,13 @@ const app = express();
 const angularApp = new AngularNodeAppEngine();
 
 /**
- * Example Express Rest API endpoints can be defined here.
- * Uncomment and define endpoints as necessary.
- *
- * Example:
- * ```ts
- * app.get('/api/{*splat}', (req, res) => {
- *   // Handle API request
- * });
- * ```
+ * Caching middleware for dynamic routes
+ * ¡CORREGIDO!: Usamos :slug en lugar de * para compatibilidad con Express v8+
  */
+app.get(['/logs/:slug', '/works/:slug'], (req, res, next) => {
+  res.setHeader('Cache-Control', 'public, s-maxage=86400, stale-while-revalidate');
+  next();
+});
 
 /**
  * Serve static files from /browser

@@ -86,6 +86,41 @@
         </div>
       </div>
     </div>
+
+    <!-- PENDING DRAFTS -->
+    <div class="recent-entries-inner" style="margin-top: 2rem;">
+      <h2 class="recent-entries-title" style="display: flex; align-items: center; gap: 0.5rem;">
+        <span class="material-symbols-outlined">edit_document</span> PENDING_DRAFTS
+      </h2>
+      
+      <div *ngIf="!loading && drafts.length === 0" class="empty-state-box">
+        No pending drafts. Everything is published.
+      </div>
+
+      <div *ngIf="!loading && drafts.length > 0" class="entries-list">
+        <div *ngFor="let draft of drafts" class="entry-row">
+          <div class="entry-info">
+            <div class="entry-badge entry-badge-draft">
+              {{ draft.category }}
+            </div>
+            <div class="entry-details">
+              <h3 class="entry-title entry-title-draft"
+                [routerLink]="'/admin/editor/' + draft.slug">{{ draft.title || 'Untitled Document' }}</h3>
+              <p class="entry-meta">Last edited {{ draft.updatedAt | date:'short' }}</p>
+            </div>
+          </div>
+          <div class="entry-actions">
+            <button class="btn-action btn-action-edit"
+              [routerLink]="'/admin/editor/' + draft.slug">
+              <span class="material-symbols-outlined btn-action-icon">edit</span>
+            </button>
+            <button (click)="deleteEntry(draft)" class="btn-action btn-action-delete">
+              <span class="material-symbols-outlined btn-action-icon">delete</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   <!-- TAG MANAGER -->
   <div class="tech-stack-dictionary-container">
     <div class="dictionary-header">

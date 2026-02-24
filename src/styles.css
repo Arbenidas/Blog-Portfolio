@@ -48,12 +48,7 @@ textarea {
   margin: 0;
 }
 
-button,
-[type="button"],
-[type="reset"],
-[type="submit"] {
-  -webkit-appearance: button;
-}
+
 
 button {
   background-color: transparent;
@@ -494,4 +489,144 @@ a {
 .logs-scroll::-webkit-scrollbar-thumb {
   background: var(--charcoal);
   border: 1px solid var(--paper-cream);
+}
+
+/* =========================================================
+   ZEN MODE GLOBAL OVERRIDES
+   ========================================================= */
+
+/* Cuando el body tiene esta clase, ocultamos la estructura del Admin */
+body.zen-is-active .admin-topbar,
+body.zen-is-active .admin-sidebar,
+body.zen-is-active .noise-overlay {
+  display: none !important;
+}
+
+/* Forzamos que el contenedor principal no restrinja al editor */
+body.zen-is-active .admin-main-content {
+  overflow: visible !important;
+}
+
+/* Opcional: Para evitar que la página de fondo se pueda scrollear */
+body.zen-is-active {
+  overflow: hidden !important;
+}
+
+/* Opcional: Para evitar que la página de fondo se pueda scrollear */
+/* === NODO BRUTALISTA EXACTO (Como en la Img 10) === */
+.brutalist-node-strict {
+  background-color: #ffffff;
+  /* Fondo blanco por defecto a prueba de fallos */
+  color: #1a1a1a;
+  border: 2px solid #1a1a1a;
+  box-shadow: 4px 4px 0px #1a1a1a;
+  min-width: 130px;
+  min-height: 80px;
+  /* Hace que se vea como un rectángulo/cuadrado */
+  padding: 1rem 0.5rem;
+  position: relative;
+  cursor: grab;
+  display: flex;
+  flex-direction: column;
+  /* Ícono ARRIBA, texto ABAJO */
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-family: var(--font-mono, monospace);
+  transition: transform 0.1s, box-shadow 0.1s;
+}
+
+.brutalist-node-strict:active {
+  cursor: grabbing;
+}
+
+/* Efecto al pasar el mouse (se presiona el botón) */
+.brutalist-node-strict:hover {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0px #1a1a1a;
+}
+
+.strict-icon {
+  font-size: 24px;
+  display: block;
+}
+
+.strict-input {
+  border: none;
+  outline: none;
+  background: transparent;
+  font-family: inherit;
+  font-weight: 900;
+  font-size: 0.85rem;
+  text-align: center;
+  width: 100%;
+  color: inherit;
+}
+
+/* El botón de borrar (X roja flotante) */
+.strict-delete-btn {
+  position: absolute;
+  top: -12px;
+  right: -12px;
+  background-color: #ef4444;
+  color: white;
+  border: 2px solid #1a1a1a;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.2s;
+  z-index: 10;
+}
+
+.brutalist-node-strict:hover .strict-delete-btn {
+  opacity: 1;
+}
+
+/* Base styles for compatibility with previously added classes */
+/* =========================================================
+   DIAGRAM DESIGN SYSTEM (DESIGN STUDIO RESTORATION)
+   ========================================================= */
+
+.brutalist-node {
+  padding: 0.75rem 1rem;
+  min-width: 140px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.brutalist-node:hover {
+  transform: scale(0.98);
+}
+
+.node-inner-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.node-icon {
+  font-size: 20px;
+}
+
+.node-input,
+.node-text {
+  border: none;
+  outline: none;
+  background: transparent;
+  font-family: inherit;
+  font-weight: 900;
+  font-size: 0.9rem;
+  text-align: center;
+  width: 100%;
+  max-width: 120px;
 }

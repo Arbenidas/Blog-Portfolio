@@ -24,7 +24,7 @@ export class SeoService {
     updateMetaTags(config: MetaConfig) {
         const title = config.title ? `${config.title} | Arbe_Workshop` : this.DEFAULT_TITLE;
         const description = config.description || this.DEFAULT_DESC;
-        const image = config.image || this.DEFAULT_IMAGE;
+        const image = config.image ? this.getTransformedImageUrl(config.image) : this.DEFAULT_IMAGE;
         const url = config.url ? `https://arbe.blog${config.url}` : this.DEFAULT_URL;
         const type = config.type || 'website';
 
@@ -43,6 +43,20 @@ export class SeoService {
         this.metaService.updateTag({ name: 'twitter:title', content: title });
         this.metaService.updateTag({ name: 'twitter:description', content: description });
         this.metaService.updateTag({ name: 'twitter:image', content: image });
+    }
+
+    /**
+     * Optimizes Supabase image URLs for social media.
+     * Future: Add watermark parameters here when supported.
+     */
+    private getTransformedImageUrl(imageUrl: string): string {
+        if (!imageUrl) return this.DEFAULT_IMAGE;
+        // If it's a Supabase storage URL, we can append transformation parameters
+        if (imageUrl.includes('supabase.co/storage/v1/object/public/')) {
+            const baseUrl = imageUrl.split('?')[0];
+            return `${baseUrl}?width=1200&height=630&resize=cover`;
+        }
+        return imageUrl;
     }
 
     resetMetaTags() {

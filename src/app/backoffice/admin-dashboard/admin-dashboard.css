@@ -266,6 +266,14 @@
     border-color: var(--accent-orange);
 }
 
+.entry-badge-draft {
+    background-color: #fef3c7;
+    /* Amber-100 */
+    color: #d97706;
+    /* Amber-600 */
+    border-color: #d97706;
+}
+
 .entry-details {
     display: flex;
     flex-direction: column;
@@ -278,6 +286,10 @@
     margin: 0;
     transition: color 0.3s;
     cursor: pointer;
+}
+
+.entry-title-draft:hover {
+    color: #d97706;
 }
 
 .entry-row:hover .entry-title-work {

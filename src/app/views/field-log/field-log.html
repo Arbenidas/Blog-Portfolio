@@ -33,8 +33,10 @@
       
       <!-- Meta Header -->
       <header class="log-header">
-        <div *ngIf="log.coverPhoto" class="cover-photo-box">
-           <img [src]="log.coverPhoto" class="cover-photo-img" />
+        <div *ngIf="log.coverPhoto" class="cover-photo-box" style="overflow: hidden;">
+           <img [src]="getCoverUrl(log.coverPhoto)" 
+                class="cover-photo-img" 
+                [ngStyle]="getCoverStyles(log.coverPhoto)" />
         </div>
         <div class="meta-badges">
           <span class="meta-badge meta-badge-status">STATUS: LOGGED</span>
@@ -87,69 +89,61 @@
             </div>
           </div>
 
+          <div *ngIf="block.type === 'comparison'" class="comp-box">
+            
+            <div class="comp-header">
+              <span class="material-symbols-outlined">compare_arrows</span>
+              <span>DATA_COMPARISON_LOG</span>
+            </div>
+
+            <div class="comp-row comp-title-bg">
+              <div class="comp-input comp-title">{{ block.data.col1Title }}</div>
+              <div class="comp-vs">VS</div>
+              <div class="comp-input comp-title">{{ block.data.col2Title }}</div>
+            </div>
+
+            <div class="comp-row" *ngFor="let row of block.data.rows">
+              <div class="comp-input comp-text" style="white-space: pre-wrap;">{{ row.col1 }}</div>
+              <div class="comp-vs"></div>
+              <div class="comp-input comp-text" style="white-space: pre-wrap;">{{ row.col2 }}</div>
+            </div>
+          </div>
+
           <div *ngIf="block.type === 'diagram'" class="block-diagram">
             <div class="block-diagram-box">
-              <div class="block-diagram-label">
+              <div class="block-diagram-label" style="background: var(--charcoal); color: white; padding: 0.5rem 1rem; border-bottom: 2px solid var(--charcoal); font-weight: bold;">
                 <span class="material-symbols-outlined" style="font-size: 12px;">account_tree</span> SYSTEM_DIAGRAM
+                <span style="margin-left: auto; color: #86efac; font-size: 0.65rem; float: right;">[SECURE_VIEW]</span>
               </div>
               
-              <div class="block-diagram-canvas">
+              <div class="foblex-canvas-wrapper" 
+                   [ngClass]="'size-' + (block.data.size || 'large')">
+                <f-flow>
+                  <f-canvas>
+                    <f-connection *ngFor="let conn of block.data?.connections"
+                                  [fOutputId]="conn.from"
+                                  [fInputId]="conn.to"
+                                  fBehavior="floating"
+                                  fType="straight">
+                    </f-connection>
 
-                <!-- SVG Arrow Overlay -->
-                <svg style="position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10;">
-                  <defs>
-                    <marker id="fl-arrowhead-solid" markerWidth="12" markerHeight="8" refX="10" refY="4" orient="auto"><polygon points="0 0, 12 4, 0 8" fill="#1a1a1a" /></marker>
-                    <marker id="fl-arrowhead-dashed" markerWidth="12" markerHeight="8" refX="10" refY="4" orient="auto"><polygon points="0 0, 12 4, 0 8" fill="#1a1a1a" /></marker>
-                    <marker id="fl-arrowhead-zigzag" markerWidth="14" markerHeight="10" refX="12" refY="5" orient="auto"><polygon points="0 0, 14 5, 0 10" fill="#d94e1e" /></marker>
-                    <marker id="fl-arrowhead-graffiti" markerWidth="16" markerHeight="12" refX="14" refY="6" orient="auto"><circle cx="8" cy="6" r="5" fill="#1a1a1a" opacity="0.7" /></marker>
-                    <marker id="fl-arrowhead-dotted" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><circle cx="5" cy="5" r="4" fill="#1a1a1a" /></marker>
-                  </defs>
-                  <ng-container *ngFor="let arrow of block.data?.arrows">
-                    <line
-                      [attr.x1]="getNodeEdgePoint(block, arrow.from, arrow.to).x"
-                      [attr.y1]="getNodeEdgePoint(block, arrow.from, arrow.to).y"
-                      [attr.x2]="getNodeEdgePoint(block, arrow.to, arrow.from).x"
-                      [attr.y2]="getNodeEdgePoint(block, arrow.to, arrow.from).y"
-                      [attr.stroke]="arrow.type === 'zigzag' ? '#d94e1e' : '#1a1a1a'"
-                      [attr.stroke-width]="getArrowStrokeWidth(arrow.type)"
-                      [attr.stroke-dasharray]="getArrowDashArray(arrow.type) === 'none' ? null : getArrowDashArray(arrow.type)"
-                      [attr.marker-end]="getMarkerUrl(arrow.type)"
-                      [attr.opacity]="arrow.type === 'graffiti' ? 0.6 : 1"
-                      stroke-linecap="round"
-                    />
-                  </ng-container>
-                </svg>
-                <div *ngFor="let node of block.data?.nodes" class="diagram-node" [style.left.px]="node.x" [style.top.px]="node.y">
-                  <div *ngIf="node.type === 'postgres'" class="diagram-node-postgres">
-                    <span class="material-symbols-outlined diagram-node-icon-gray">database</span>
-                    <div class="diagram-node-label">{{node.label || 'Database'}}</div>
-                  </div>
-                  <div *ngIf="node.type === 'api'" class="diagram-node-api">
-                    <span class="material-symbols-outlined diagram-node-icon-white">hub</span>
-                    <div class="diagram-node-label-small">{{node.label || 'API'}}</div>
-                  </div>
-                  <div *ngIf="node.type === 'client' || node.type === 'mobile'" class="diagram-node-client">
-                    <span class="material-symbols-outlined diagram-node-icon-teal">{{ node.type === 'client' ? 'devices' : 'phone_iphone' }}</span>
-                    <div class="diagram-node-label">{{node.label || 'Client'}}</div>
-                  </div>
-                  <div *ngIf="node.type === 'text'" class="diagram-node-text">
-                    <div class="diagram-node-text-inner">{{node.label || 'Note'}}</div>
-                  </div>
+                    <div fNode *ngFor="let node of block.data?.nodes"
+                            [fNodePosition]="{x: node.x, y: node.y}"
+                            class="brutalist-node-strict">
 
-                  <!-- Custom Node from Design Studio -->
-                  <div *ngIf="node.type === 'custom' && node.config"
-                    class="diagram-node-custom"
-                    [style.background-color]="getBgColor(node.config.bg_color)"
-                    [style.color]="getTextColor(node.config.text_color)"
-                    [style.border]="getBorderCss(node.config.border_style)"
-                    [style.box-shadow]="getShadowCss(node.config.shadow_style)"
-                    [style.border-radius]="node.config.shape === 'circle' ? '50%' : '0'"
-                    [style.width]="node.config.shape === 'circle' ? '100px' : 'auto'"
-                    [style.height]="node.config.shape === 'circle' ? '100px' : 'auto'">
-                    <span *ngIf="node.config.icon" class="material-symbols-outlined" style="margin-bottom: 0.25rem;">{{ node.config.icon }}</span>
-                    <span class="diagram-node-label" style="font-size: 10px;">{{ node.label }}</span>
-                  </div>
-                </div>
+                      <span *ngIf="node.icon" class="material-symbols-outlined strict-icon">
+                        {{ node.icon }}
+                      </span>
+                      
+                      <span class="strict-input" style="pointer-events: none;">
+                        {{ node.text }}
+                      </span>
+
+                      <div fNodeInput [fInputId]="node.id" fInputConnectableSide="left" class="f-port f-port-in" style="pointer-events: none;"></div>
+                      <div fNodeOutput [fOutputId]="node.id" fOutputConnectableSide="right" class="f-port f-port-out" style="pointer-events: none;"></div>
+                    </div>
+                  </f-canvas>
+                </f-flow>
               </div>
 
             </div>
