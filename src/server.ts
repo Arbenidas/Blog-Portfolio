@@ -1,65 +1,28 @@
-import {
-  AngularNodeAppEngine,
-  createNodeRequestHandler,
-  isMainModule,
-  writeResponseToNodeResponse,
-} from '@angular/ssr/node';
-import express from 'express';
-import { join } from 'node:path';
+import { AngularAppEngine, createRequestHandler } from '@angular/ssr';
+import { getContext } from '@netlify/angular-runtime/context.mjs';
 
-const browserDistFolder = join(import.meta.dirname, '../browser');
+const angularAppEngine = new AngularAppEngine();
 
-const app = express();
-const angularApp = new AngularNodeAppEngine();
+export async function netlifyAppEngineHandler(request: Request): Promise<Response> {
+  const context = getContext();
+  const url = new URL(request.url);
 
-/**
- * Caching middleware for dynamic routes
- * ¡CORREGIDO!: Usamos :slug en lugar de * para compatibilidad con Express v8+
- */
-app.get(['/logs/:slug', '/works/:slug'], (req, res, next) => {
-  res.setHeader('Cache-Control', 'public, s-maxage=86400, stale-while-revalidate');
-  next();
-});
+  // Dejamos que Angular renderice la aplicación
+  const result = await angularAppEngine.handle(request, context);
 
-/**
- * Serve static files from /browser
- */
-app.use(
-  express.static(browserDistFolder, {
-    maxAge: '1y',
-    index: false,
-    redirect: false,
-  }),
-);
-
-/**
- * Handle all other requests by rendering the Angular application.
- */
-app.use((req, res, next) => {
-  angularApp
-    .handle(req)
-    .then((response) =>
-      response ? writeResponseToNodeResponse(response, res) : next(),
-    )
-    .catch(next);
-});
-
-/**
- * Start the server if this module is the main entry point, or it is ran via PM2.
- * The server listens on the port defined by the `PORT` environment variable, or defaults to 4000.
- */
-if (isMainModule(import.meta.url) || process.env['pm_id']) {
-  const port = process.env['PORT'] || 4000;
-  app.listen(port, (error) => {
-    if (error) {
-      throw error;
+  if (result) {
+    // ¡AQUÍ RESCATAMOS TU LÓGICA DE CACHÉ!
+    // Si la ruta es de logs o works, le inyectamos los headers para Netlify Edge
+    if (url.pathname.startsWith('/logs/') || url.pathname.startsWith('/works/')) {
+      result.headers.set('Cache-Control', 'public, s-maxage=86400, stale-while-revalidate');
     }
+    return result;
+  }
 
-    console.log(`Node Express server listening on http://localhost:${port}`);
-  });
+  return new Response('Not found', { status: 404 });
 }
 
 /**
- * Request handler used by the Angular CLI (for dev-server and during build) or Firebase Cloud Functions.
+ * The request handler used by the Angular CLI (dev-server and during build).
  */
-export const reqHandler = createNodeRequestHandler(app);
+export const reqHandler = createRequestHandler(netlifyAppEngineHandler);
