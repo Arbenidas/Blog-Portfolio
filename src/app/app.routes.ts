@@ -17,6 +17,7 @@ import { AuthGuard } from './guards/auth.guard';
 import { DesignStudio } from './backoffice/design-studio/design-studio';
 import { ProfileEditor } from './backoffice/profile-editor/profile-editor';
 import { NotFound } from './views/not-found/not-found';
+
 export const routes: Routes = [
     {
         path: '',

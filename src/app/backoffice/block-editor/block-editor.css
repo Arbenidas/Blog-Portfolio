@@ -1,5 +1,15 @@
 /* block-editor.css */
 
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
 .editor-container {
     max-width: 56rem;
     margin: 0 auto;

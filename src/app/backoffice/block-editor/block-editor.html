@@ -44,10 +44,12 @@
         </label>
       </div>
 
-      <button (click)="preview()" class="btn-preview flex items-center justify-center gap-2">
-        <span class="material-symbols-outlined text-[18px]">visibility</span> Preview
+      <button (click)="preview()" class="btn-preview flex items-center justify-center gap-2" [disabled]="isUploadingCover">
+        <span *ngIf="!isUploadingCover" class="material-symbols-outlined text-[18px]">visibility</span>
+        <span *ngIf="isUploadingCover" class="material-symbols-outlined text-[18px]" style="animation: spin 1s linear infinite;">progress_activity</span>
+        {{ isUploadingCover ? 'Uploading...' : 'Preview' }}
       </button>
-      <button (click)="save()" class="btn-publish">
+      <button (click)="save()" class="btn-publish" [disabled]="isUploadingCover">
         <span class="material-symbols-outlined text-[18px]">save</span> Publish
       </button>
     </div>
@@ -84,10 +86,16 @@
           
           <div class="meta-cover-input-group" style="margin: 1rem; border: 2px solid #1a1a1a;">
             <input [(ngModel)]="coverPhotoUrl" class="meta-cover-input" placeholder="https://example.com/image.jpg" type="text" style="border: none;" />
-            <button (click)="fileInput.click()" class="btn-upload" style="border-left: 2px solid #1a1a1a; background: #f9fafb;" title="Upload File">
-              <span class="material-symbols-outlined text-[20px]">upload_file</span>
+            <button (click)="fileInput.click()" class="btn-upload" style="border-left: 2px solid #1a1a1a; background: #f9fafb;" title="Upload File" [disabled]="isUploadingCover">
+              <span *ngIf="!isUploadingCover" class="material-symbols-outlined text-[20px]">upload_file</span>
+              <span *ngIf="isUploadingCover" class="material-symbols-outlined text-[20px]" style="animation: spin 1s linear infinite;">progress_activity</span>
             </button>
             <input type="file" #fileInput (change)="onCoverPhotoSelected($event)" accept="image/*" class="hidden" style="display: none;" />
+          </div>
+          <!-- Pending upload badge -->
+          <div *ngIf="pendingCoverFile" style="margin: 0 1rem 0.5rem; padding: 0.4rem 0.75rem; background: #fef9c3; border: 2px solid #1a1a1a; font-family: var(--font-mono); font-size: 0.7rem; font-weight: bold; display: flex; align-items: center; gap: 0.5rem;">
+            <span class="material-symbols-outlined" style="font-size: 16px; color: #d97706;">pending</span>
+            IMAGEN PENDIENTE — Se subirá a Supabase al hacer Preview o Publish
           </div>
 
           <div *ngIf="coverPhotoUrl" style="padding-top: 1rem;">
@@ -172,6 +180,11 @@
       <div *ngIf="category === 'work'">
         <label class="meta-label">Global Index Log (One item per line)</label>
         <textarea [(ngModel)]="indexLog" readonly class="meta-textarea" placeholder="01_SPECIFICATIONS&#10;02_MISSION_OBJECTIVES&#10;03_SYSTEM_ARCHITECTURE" rows="4"></textarea>
+      </div>
+
+      <div style="margin-top: 1rem; border-top: 1px dashed #e5e7eb; padding-top: 1rem;">
+        <label class="meta-label">Bibliography / References (Optional) <span class="meta-label-hint">— Appears at the end of the document</span></label>
+        <textarea [(ngModel)]="bibliography" class="meta-textarea" placeholder="Links, books, or articles used as reference..." rows="3"></textarea>
       </div>
     </div>
 

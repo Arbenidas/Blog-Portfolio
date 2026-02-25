@@ -5,39 +5,68 @@
   <div class="logs-content-grid">
     <!-- LEFT SIDEBAR -->
     <aside class="logs-sidebar">
-      <div class="topic-matrix-card ink-border">
-        <div class="tape-strip" style="top: -12px; left: 40%;"></div>
-        <h3 class="topic-title">
-          <span class="material-symbols-outlined">tag</span> Topic Matrix
-        </h3>
-        <div class="tag-list">
-          <a *ngFor="let tag of popularTags" [ngClass]="tag.class" class="tag-item">{{ tag.name }}</a>
-          <span *ngIf="popularTags.length === 0" style="font-family: var(--font-mono); font-size: 10px;">AWAITING DATA...</span>
+      <!-- SEARCH QUERY INPUT -->
+      <div class="search-card ink-border">
+        <div class="search-header">
+          <span class="search-caret">&gt;</span> SEARCH_QUERY_INPUT
         </div>
-        
-        <div class="topic-note-container">
-          <p class="topic-note">
-            "Note to self: The #DESIGN_SYS tags need cleanup. Too much clutter." - Arbe
-          </p>
+        <div class="search-input-wrapper">
+          <input type="text" 
+                 class="search-input" 
+                 placeholder="Start typing..." 
+                 [value]="searchQuery"
+                 (input)="onSearchChange($event)">
+          <span class="search-cursor" [class.hidden]="searchQuery.length > 0">_</span>
         </div>
       </div>
 
-      <div class="frequency-card">
-        <div class="frequency-live-badge">LIVE DATA</div>
-        <h3 class="frequency-title">Log Frequency</h3>
+      <!-- FILTER PROTOCOLS -->
+      <div class="filter-card ink-border">
+        <div class="filter-tab">FILTER_PROTOCOLS</div>
+        <div class="screw top-left"></div>
+        <div class="screw top-right"></div>
         
-        <div class="chart-container">
-          <div *ngFor="let data of chartData; let i = index" class="chart-bar group" [ngClass]="'chart-bar-' + (i + 1)" [style.height.%]="data.height">
-            <div class="chart-bar-tooltip">{{ data.month }}</div>
+        <div class="filter-list">
+          <div *ngFor="let protocol of filterProtocols" class="filter-row">
+            <span class="filter-name">{{ protocol.name }}</span>
+            <button class="brutalist-toggle" 
+                    [class.toggle-active]="protocol.active"
+                    (click)="toggleFilter(protocol.name)">
+              <div class="toggle-track">
+                <div class="toggle-thumb"></div>
+              </div>
+            </button>
           </div>
-          <svg class="frequency-chart-svg" preserveAspectRatio="none" viewBox="0 0 100 100">
-            <path [attr.d]="chartPath" class="svg-path-anim" fill="none" stroke="#d94e1e" stroke-dasharray="3,3" stroke-width="2"></path>
-            <circle *ngFor="let p of chartData" [attr.cx]="p.cx" [attr.cy]="p.cy" fill="#fff" r="2" stroke="#d94e1e" stroke-width="1"></circle>
-          </svg>
         </div>
-        <div class="chart-labels" *ngIf="chartData.length > 0">
-          <span>{{ chartData[0].month }} Start</span>
-          <span>{{ chartData[3].month }} Current</span>
+
+        <div class="filter-divider"></div>
+        <div class="filter-note">
+          // ADJUST TOGGLES TO REFINE<br>
+          DATA VISUALIZATION
+        </div>
+        
+        <div class="screw bottom-left"></div>
+        <div class="screw bottom-right"></div>
+      </div>
+
+      <!-- TECH STACK DENSITY -->
+      <div class="density-card ink-border">
+        <div class="density-header">TECH_STACK_DENSITY</div>
+        <div class="density-divider"></div>
+        
+        <div class="density-list">
+          <div *ngFor="let tech of techStackDensity" class="density-item">
+            <div class="density-item-header">
+              <span class="density-name" [class.density-primary]="tech.isPrimary">
+                <span *ngIf="tech.isPrimary" class="material-symbols-outlined density-star">star</span>
+                {{ tech.name }}
+              </span>
+              <span class="density-count">[{{ tech.count }}]</span>
+            </div>
+            <div class="density-bar-bg">
+              <div class="density-bar-fill" [style.width.%]="tech.percentage"></div>
+            </div>
+          </div>
         </div>
       </div>
     </aside>
@@ -91,8 +120,8 @@
         </div>
 
         <ng-container *ngIf="!isLoading">
-          <div *ngFor="let log of logs; let i = index" 
-               class="timeline-item group" 
+          <ng-container *ngFor="let log of filteredLogs; let i = index">
+          <div class="timeline-item group list-anim-item" 
                [ngClass]="i % 2 === 0 ? 'timeline-item-even' : 'timeline-item-odd'" 
                [routerLink]="['/logs', log.slug]">
              
@@ -148,9 +177,15 @@
             </div>
           </div>
         </div>
+
+          <!-- Native Ad every 4th entry -->
+          <div *ngIf="(i + 1) % 4 === 0 && i !== filteredLogs.length - 1" class="timeline-ad-slot" style="margin: 1.5rem 0; padding-left: 2.5rem;">
+            <app-native-ad></app-native-ad>
+          </div>
+          </ng-container>
         
-          <div *ngIf="logs.length === 0" class="empty-logs">
-             <span class="empty-logs-text">No logs available. Create one in the admin panel.</span>
+          <div *ngIf="filteredLogs.length === 0" class="empty-logs">
+             <span class="empty-logs-text">No logs available matching the current criteria.</span>
           </div>
         </ng-container>
       </div>

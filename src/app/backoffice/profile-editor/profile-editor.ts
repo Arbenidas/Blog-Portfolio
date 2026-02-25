@@ -2,7 +2,7 @@ import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
-import { ContentService, ProfileData, CustomWidget } from '../../services/content.service';
+import { ContentService, ProfileData, TechEntry, CustomWidget } from '../../services/content.service';
 
 @Component({
   selector: 'app-profile-editor',
@@ -29,41 +29,100 @@ export class ProfileEditor implements OnInit {
     experience: [
       { role: 'Senior Engineer', company: 'CyberDyne Systems', location: 'San Francisco, CA', years: '2021 - Present', description: 'Spearheading the development of neural network interfaces.' }
     ],
-    languages: ['JavaScript (ES6+)', 'TypeScript', 'Python'],
-    frameworks: ['Angular', 'Next.js', 'Node.js'],
+    languages: [
+      { name: 'JavaScript (ES6+)' },
+      { name: 'TypeScript' },
+      { name: 'Python' }
+    ],
+    frameworks: [
+      { name: 'Angular' },
+      { name: 'Next.js' },
+      { name: 'Node.js' }
+    ],
+    technologies: [
+      { name: 'Docker' },
+      { name: 'Git' }
+    ],
     widgets: []
   });
 
   isSaving = signal(false);
+  saveToast = signal<'success' | 'error' | null>(null);
   draggingWidget = signal<CustomWidget | null>(null);
+
+  // Inputs for adding new tech
+  newLangInput = '';
+  newFwInput = '';
+  newTechInput = '';
+
+  // The tech currently being edited (to show description/link fields inline)
+  editingTech: TechEntry | null = null;
 
   ngOnInit() {
     this.loadData();
   }
 
   async loadData() {
-    // 1. Fetch available custom widgets
     const widgets = await this.contentService.getCustomWidgets();
     this.availableWidgets.set(widgets);
 
-    // 2. Fetch profile data
     const p = await this.contentService.getProfile();
     if (p) {
       this.profile.set(p);
     }
   }
 
-  // Helper arrays for strings
-  get languagesStr() { return this.profile().languages.join(', '); }
-  set languagesStr(val: string) {
-    this.profile.update(p => ({ ...p, languages: val.split(',').map(s => s.trim()).filter(Boolean) }));
+  // ===== LANGUAGE METHODS =====
+  addLanguage() {
+    const val = this.newLangInput.trim();
+    if (!val) return;
+    if (!this.profile().languages.find(l => l.name === val)) {
+      this.profile.update(p => ({ ...p, languages: [...p.languages, { name: val }] }));
+    }
+    this.newLangInput = '';
   }
 
-  get frameworksStr() { return this.profile().frameworks.join(', '); }
-  set frameworksStr(val: string) {
-    this.profile.update(p => ({ ...p, frameworks: val.split(',').map(s => s.trim()).filter(Boolean) }));
+  removeLanguage(tech: TechEntry) {
+    this.profile.update(p => ({ ...p, languages: p.languages.filter(l => l !== tech) }));
+    if (this.editingTech === tech) this.editingTech = null;
   }
 
+  // ===== FRAMEWORK METHODS =====
+  addFramework() {
+    const val = this.newFwInput.trim();
+    if (!val) return;
+    if (!this.profile().frameworks.find(f => f.name === val)) {
+      this.profile.update(p => ({ ...p, frameworks: [...p.frameworks, { name: val }] }));
+    }
+    this.newFwInput = '';
+  }
+
+  removeFramework(tech: TechEntry) {
+    this.profile.update(p => ({ ...p, frameworks: p.frameworks.filter(f => f !== tech) }));
+    if (this.editingTech === tech) this.editingTech = null;
+  }
+
+  // ===== TECHNOLOGIES METHODS =====
+  addTechnology() {
+    const val = this.newTechInput.trim();
+    if (!val) return;
+    if (!this.profile().technologies.find(t => t.name === val)) {
+      this.profile.update(p => ({ ...p, technologies: [...p.technologies, { name: val }] }));
+    }
+    this.newTechInput = '';
+  }
+
+  removeTechnology(tech: TechEntry) {
+    this.profile.update(p => ({ ...p, technologies: p.technologies.filter(t => t !== tech) }));
+    if (this.editingTech === tech) this.editingTech = null;
+  }
+
+  // Toggle editing panel for a tech chip
+  toggleEditTech(tech: TechEntry) {
+    this.editingTech = this.editingTech === tech ? null : tech;
+  }
+
+  // ===== EXPERIENCE METHODS =====
   addExperience() {
     this.profile.update(p => ({
       ...p,
@@ -79,18 +138,17 @@ export class ProfileEditor implements OnInit {
     });
   }
 
-  // Widget Drag & Drop
+  // ===== WIDGET DRAG & DROP =====
   onDragStart(event: DragEvent, widget: CustomWidget) {
     this.draggingWidget.set(widget);
     if (event.dataTransfer) {
       event.dataTransfer.effectAllowed = 'copy';
-      // Required for Firefox
       event.dataTransfer.setData('text/plain', widget.id || '');
     }
   }
 
   onDragOver(event: DragEvent) {
-    event.preventDefault(); // allow drop
+    event.preventDefault();
     if (event.dataTransfer) {
       event.dataTransfer.dropEffect = 'copy';
     }
@@ -101,10 +159,9 @@ export class ProfileEditor implements OnInit {
     const widget = this.draggingWidget();
     if (!widget || !widget.id) return;
 
-    // Get position relative to the preview container
     const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
-    const x = event.clientX - rect.left - 50; // Offset by ~half widget width
-    const y = event.clientY - rect.top - 50;  // Offset by ~half widget height
+    const x = event.clientX - rect.left - 50;
+    const y = event.clientY - rect.top - 50;
 
     this.profile.update(p => ({
       ...p,
@@ -122,7 +179,7 @@ export class ProfileEditor implements OnInit {
     });
   }
 
-  // Template helpers
+  // ===== TEMPLATE HELPERS =====
   getWidgetHtml(id: string): SafeHtml {
     const w = this.availableWidgets().find(w => w.id === id);
     return w ? this.sanitizer.bypassSecurityTrustHtml(w.html_content) : '';
@@ -136,10 +193,12 @@ export class ProfileEditor implements OnInit {
     this.isSaving.set(true);
     try {
       await this.contentService.saveProfile(this.profile());
-      alert('Personnel File saved! (It is now live on the public site)');
+      this.saveToast.set('success');
+      setTimeout(() => this.saveToast.set(null), 3500);
     } catch (e) {
       console.error(e);
-      alert('Error saving profile');
+      this.saveToast.set('error');
+      setTimeout(() => this.saveToast.set(null), 4000);
     } finally {
       this.isSaving.set(false);
     }

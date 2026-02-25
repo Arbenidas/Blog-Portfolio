@@ -1,21 +1,25 @@
-import { Component, inject, OnInit, ChangeDetectorRef, PLATFORM_ID, PendingTasks } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy, ChangeDetectorRef, ChangeDetectionStrategy, PLATFORM_ID, PendingTasks, ViewChild } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { ActivatedRoute, RouterModule } from '@angular/router';
+import { distinctUntilChanged, map } from 'rxjs/operators';
 import { ContentService, DocumentEntry, CustomWidget } from '../../services/content.service';
 import { DomSanitizer, SafeHtml, SafeResourceUrl } from '@angular/platform-browser';
 import { SeoService } from '../../services/seo.service';
 
 import { ShareButtons } from '../../components/share-buttons/share-buttons.component';
+import { AdModalComponent } from '../../components/ad-modal/ad-modal';
+import { PdfService } from '../../services/pdf.service';
 import { FFlowModule } from '@foblex/flow';
 
 @Component({
   selector: 'app-field-log',
   standalone: true,
-  imports: [CommonModule, RouterModule, ShareButtons, FFlowModule],
+  imports: [CommonModule, RouterModule, ShareButtons, FFlowModule, AdModalComponent],
   templateUrl: './field-log.html',
   styleUrl: './field-log.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class FieldLog implements OnInit {
+export class FieldLog implements OnInit, OnDestroy {
   private contentService = inject(ContentService);
   private seoService = inject(SeoService);
   private route = inject(ActivatedRoute);
@@ -23,13 +27,128 @@ export class FieldLog implements OnInit {
   private sanitizer = inject(DomSanitizer);
   private platformId = inject(PLATFORM_ID);
   private pendingTasks = inject(PendingTasks);
+  private pdfService = inject(PdfService);
+
+  @ViewChild('adModal') adModal!: AdModalComponent;
+  isModalOpen = false;
 
   log: DocumentEntry | undefined;
   availableWidgets: CustomWidget[] = [];
+  isLoading = true;
+
+  showBibliography = false;
+
+  get bibliographyBlock(): any {
+    return this.log?.blocks.find(b => b.type === 'bibliography');
+  }
+
+  toggleBibliography(event?: Event) {
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+    this.showBibliography = !this.showBibliography;
+    this.cdr.markForCheck();
+  }
+
+  /** Auto-generated table of contents from indexable blocks */
+  get tocItems(): { level: number; text: string; id: string; icon: string | null }[] {
+    if (!this.log) return [];
+    const items: { level: number; text: string; id: string; icon: string | null }[] = [];
+    this.log.blocks.forEach((b: any, i: number) => {
+      if (b.type === 'h1') {
+        items.push({ level: 1, text: b.content, id: 'blk-' + i, icon: null });
+      } else if (b.type === 'h2') {
+        items.push({ level: 2, text: b.content, id: 'blk-' + i, icon: null });
+      } else if (b.type === 'objective-header') {
+        items.push({ level: 1, text: b.data?.title || 'Objectives', id: 'blk-' + i, icon: 'grid_view' });
+      } else if (b.type === 'diagram') {
+        items.push({ level: 2, text: 'System Diagram', id: 'blk-' + i, icon: 'account_tree' });
+      } else if (b.type === 'comparison') {
+        const label = b.data?.col1Title && b.data?.col2Title
+          ? b.data.col1Title + ' vs ' + b.data.col2Title
+          : 'Comparison';
+        items.push({ level: 2, text: label, id: 'blk-' + i, icon: 'compare_arrows' });
+      }
+    });
+    return items;
+  }
+
+  /** Estimated read time in minutes */
+  get readingTime(): number {
+    if (!this.log) return 1;
+    const words = this.log.blocks
+      .filter((b: any) => b.type === 'p' || b.type === 'h1' || b.type === 'h2')
+      .map((b: any) => b.content.split(/\s+/).length)
+      .reduce((a: number, b: number) => a + b, 0);
+    return Math.max(1, Math.ceil(words / 200));
+  }
+
+  /** Currently visible section id (for TOC active highlight) */
+  activeSectionId = '';
+
+  /** Smooth-scroll to a block, offset for the fixed navbar */
+  scrollToSection(id: string): void {
+    const el = document.getElementById(id);
+    if (el) {
+      const navbarHeight = 80;
+      const extraPadding = 16;
+      const top = el.getBoundingClientRect().top + window.scrollY - navbarHeight - extraPadding;
+      window.scrollTo({ top, behavior: 'smooth' });
+    }
+  }
+
+  /** IntersectionObserver instance — destroyed on ngOnDestroy */
+  private sectionObserver: IntersectionObserver | null = null;
+
+  /** Re-creates the observer after content loads */
+  private setupScrollObserver(): void {
+    if (!isPlatformBrowser(this.platformId)) return;
+    this.sectionObserver?.disconnect();
+
+    const ids = this.tocItems.map(item => item.id);
+    if (ids.length === 0) return;
+
+    // rootMargin: push top boundary down by navbar height; bottom at -55% so only ~45% of page triggers
+    this.sectionObserver = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          // Use the first (topmost) intersecting TOC id
+          const id = entry.target.id;
+          if (ids.includes(id)) {
+            this.activeSectionId = id;
+            this.cdr.markForCheck();
+          }
+        }
+      });
+    }, {
+      rootMargin: '-96px 0px -55% 0px',
+      threshold: 0
+    });
+
+    // Wait one tick for Angular to render the [id] bindings
+    setTimeout(() => {
+      ids.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) this.sectionObserver!.observe(el);
+      });
+    }, 0);
+  }
+
+  ngOnDestroy(): void {
+    this.sectionObserver?.disconnect();
+  }
 
   ngOnInit() {
-    this.route.paramMap.subscribe(async params => {
-      const slug = params.get('slug');
+    this.route.paramMap.pipe(
+      map(p => p.get('slug') ?? ''),
+      distinctUntilChanged()          // skip if same slug fires twice (e.g. on reload)
+    ).subscribe(async slug => {
+      // Always reset to loading state for each navigation
+      this.isLoading = true;
+      this.log = undefined;
+      this.cdr.markForCheck();
+
       if (slug) {
         const removeTask = this.pendingTasks.add();
         try {
@@ -49,10 +168,15 @@ export class FieldLog implements OnInit {
               this.updateSeo();
             }
           }
-          this.cdr.detectChanges();
         } finally {
+          this.isLoading = false;
+          this.cdr.markForCheck();
+          this.setupScrollObserver();
           removeTask();
         }
+      } else {
+        this.isLoading = false;
+        this.cdr.markForCheck();
       }
     });
   }
@@ -169,4 +293,37 @@ export class FieldLog implements OnInit {
   isYoutubeUrl(url: string): boolean {
     return !!this.contentService.extractYoutubeId(url);
   }
+
+  // --- PDF DOWNLOAD ---
+  openPdfModal() {
+    this.isModalOpen = true;
+    setTimeout(() => {
+      if (this.adModal) {
+        this.adModal.open();
+      }
+    }, 0);
+  }
+
+  async generatePdf() {
+    try {
+      if (!isPlatformBrowser(this.platformId)) return;
+      const element = document.getElementById('pdf-content-area');
+      if (!element) {
+        console.error('PDF content area not found.');
+        return;
+      }
+
+      const filename = this.log?.title ? `FieldLog_${this.log.title.replace(/\s+/g, '_')}` : 'FieldLog_Download';
+      await this.pdfService.downloadElementToPdf(element, filename);
+    } catch (error) {
+      console.error('Failed to generate PDF', error);
+      alert('Error generating PDF.');
+    } finally {
+      this.isModalOpen = false;
+      if (this.adModal) {
+        this.adModal.isDownloading = false;
+      }
+    }
+  }
+
 }

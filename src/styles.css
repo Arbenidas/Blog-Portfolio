@@ -630,3 +630,74 @@ body.zen-is-active {
   width: 100%;
   max-width: 120px;
 }
+
+/* ===== GLOBAL SKELETON SHIMMER (used by case-study, field-log, home-view) ===== */
+@keyframes skeletonShimmer {
+  0% {
+    background-position: -600px 0;
+  }
+
+  100% {
+    background-position: 600px 0;
+  }
+}
+
+.skel {
+  background-color: #e5e2dc;
+  background-image: linear-gradient(90deg, #e5e2dc 0px, #f0ede6 40%, #e5e2dc 80%);
+  background-size: 600px 100%;
+  animation: skeletonShimmer 1.4s ease-in-out infinite;
+  display: block;
+}
+
+/* =========================================================
+   BIBLIOGRAPHY NOTE (WITH TAPE)
+   ========================================================= */
+.biblio-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background-color: rgba(242, 240, 228, 0.85);
+  /* paper-cream with opacity */
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.bibliography-note {
+  position: relative;
+  background-color: var(--paper-white);
+  border: 1px dashed rgba(0, 0, 0, 0.2);
+  padding: 2.5rem 2rem;
+  width: 100%;
+  max-width: 600px;
+  max-height: 90vh;
+  overflow-y: auto;
+  font-family: var(--font-mono);
+  box-shadow: var(--shadow-sketch-lg);
+  transform: rotate(-1deg);
+}
+
+.bibliography-note .tape-strip-sm {
+  top: -10px;
+  left: 50%;
+  transform: translateX(-50%) rotate(2deg);
+}
+
+.bibliography-title {
+  font-size: 0.85rem;
+  font-weight: bold;
+  color: var(--charcoal);
+  margin-bottom: 0.75rem;
+  text-transform: uppercase;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  padding-bottom: 0.25rem;
+}
+
+.bibliography-content {
+  font-size: 0.8rem;
+  color: var(--charcoal);
+  line-height: 1.6;
+}

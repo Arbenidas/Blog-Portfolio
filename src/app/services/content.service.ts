@@ -1,10 +1,10 @@
-import { Injectable, signal, inject, PLATFORM_ID } from '@angular/core';
+import { Injectable, signal, inject, PLATFORM_ID, TransferState, makeStateKey } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { SupabaseService } from './supabase.service';
 
 export interface EditorBlock {
     id: string;
-    type: 'h1' | 'h2' | 'p' | 'image' | 'video' | 'code' | 'objective-header' | 'objectives' | 'divider' | 'tech-stack' | 'diagram' | 'widget' | 'comparison';
+    type: 'h1' | 'h2' | 'p' | 'image' | 'video' | 'code' | 'objective-header' | 'objectives' | 'divider' | 'tech-stack' | 'diagram' | 'widget' | 'comparison' | 'bibliography';
     content: string;
     data?: any;
 }
@@ -37,6 +37,13 @@ export interface ProfileExperience {
     description: string;
 }
 
+export interface TechEntry {
+    name: string;
+    description?: string;    // Brief description shown on hover
+    linkSlug?: string;       // Slug of a related work or log
+    linkCategory?: 'work' | 'log';
+}
+
 export interface ProfileData {
     name: string;
     role: string;
@@ -45,8 +52,9 @@ export interface ProfileData {
     status: string;
     coreMission: string;
     experience: ProfileExperience[];
-    languages: string[];
-    frameworks: string[];
+    languages: TechEntry[];
+    frameworks: TechEntry[];
+    technologies: TechEntry[];
     widgets: { widgetId: string, x: number, y: number }[];
 }
 
@@ -70,6 +78,7 @@ export interface DocumentEntry {
 export class ContentService {
     private supabase = inject(SupabaseService);
     private platformId = inject(PLATFORM_ID);
+    private transferState = inject(TransferState);
     private previewDocSignal = signal<DocumentEntry | null>(null);
 
     constructor() {
@@ -93,10 +102,17 @@ export class ContentService {
         if (isPlatformBrowser(this.platformId)) {
             const previewStored = localStorage.getItem('portfolio_preview');
             if (previewStored) {
+                // Guard: si el preview guardado tiene un Base64 enorme, lo descartamos
+                if (previewStored.includes('"data:image')) {
+                    console.warn('Preview descartado: contiene imagen Base64 pesada. Limpiando...');
+                    localStorage.removeItem('portfolio_preview');
+                    return;
+                }
                 try {
                     this.previewDocSignal.set(JSON.parse(previewStored));
                 } catch (e) {
                     console.error('Error parsing preview content', e);
+                    localStorage.removeItem('portfolio_preview');
                 }
             }
         }
@@ -118,10 +134,28 @@ export class ContentService {
         };
     }
 
+    /** Mapper ligero para vistas de lista (sin blocks ni cover_photo) */
+    private mapToListEntry(d: any): DocumentEntry {
+        return {
+            id: d.id,
+            slug: d.slug,
+            title: d.title,
+            coverPhoto: undefined,
+            category: d.category,
+            tags: d.tags || [],
+            indexLog: d.index_log,
+            blocks: [],
+            status: d.status || 'published',
+            createdAt: d.created_at,
+            updatedAt: d.updated_at
+        };
+    }
+
     async getAllWorks(limitCount?: number): Promise<DocumentEntry[]> {
+        // Solo columnas ligeras: sin blocks ni cover_photo para no transferir datos pesados
         let query = this.supabase
             .from('documents')
-            .select('*')
+            .select('id, slug, title, category, tags, status, index_log, created_at, updated_at')
             .eq('category', 'work')
             .eq('status', 'published')
             .neq('slug', 'system-settings')
@@ -133,13 +167,14 @@ export class ContentService {
 
         const { data, error } = await query;
         if (error) console.error(error);
-        return data ? data.map(this.mapToEntry) : [];
+        return data ? data.map((d: any) => this.mapToListEntry(d)) : [];
     }
 
     async getAllLogs(limitCount?: number): Promise<DocumentEntry[]> {
+        // Solo columnas ligeras: sin blocks ni cover_photo
         let query = this.supabase
             .from('documents')
-            .select('*')
+            .select('id, slug, title, category, tags, status, index_log, created_at, updated_at')
             .eq('category', 'log')
             .eq('status', 'published')
             .order('created_at', { ascending: false });
@@ -150,23 +185,31 @@ export class ContentService {
 
         const { data, error } = await query;
         if (error) console.error(error);
-        return data ? data.map(this.mapToEntry) : [];
+        return data ? data.map((d: any) => this.mapToListEntry(d)) : [];
     }
 
     async getDraftDocuments(): Promise<DocumentEntry[]> {
+        // Solo columnas ligeras: sin blocks ni cover_photo
         const { data, error } = await this.supabase
             .from('documents')
-            .select('*')
+            .select('id, slug, title, category, tags, status, index_log, created_at, updated_at')
             .eq('status', 'draft')
             .order('updated_at', { ascending: false });
 
         if (error) console.error(error);
-        return data ? data.map(this.mapToEntry) : [];
+        return data ? data.map((d: any) => this.mapToListEntry(d)) : [];
     }
 
     async getDocument(slugOrPreview: string): Promise<DocumentEntry | undefined> {
         if (slugOrPreview === 'preview') {
             return this.previewDocSignal() || undefined;
+        }
+
+        const DOC_KEY = makeStateKey<DocumentEntry | undefined>(`doc-${slugOrPreview}`);
+        if (this.transferState.hasKey(DOC_KEY)) {
+            const cached = this.transferState.get(DOC_KEY, undefined);
+            this.transferState.remove(DOC_KEY); // Clean up memory
+            if (cached) return cached;
         }
 
         const { data, error } = await this.supabase
@@ -179,16 +222,31 @@ export class ContentService {
             console.error(error);
             return undefined;
         }
-        return data ? this.mapToEntry(data) : undefined;
+
+        const entry = data ? this.mapToEntry(data) : undefined;
+
+        if (entry && !isPlatformBrowser(this.platformId)) {
+            this.transferState.set(DOC_KEY, entry);
+        }
+
+        return entry;
     }
 
     setPreviewDocument(doc: Partial<DocumentEntry>) {
         const now = new Date().toISOString();
+
+        // Strip data: (Base64) and blob: URLs from the cover before storing in localStorage.
+        // Both are too large or cross-tab-invalid and will cause QuotaExceededError.
+        const rawCover = doc.coverPhoto || '';
+        const safeCoverForStorage = (rawCover.startsWith('data:') || rawCover.startsWith('blob:'))
+            ? ''
+            : rawCover;
+
         const previewDoc: DocumentEntry = {
             id: 'preview',
             slug: 'preview',
             title: doc.title || 'Preview Title',
-            coverPhoto: doc.coverPhoto || '',
+            coverPhoto: rawCover,  // en memoria: URL completa (funciona para preview en misma pestaña)
             category: doc.category || 'work',
             tags: doc.tags || [],
             indexLog: doc.indexLog || '',
@@ -197,10 +255,18 @@ export class ContentService {
             updatedAt: now
         };
         this.previewDocSignal.set(previewDoc);
+
         if (isPlatformBrowser(this.platformId)) {
-            localStorage.setItem('portfolio_preview', JSON.stringify(previewDoc));
+            // Para localStorage: usamos la versión sin base64/blob para no desbordar la cuota
+            const storageDoc = { ...previewDoc, coverPhoto: safeCoverForStorage };
+            try {
+                localStorage.setItem('portfolio_preview', JSON.stringify(storageDoc));
+            } catch (e) {
+                console.warn('No se pudo guardar el preview en localStorage (QuotaExceededError):', e);
+            }
         }
     }
+
 
     // --- SYSTEM SETTINGS (TAG MANAGER) ---
     async getSystemTags(): Promise<string[]> {
@@ -266,15 +332,37 @@ export class ContentService {
         if (error) throw error;
     }
 
+    /** Limpia el cover_photo de un documento (usado para auto-reparar Base64 pesados) */
+    async clearCoverPhoto(id: string): Promise<void> {
+        const { error } = await this.supabase
+            .from('documents')
+            .update({ cover_photo: '' })
+            .eq('id', id);
+        if (error) console.error('Error limpiando cover_photo:', error);
+    }
+
     // --- CUSTOM WIDGETS ---
 
     async getCustomWidgets(): Promise<CustomWidget[]> {
+        const WIDGETS_KEY = makeStateKey<CustomWidget[]>('custom-widgets');
+        if (this.transferState.hasKey(WIDGETS_KEY)) {
+            const cached = this.transferState.get(WIDGETS_KEY, []);
+            this.transferState.remove(WIDGETS_KEY);
+            if (cached.length) return cached;
+        }
+
         const { data, error } = await this.supabase
             .from('custom_widgets')
             .select('*')
             .order('created_at', { ascending: false });
+
         if (error) console.error(error);
-        return data || [];
+        const widgets = data || [];
+
+        if (widgets.length && !isPlatformBrowser(this.platformId)) {
+            this.transferState.set(WIDGETS_KEY, widgets);
+        }
+        return widgets;
     }
 
     async saveCustomWidget(widget: CustomWidget): Promise<void> {
@@ -361,7 +449,25 @@ export class ContentService {
         if (error && error.code !== 'PGRST116') { // PGRST116 = not found
             console.error('Error fetching profile', error);
         }
-        return data ? data.data as ProfileData : null;
+        if (!data) return null;
+
+        // Backward-compat migration: old profiles store languages/frameworks as string[].
+        // Convert to TechEntry[] automatically.
+        const p = data.data as ProfileData;
+        if (p.languages?.length && typeof p.languages[0] === 'string') {
+            p.languages = (p.languages as unknown as string[]).map(name => ({ name }));
+        }
+        if (p.frameworks?.length && typeof p.frameworks[0] === 'string') {
+            p.frameworks = (p.frameworks as unknown as string[]).map(name => ({ name }));
+        }
+        if (p.technologies?.length && typeof p.technologies[0] === 'string') {
+            p.technologies = (p.technologies as unknown as string[]).map(name => ({ name }));
+        }
+        // If profile doesn't have technologies array, initialize it
+        if (!p.technologies) {
+            p.technologies = [];
+        }
+        return p;
     }
 
     async saveProfile(profileData: ProfileData): Promise<void> {
@@ -370,6 +476,29 @@ export class ContentService {
             .upsert({ id: 1, data: profileData, updated_at: new Date().toISOString() });
 
         if (error) throw error;
+    }
+
+    // --- COVER IMAGE UPLOAD ---
+
+    async uploadCoverImage(file: File): Promise<string> {
+        const ext = file.name.split('.').pop() || 'jpg';
+        const fileName = `${Date.now()}_cover.${ext}`;
+        const filePath = `covers/${fileName}`;
+
+        const { error } = await this.supabase.client.storage
+            .from('videos') // Reutilizamos el bucket que ya existe
+            .upload(filePath, file, {
+                cacheControl: '3600',
+                upsert: false
+            });
+
+        if (error) throw error;
+
+        const { data } = this.supabase.client.storage
+            .from('videos')
+            .getPublicUrl(filePath);
+
+        return data.publicUrl;
     }
 
     // --- VIDEO UPLOAD ---

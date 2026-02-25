@@ -1,0 +1,41 @@
+/* native-ad.css */
+.native-ad-card {
+    background-color: var(--paper-cream, #f5f0e8);
+    border: 2px solid var(--charcoal, #1a1a1a);
+    box-shadow: 4px 4px 0 var(--charcoal, #1a1a1a);
+    position: relative;
+    overflow: hidden;
+    min-height: 100px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.native-ad-card:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 6px 6px 0 var(--charcoal, #1a1a1a);
+}
+
+.native-ad-label {
+    background-color: var(--charcoal, #1a1a1a);
+    color: #6b7280;
+    font-family: var(--font-mono, monospace);
+    font-size: 8px;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    padding: 0.2rem 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.native-ad-content {
+    padding: 0.5rem;
+    min-height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.native-ad-content ins {
+    width: 100%;
+}

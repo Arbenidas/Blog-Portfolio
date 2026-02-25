@@ -5,21 +5,6 @@
 <div class="home-content-grid">
   <!-- LEFT COLUMN -->
   <div class="home-left-col">
-    <!-- Personnel Card -->
-    <div class="personnel-card ink-border-thick shadow-sketch group relative">
-      <div class="tape-strip"></div>
-      <div class="personnel-image-wrapper">
-        <img alt="Arbe personnel photo" class="personnel-image riso-print" src="profile.jpg"/>
-        <div class="personnel-halftone halftone-dots"></div>
-        <div class="scanline-overlay">
-          <div class="scanline"></div>
-        </div>
-      </div>
-      <div class="personnel-info">
-        <p class="personnel-name">Sub: Arbe</p>
-        <p class="personnel-clearance">CLEARANCE: LVL.05</p>
-      </div>
-    </div>
 
     <!-- Subject Metrics -->
     <div class="metrics-card shadow-sketch">
@@ -98,7 +83,21 @@
             <h3 class="tab-title">Case Files_Grid</h3>
             <span class="tab-badge">INDEX_LOADED</span>
           </div>
-          <div class="works-grid">
+
+          <!-- SKELETON -->
+          <div *ngIf="isLoading()" class="works-grid">
+            <div *ngFor="let i of [1,2,3,4]" class="work-card skeleton-card">
+              <div class="skel skel-image"></div>
+              <div class="skel-body">
+                <div class="skel skel-title"></div>
+                <div class="skel skel-tag"></div>
+                <div class="skel skel-btn"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- REAL CONTENT -->
+          <div *ngIf="!isLoading()" class="works-grid">
             <ng-container *ngFor="let work of works; let i = index">
               <div class="work-card shadow-sketch group">
                 <div *ngIf="i === 0" class="work-featured-badge">FEATURED</div>
@@ -125,6 +124,8 @@
                   Access File <span class="material-symbols-outlined btn-access-icon">arrow_forward</span>
                 </button>
               </div>
+              <!-- Native Ad every 3rd card -->
+              <app-native-ad *ngIf="(i + 1) % 3 === 0 && i !== works.length - 1"></app-native-ad>
             </ng-container>
           </div>
         </div>
@@ -212,20 +213,70 @@
               <h3 class="section-title">Verified Capabilities</h3>
             </div>
             <div class="capabilities-grid">
+
+              <!-- Languages -->
               <div class="capability-card capability-lang group">
                 <div class="capability-bg"></div>
                 <p class="capability-title" style="color:var(--accent-orange);">Languages</p>
                 <div class="capability-list">
-                  <span *ngFor="let item of profile()!.languages" class="capability-item">{{ item }}</span>
+                  <span *ngFor="let item of profile()!.languages" class="capability-item capability-item-hoverable">
+                    {{ item.name }}
+                    <!-- Hover tooltip -->
+                    <span *ngIf="item.description || item.linkSlug" class="tech-tooltip">
+                      <span *ngIf="item.description" class="tech-tooltip-desc">{{ item.description }}</span>
+                      <a *ngIf="item.linkSlug && item.linkCategory"
+                         [routerLink]="'/' + item.linkCategory + 's/' + item.linkSlug"
+                         class="tech-tooltip-link">
+                        View {{ item.linkCategory === 'work' ? 'Project' : 'Log' }}
+                        <span class="material-symbols-outlined" style="font-size:11px;">arrow_forward</span>
+                      </a>
+                    </span>
+                  </span>
                 </div>
               </div>
+
+              <!-- Frameworks -->
               <div class="capability-card capability-framework group">
                 <div class="capability-bg"></div>
                 <p class="capability-title" style="color:var(--primary);">Frameworks</p>
                 <div class="capability-list">
-                  <span *ngFor="let item of profile()!.frameworks" class="capability-item">{{ item }}</span>
+                  <span *ngFor="let item of profile()!.frameworks" class="capability-item capability-item-hoverable">
+                    {{ item.name }}
+                    <!-- Hover tooltip -->
+                    <span *ngIf="item.description || item.linkSlug" class="tech-tooltip">
+                      <span *ngIf="item.description" class="tech-tooltip-desc">{{ item.description }}</span>
+                      <a *ngIf="item.linkSlug && item.linkCategory"
+                         [routerLink]="'/' + item.linkCategory + 's/' + item.linkSlug"
+                         class="tech-tooltip-link">
+                        View {{ item.linkCategory === 'work' ? 'Project' : 'Log' }}
+                        <span class="material-symbols-outlined" style="font-size:11px;">arrow_forward</span>
+                      </a>
+                    </span>
+                  </span>
                 </div>
               </div>
+
+              <!-- Technologies -->
+              <div class="capability-card capability-tech group">
+                <div class="capability-bg"></div>
+                <p class="capability-title" style="color:#7c3aed;">Technologies</p>
+                <div class="capability-list">
+                  <span *ngFor="let item of profile()!.technologies" class="capability-item capability-item-hoverable">
+                    {{ item.name }}
+                    <!-- Hover tooltip -->
+                    <span *ngIf="item.description || item.linkSlug" class="tech-tooltip">
+                      <span *ngIf="item.description" class="tech-tooltip-desc">{{ item.description }}</span>
+                      <a *ngIf="item.linkSlug && item.linkCategory"
+                         [routerLink]="'/' + item.linkCategory + 's/' + item.linkSlug"
+                         class="tech-tooltip-link">
+                        View {{ item.linkCategory === 'work' ? 'Project' : 'Log' }}
+                        <span class="material-symbols-outlined" style="font-size:11px;">arrow_forward</span>
+                      </a>
+                    </span>
+                  </span>
+                </div>
+              </div>
+
             </div>
           </div>
 
@@ -246,7 +297,27 @@
             <h3 class="tab-title">Field Logs_Archive</h3>
             <span class="tab-badge">TIMESTAMPS_SYNCED</span>
           </div>
-          <div class="logs-list">
+
+          <!-- SKELETON -->
+          <div *ngIf="isLoading()" class="logs-list">
+            <div *ngFor="let i of [1,2,3]" class="log-card skeleton-card">
+              <div class="skel-body" style="padding: 1rem; width:100%;">
+                <div style="display:flex; gap:1rem; align-items:flex-start;">
+                  <div class="skel skel-log-num"></div>
+                  <div style="flex:1; display:flex; flex-direction:column; gap:0.5rem;">
+                    <div class="skel skel-log-title"></div>
+                    <div class="skel skel-log-title" style="width:55%;"></div>
+                    <div class="skel skel-log-meta"></div>
+                    <div class="skel skel-log-preview"></div>
+                    <div class="skel skel-log-preview" style="width:70%;"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- REAL CONTENT -->
+          <div *ngIf="!isLoading()" class="logs-list">
             <ng-container *ngFor="let log of logs; let i = index">
               <a [routerLink]="['/logs', log.slug]" class="log-card group/log">
                 <div class="log-card-inner">
@@ -265,6 +336,8 @@
                   </div>
                 </div>
               </a>
+              <!-- Native Ad every 3rd card -->
+              <app-native-ad *ngIf="(i + 1) % 3 === 0 && i !== logs.length - 1"></app-native-ad>
             </ng-container>
           </div>
         </div>

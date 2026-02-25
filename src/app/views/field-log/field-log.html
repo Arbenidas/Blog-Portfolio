@@ -1,225 +1,302 @@
-<main *ngIf="log" class="field-log-main">
-  <div class="coffee-stain" style="top: 8rem; left: -2.5rem; opacity: 0.5;"></div>
+<!-- Single main container — inner content switches based on state -->
+<main class="field-log-main">
   <div class="field-log-bg"></div>
 
-  <!-- FLUID WIDGET LAYER (Outside the white paper) -->
-  <div class="absolute inset-0 pointer-events-none z-50 overflow-visible hidden md:block">
-    <ng-container *ngFor="let widget of log.blocks">
-      <div *ngIf="widget.type === 'widget'" class="absolute pointer-events-auto" [style.transform]="'translate3d(' + (widget.data?.x || 0) + 'px, ' + (widget.data?.y || 0) + 'px, 0)'">
-         
-         <ng-container>
-            <div class="pointer-events-none" [innerHTML]="getWidgetHtml(widget.content)"></div>
-         </ng-container>
-
+  <!-- ===== SKELETON LOADER ===== -->
+  <ng-container *ngIf="isLoading">
+    <div class="field-log-nav">
+      <div class="skel" style="width:160px; height:16px;"></div>
+    </div>
+    <div class="log-page-grid">
+      <div class="article-container">
+        <div class="article-inner">
+          <div class="skel" style="width:100%; height:260px; margin-bottom:1.5rem;"></div>
+          <div style="display:flex; gap:0.5rem; margin-bottom:1rem; padding: 0 1.5rem;">
+            <div class="skel" style="width:90px; height:20px;"></div>
+            <div class="skel" style="width:110px; height:20px;"></div>
+          </div>
+          <div class="skel" style="width:72%; height:38px; margin-bottom:0.75rem; margin-left:1.5rem;"></div>
+          <div style="display:flex; flex-direction:column; gap:0.6rem; padding: 0 1.5rem 1.5rem;">
+            <div class="skel" style="width:100%; height:14px;"></div>
+            <div class="skel" style="width:100%; height:14px;"></div>
+            <div class="skel" style="width:85%; height:14px;"></div>
+            <div style="height:0.5rem;"></div>
+            <div class="skel" style="width:100%; height:14px;"></div>
+            <div class="skel" style="width:65%; height:14px;"></div>
+          </div>
+        </div>
       </div>
-    </ng-container>
-  </div>
-
-  <div class="field-log-nav">
-    <a class="btn-back-nav" routerLink="/logs">
-      <span class="material-symbols-outlined" style="font-size: 16px;">arrow_back</span>
-      RETURN_TO_ARCHIVES
-    </a>
-  </div>
-
-  <article class="article-container">
-    <div class="article-inner">
-      <!-- Decoratives -->
-      <div class="tape-strip" style="top: -10px; left: 5%; transform: rotate(-2deg);"></div>
-      <div class="file-ref-badge">
-        <span class="file-ref-val">{{ (log.id || 'PRV').slice(0, 3) | uppercase }}</span>
-        <span class="file-ref-label">FILE_REF</span>
+      <!-- Sidebar skeleton -->
+      <div style="display:flex; flex-direction:column; gap:1rem;">
+        <div class="skel" style="height:120px;"></div>
+        <div class="skel" style="height:80px;"></div>
       </div>
-      
-      <!-- Meta Header -->
-      <header class="log-header">
-        <div *ngIf="log.coverPhoto" class="cover-photo-box" style="overflow: hidden;">
-           <img [src]="getCoverUrl(log.coverPhoto)" 
-                class="cover-photo-img" 
-                [ngStyle]="getCoverStyles(log.coverPhoto)" />
-        </div>
-        <div class="meta-badges">
-          <span class="meta-badge meta-badge-status">STATUS: LOGGED</span>
-          <span class="meta-badge meta-badge-date">{{ log.createdAt | date:'MMM.dd.yyyy' }}</span>
-        </div>
-        <h1 class="log-title">
-          {{ log.title }}
-        </h1>
-        <div class="log-tags">
-          <a *ngFor="let tag of log.tags" class="log-tag" href="#">#{{ tag }}</a>
-        </div>
-      </header>
+    </div>
+  </ng-container>
 
-      <!-- Content Body -->
-      <div class="log-content">
-        
-        <ng-container *ngFor="let block of log.blocks; let first = first">
+  <!-- ===== REAL CONTENT ===== -->
+  <ng-container *ngIf="log && !isLoading">
+    <div class="coffee-stain" style="top: 8rem; left: -2.5rem; opacity: 0.5;"></div>
+
+    <!-- FLUID WIDGET LAYER (Outside the white paper) -->
+    <div class="absolute inset-0 pointer-events-none z-50 overflow-visible hidden md:block">
+      <ng-container *ngFor="let widget of log.blocks">
+        <div *ngIf="widget.type === 'widget'" class="absolute pointer-events-auto" [style.transform]="'translate3d(' + (widget.data?.x || 0) + 'px, ' + (widget.data?.y || 0) + 'px, 0)'">
+           <ng-container>
+              <div class="pointer-events-none" [innerHTML]="getWidgetHtml(widget.content)"></div>
+           </ng-container>
+        </div>
+      </ng-container>
+    </div>
+
+    <div class="field-log-nav">
+      <a class="btn-back-nav" routerLink="/logs">
+        <span class="material-symbols-outlined" style="font-size: 16px;">arrow_back</span>
+        RETURN_TO_ARCHIVES
+      </a>
+    </div>
+
+    <!-- 2-COLUMN: ARTICLE + SIDEBAR -->
+    <div class="log-page-grid">
+
+      <!-- LEFT: ARTICLE -->
+      <article class="article-container" id="pdf-content-area">
+        <div class="article-inner">
+          <!-- Decoratives -->
+          <div class="tape-strip" style="top: -10px; left: 5%; transform: rotate(-2deg);"></div>
+          <div class="file-ref-badge">
+            <span class="file-ref-val">{{ (log.id || 'PRV').slice(0, 3) | uppercase }}</span>
+            <span class="file-ref-label">FILE_REF</span>
+          </div>
           
-          <p *ngIf="block.type === 'p'" 
-             [ngClass]="first ? 'block-p-first' : ''">
-             {{ block.content }}
-          </p>
-
-          <h2 *ngIf="block.type === 'h1'" class="block-h1">
-            {{ block.content }}
-          </h2>
-
-          <h3 *ngIf="block.type === 'h2'" class="block-h2">
-            {{ block.content }}
-          </h3>
-
-          <div *ngIf="block.type === 'code'" class="block-code">
-            <pre><code>{{ block.content }}</code></pre>
-          </div>
-
-          <div *ngIf="block.type === 'image'" class="block-image">
-             <div class="block-image-tape"></div>
-             <img [src]="block.content" class="block-image-img riso-print">
-          </div>
-
-          <div *ngIf="block.type === 'video'" class="block-video">
-            <div class="block-image-tape"></div>
-            <!-- YouTube embed -->
-            <div *ngIf="isYoutubeUrl(block.content)" class="block-video-embed">
-              <iframe [src]="getSafeVideoUrl(block.content)" style="width: 100%; height: 100%;" frameborder="0" allowfullscreen allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"></iframe>
+          <!-- Meta Header -->
+          <header class="log-header">
+            <div *ngIf="log.coverPhoto" class="cover-photo-box" style="overflow: hidden;">
+               <img [src]="getCoverUrl(log.coverPhoto)" 
+                    class="cover-photo-img" 
+                    [ngStyle]="getCoverStyles(log.coverPhoto)" />
             </div>
-            <!-- Direct video -->
-            <div *ngIf="!isYoutubeUrl(block.content)">
-              <video [src]="block.content" controls class="block-video-direct"></video>
+            <div class="meta-badges">
+              <span class="meta-badge meta-badge-status">STATUS: LOGGED</span>
+              <span class="meta-badge meta-badge-date">{{ log.createdAt | date:'MMM.dd.yyyy' }}</span>
+              <!-- Download PDF Button -->
+              <button class="btn-download-hero" (click)="openPdfModal()">
+                <span class="material-symbols-outlined" style="font-size:14px; margin-right:4px; vertical-align:-2px;">download</span>
+                PDF
+              </button>
             </div>
-          </div>
-
-          <div *ngIf="block.type === 'comparison'" class="comp-box">
-            
-            <div class="comp-header">
-              <span class="material-symbols-outlined">compare_arrows</span>
-              <span>DATA_COMPARISON_LOG</span>
+            <h1 class="log-title">{{ log.title }}</h1>
+            <div class="log-tags">
+              <a *ngFor="let tag of log.tags" class="log-tag" href="#">#{{ tag }}</a>
             </div>
+          </header>
 
-            <div class="comp-row comp-title-bg">
-              <div class="comp-input comp-title">{{ block.data.col1Title }}</div>
-              <div class="comp-vs">VS</div>
-              <div class="comp-input comp-title">{{ block.data.col2Title }}</div>
-            </div>
-
-            <div class="comp-row" *ngFor="let row of block.data.rows">
-              <div class="comp-input comp-text" style="white-space: pre-wrap;">{{ row.col1 }}</div>
-              <div class="comp-vs"></div>
-              <div class="comp-input comp-text" style="white-space: pre-wrap;">{{ row.col2 }}</div>
-            </div>
-          </div>
-
-          <div *ngIf="block.type === 'diagram'" class="block-diagram">
-            <div class="block-diagram-box">
-              <div class="block-diagram-label" style="background: var(--charcoal); color: white; padding: 0.5rem 1rem; border-bottom: 2px solid var(--charcoal); font-weight: bold;">
-                <span class="material-symbols-outlined" style="font-size: 12px;">account_tree</span> SYSTEM_DIAGRAM
-                <span style="margin-left: auto; color: #86efac; font-size: 0.65rem; float: right;">[SECURE_VIEW]</span>
-              </div>
+          <!-- Content Body -->
+          <div class="log-content">
+            <ng-container *ngFor="let block of log.blocks; let first = first; let i = index">
               
-              <div class="foblex-canvas-wrapper" 
-                   [ngClass]="'size-' + (block.data.size || 'large')">
-                <f-flow>
-                  <f-canvas>
-                    <f-connection *ngFor="let conn of block.data?.connections"
-                                  [fOutputId]="conn.from"
-                                  [fInputId]="conn.to"
-                                  fBehavior="floating"
-                                  fType="straight">
-                    </f-connection>
+              <p *ngIf="block.type === 'p'" [ngClass]="first ? 'block-p-first' : ''" [id]="'blk-' + i">{{ block.content }}</p>
 
-                    <div fNode *ngFor="let node of block.data?.nodes"
-                            [fNodePosition]="{x: node.x, y: node.y}"
-                            class="brutalist-node-strict">
+              <h2 *ngIf="block.type === 'h1'" class="block-h1" [id]="'blk-' + i">{{ block.content }}</h2>
+              <h3 *ngIf="block.type === 'h2'" class="block-h2" [id]="'blk-' + i">{{ block.content }}</h3>
 
-                      <span *ngIf="node.icon" class="material-symbols-outlined strict-icon">
-                        {{ node.icon }}
-                      </span>
-                      
-                      <span class="strict-input" style="pointer-events: none;">
-                        {{ node.text }}
-                      </span>
-
-                      <div fNodeInput [fInputId]="node.id" fInputConnectableSide="left" class="f-port f-port-in" style="pointer-events: none;"></div>
-                      <div fNodeOutput [fOutputId]="node.id" fOutputConnectableSide="right" class="f-port f-port-out" style="pointer-events: none;"></div>
-                    </div>
-                  </f-canvas>
-                </f-flow>
+              <div *ngIf="block.type === 'code'" class="block-code">
+                <pre><code>{{ block.content }}</code></pre>
               </div>
 
-            </div>
-          </div>
+              <div *ngIf="block.type === 'image'" class="block-image">
+                 <div class="block-image-tape"></div>
+                 <img [src]="block.content" class="block-image-img riso-print">
+              </div>
 
-          <div *ngIf="block.type === 'objective-header'" class="block-obj-header-container">
-            <h2 class="block-obj-title">{{ block.data?.title }}</h2>
-            <span class="block-obj-subtitle">{{ block.data?.subtitle }}</span>
-          </div>
-
-          <div *ngIf="block.type === 'objectives'" style="width: 100%;">
-            <div class="block-obj-grid">
-              <div *ngFor="let obj of block.data" class="block-obj-card">
-                <div class="block-obj-label">
-                  {{ obj.label }}
+              <div *ngIf="block.type === 'video'" class="block-video">
+                <div class="block-image-tape"></div>
+                <div *ngIf="isYoutubeUrl(block.content)" class="block-video-embed">
+                  <iframe [src]="getSafeVideoUrl(block.content)" style="width:100%;height:100%;" frameborder="0" allowfullscreen allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture"></iframe>
                 </div>
-                <h3 class="block-obj-item-title">{{ obj.title }}</h3>
-                <p class="block-obj-desc">{{ obj.desc }}</p>
-                <div style="margin-top: auto;">
-                  <div class="block-obj-progress-bg">
-                    <div class="block-obj-progress-fill" [ngClass]="obj.progress > 50 ? 'block-obj-progress-high' : 'block-obj-progress-low'" [style.width.%]="obj.progress"></div>
+                <div *ngIf="!isYoutubeUrl(block.content)">
+                  <video [src]="block.content" controls class="block-video-direct"></video>
+                </div>
+              </div>
+
+              <div *ngIf="block.type === 'comparison'" class="comp-box" [id]="'blk-' + i">
+                <div class="comp-header">
+                  <span class="material-symbols-outlined">compare_arrows</span>
+                  <span>DATA_COMPARISON_LOG</span>
+                </div>
+                <div class="comp-row comp-title-bg">
+                  <div class="comp-input comp-title">{{ block.data.col1Title }}</div>
+                  <div class="comp-vs">VS</div>
+                  <div class="comp-input comp-title">{{ block.data.col2Title }}</div>
+                </div>
+                <div class="comp-row" *ngFor="let row of block.data.rows">
+                  <div class="comp-input comp-text" style="white-space:pre-wrap;">{{ row.col1 }}</div>
+                  <div class="comp-vs"></div>
+                  <div class="comp-input comp-text" style="white-space:pre-wrap;">{{ row.col2 }}</div>
+                </div>
+              </div>
+
+              <div *ngIf="block.type === 'diagram'" class="block-diagram" [id]="'blk-' + i">
+                <div class="block-diagram-box">
+                  <div class="block-diagram-label" style="background:var(--charcoal);color:white;padding:0.5rem 1rem;border-bottom:2px solid var(--charcoal);font-weight:bold;">
+                    <span class="material-symbols-outlined" style="font-size:12px;">account_tree</span> SYSTEM_DIAGRAM
+                    <span style="margin-left:auto;color:#86efac;font-size:0.65rem;float:right;">[SECURE_VIEW]</span>
+                  </div>
+                  <div class="foblex-canvas-wrapper" [ngClass]="'size-' + (block.data.size || 'large')">
+                    <f-flow>
+                      <f-canvas>
+                        <f-connection *ngFor="let conn of block.data?.connections" [fOutputId]="conn.from" [fInputId]="conn.to" fBehavior="floating" fType="straight"></f-connection>
+                        <div fNode *ngFor="let node of block.data?.nodes" [fNodePosition]="{x: node.x, y: node.y}" class="brutalist-node-strict">
+                          <span *ngIf="node.icon" class="material-symbols-outlined strict-icon">{{ node.icon }}</span>
+                          <span class="strict-input" style="pointer-events:none;">{{ node.text }}</span>
+                          <div fNodeInput [fInputId]="node.id" fInputConnectableSide="left" class="f-port f-port-in" style="pointer-events:none;"></div>
+                          <div fNodeOutput [fOutputId]="node.id" fOutputConnectableSide="right" class="f-port f-port-out" style="pointer-events:none;"></div>
+                        </div>
+                      </f-canvas>
+                    </f-flow>
                   </div>
                 </div>
               </div>
+
+              <div *ngIf="block.type === 'objective-header'" class="block-obj-header-container" [id]="'blk-' + i">
+                <h2 class="block-obj-title">{{ block.data?.title }}</h2>
+                <span class="block-obj-subtitle">{{ block.data?.subtitle }}</span>
+              </div>
+
+              <div *ngIf="block.type === 'objectives'" style="width:100%;">
+                <div class="block-obj-grid">
+                  <div *ngFor="let obj of block.data" class="block-obj-card">
+                    <div class="block-obj-label">{{ obj.label }}</div>
+                    <h3 class="block-obj-item-title">{{ obj.title }}</h3>
+                    <p class="block-obj-desc">{{ obj.desc }}</p>
+                    <div style="margin-top:auto;">
+                      <div class="block-obj-progress-bg">
+                        <div class="block-obj-progress-fill" [ngClass]="obj.progress > 50 ? 'block-obj-progress-high' : 'block-obj-progress-low'" [style.width.%]="obj.progress"></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div *ngIf="block.type === 'divider'" class="block-divider-container">
+                <div class="block-divider-1"></div>
+                <div class="block-divider-2"></div>
+              </div>
+
+            </ng-container>
+          </div>
+
+          <footer class="log-footer">
+            <div class="author-info">
+              <div class="author-avatar">
+                <span class="material-symbols-outlined author-icon">person</span>
+              </div>
+              <div>
+                <span class="author-label">LOGGED_BY</span>
+                <span class="author-name">ADMIN</span>
+              </div>
             </div>
-          </div>
+            <div class="signed-badge">
+              SIGNED: <span class="signed-name">Admin</span>
+            </div>
+          </footer>
 
-          <div *ngIf="block.type === 'divider'" class="block-divider-container">
-            <div class="block-divider-1"></div>
-            <div class="block-divider-2"></div>
-          </div>
-
-        </ng-container>
-
-      </div>
-
-      <footer class="log-footer">
-        <div class="author-info">
-          <div class="author-avatar">
-            <span class="material-symbols-outlined author-icon">person</span>
-          </div>
-          <div>
-            <span class="author-label">LOGGED_BY</span>
-            <span class="author-name">ADMIN</span>
+          <div class="share-container">
+            <app-share-buttons 
+              [title]="log.title" 
+              [description]="log.blocks[0].type === 'p' ? log.blocks[0].content : ''" 
+              [image]="log.coverPhoto || ''">
+            </app-share-buttons>
           </div>
         </div>
-        
-        <div class="signed-badge">
-          SIGNED: <span class="signed-name">Admin</span>
-        </div>
-      </footer>
+      </article>
 
-      <!-- Social Sharing -->
-      <div class="mt-8">
-        <app-share-buttons 
-          [title]="log.title" 
-          [description]="log.blocks[0].type === 'p' ? log.blocks[0].content : ''" 
-          [image]="log.coverPhoto || ''">
-        </app-share-buttons>
-      </div>
+      <!-- RIGHT: STICKY SIDEBAR -->
+      <aside class="log-sidebar">
+        <div class="sidebar-card">
+          <div class="sidebar-card-header">
+            <span class="material-symbols-outlined" style="font-size:14px;">schedule</span>
+            SYS_INFO
+          </div>
+          <div class="sidebar-meta-row">
+            <span class="sidebar-meta-label">Read time</span>
+            <span class="sidebar-meta-val">~{{ readingTime }} min</span>
+          </div>
+          <div class="sidebar-meta-row">
+            <span class="sidebar-meta-label">Filed</span>
+            <span class="sidebar-meta-val">{{ log.createdAt | date:'dd MMM yy' }}</span>
+          </div>
+          <div class="sidebar-meta-row" style="border-bottom:none;">
+            <span class="sidebar-meta-label">Tags</span>
+            <span class="sidebar-meta-val" style="color:var(--primary);">{{ log.tags.length }}</span>
+          </div>
+        </div>
+
+        <div *ngIf="tocItems.length > 0" class="sidebar-card">
+          <div class="sidebar-card-header">
+            <span class="material-symbols-outlined" style="font-size:14px;">toc</span>
+            INDEX_LOG
+          </div>
+          <nav class="toc-list">
+            <button *ngFor="let item of tocItems"
+               class="toc-item"
+               [class.toc-item-h2]="item.level === 2"
+               [class.toc-item-active]="activeSectionId === item.id"
+               (click)="scrollToSection(item.id)">
+              <span *ngIf="item.icon" class="material-symbols-outlined toc-icon">{{ item.icon }}</span>
+              <span *ngIf="!item.icon" class="toc-bullet">{{ item.level === 1 ? '▸' : '›' }}</span>
+              <span class="toc-text">{{ item.text | uppercase }}</span>
+            </button>
+          </nav>
+        </div>
+
+        <div *ngIf="log.tags.length > 0" class="sidebar-card">
+          <div class="sidebar-card-header">
+            <span class="material-symbols-outlined" style="font-size:14px;">label</span>
+            FIELD_TAGS
+          </div>
+          <div class="sidebar-tags">
+            <span *ngFor="let tag of log.tags" class="sidebar-tag">#{{ tag }}</span>
+          </div>
+        </div>
+
+        <!-- Bibliography Button -->
+        <button *ngIf="bibliographyBlock" class="sidebar-card" (click)="toggleBibliography($event)" style="justify-content: center; padding: 0.5rem; text-align: center; font-family: var(--font-mono); font-size: 0.75rem; font-weight: bold; color: var(--charcoal); cursor: pointer; transition: background-color 0.2s;">
+          <span class="material-symbols-outlined" style="font-size:14px; margin-right: 0.25rem;">library_books</span>
+          REFERENCES
+        </button>
+
+        <a class="sidebar-back-btn" routerLink="/logs">
+          <span class="material-symbols-outlined" style="font-size:14px;">west</span>
+          Back to Archives
+        </a>
+      </aside>
     </div>
-  </article>
+  </ng-container>
 
-  <!-- Navigation -->
-  <div class="bottom-nav">
-    <a class="btn-bottom-nav" routerLink="/logs">
-      <span class="material-symbols-outlined" style="font-size: 14px;">arrow_back</span>
-      ARCHIVES
-    </a>
-    <span class="eof-label">EOF</span>
+  <!-- Bibliography Overlay Dialog -->
+  <div *ngIf="showBibliography" class="biblio-overlay" (click)="toggleBibliography()">
+    <div class="bibliography-note fade-in-up" (click)="$event.stopPropagation()">
+      <div class="tape-strip-sm"></div>
+      <h4 class="bibliography-title">Bibliography / Refs</h4>
+      <div class="bibliography-content" style="white-space: pre-wrap;">{{ bibliographyBlock.content }}</div>
+    </div>
   </div>
-</main>
 
-<main *ngIf="!log" class="not-found-main">
-  <div class="not-found-content">
-    <h2 class="not-found-title">LOG NOT FOUND</h2>
-    <a routerLink="/logs" class="not-found-link">Return to Archives</a>
-  </div>
+  <!-- ===== NOT FOUND ===== -->
+  <ng-container *ngIf="!log && !isLoading">
+    <div class="not-found-content">
+      <h2 class="not-found-title">LOG NOT FOUND</h2>
+      <a routerLink="/logs" class="not-found-link">Return to Archives</a>
+    </div>
+  </ng-container>
+
+  <!-- Ad Modal Overlay -->
+  <app-ad-modal 
+    #adModal 
+    [isOpen]="isModalOpen" 
+    (downloadReady)="generatePdf()" 
+    (closeEvent)="isModalOpen = false">
+  </app-ad-modal>
+
 </main>

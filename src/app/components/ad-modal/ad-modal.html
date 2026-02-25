@@ -1,0 +1,56 @@
+<div class="modal-overlay" *ngIf="isOpen">
+  <div class="modal-box shadow-sketch group">
+    <div class="tape-strip" style="top:-10px; left:50%; transform:translateX(-50%) rotate(2deg);"></div>
+    
+    <!-- Header -->
+    <div class="modal-header">
+      <h3 class="modal-title">
+        <span class="material-symbols-outlined" style="vertical-align:-4px; margin-right:4px;">picture_as_pdf</span>
+        Generating Document
+      </h3>
+      <button class="btn-close" (click)="close()">
+        <span class="material-symbols-outlined">close</span>
+      </button>
+    </div>
+
+    <!-- Body -->
+    <div class="modal-body">
+      <p class="modal-text">Extracting data into portable format. Please standby.</p>
+      
+      <!-- Ad Zone — Google AdSense -->
+      <div class="ad-zone">
+        <span class="ad-label">SPONSORED DATA STREAM</span>
+        <div class="ad-content">
+          <ins class="adsbygoogle"
+               style="display:block"
+               data-ad-format="fluid"
+               data-ad-layout-key="-f7+5u+4t-da+6l"
+               data-ad-client="ca-pub-7702396954288314"
+               data-ad-slot="4531784987"></ins>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Footer Action -->
+    <div class="modal-footer">
+      
+      <!-- Countdown State -->
+      <div class="countdown-bar" *ngIf="timeLeft > 0">
+        <div class="countdown-fill" [style.width.%]="(5 - timeLeft) * 20"></div>
+        <span class="countdown-text">READY IN {{ timeLeft }}s...</span>
+      </div>
+
+      <!-- Action State -->
+      <button 
+        *ngIf="timeLeft === 0" 
+        class="btn-download" 
+        (click)="triggerDownload()"
+        [disabled]="isDownloading">
+        <span class="material-symbols-outlined" style="font-size: 14px;">download</span>
+        {{ isDownloading ? 'DOWNLOADING...' : 'START DOWNLOAD' }}
+      </button>
+
+    </div>
+  </div>
+</div>

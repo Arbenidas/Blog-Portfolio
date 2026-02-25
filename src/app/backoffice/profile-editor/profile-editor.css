@@ -1,11 +1,85 @@
 /* profile-editor.css */
 
+/* ===== SAVE TOAST NOTIFICATION ===== */
+.profile-toast {
+    position: fixed;
+    top: 1.5rem;
+    left: 50%;
+    transform: translateX(-50%) translateY(0);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    background-color: var(--charcoal);
+    color: white;
+    font-family: var(--font-mono);
+    padding: 1rem 1.5rem;
+    border: 2px solid var(--charcoal);
+    box-shadow: 6px 6px 0 var(--accent-orange);
+    min-width: 320px;
+    animation: toastSlideIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards,
+        toastFadeOut 0.4s ease 3s forwards;
+    pointer-events: none;
+}
+
+.profile-toast strong {
+    display: block;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.2rem;
+}
+
+.profile-toast p {
+    font-size: 11px;
+    color: #d1d5db;
+    margin: 0;
+}
+
+.profile-toast-error {
+    box-shadow: 6px 6px 0 #ef4444;
+}
+
+.profile-toast-icon {
+    font-size: 2rem;
+    color: var(--accent-orange);
+    flex-shrink: 0;
+}
+
+.profile-toast-error .profile-toast-icon {
+    color: #ef4444;
+}
+
+@keyframes toastSlideIn {
+    from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(-24px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+}
+
+@keyframes toastFadeOut {
+    from {
+        opacity: 1;
+    }
+
+    to {
+        opacity: 0;
+        pointer-events: none;
+    }
+}
+
 .profile-container {
     height: 100%;
     display: flex;
     flex-direction: column;
     padding-top: 1rem;
 }
+
 
 .profile-header {
     display: flex;
@@ -875,7 +949,7 @@
 
 .tpl-cap-grid {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 1.5rem;
 }
 
@@ -914,6 +988,28 @@
     font-family: var(--font-mono);
     font-size: 10px;
     color: var(--primary);
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 1rem;
+    border-bottom: 1px solid #e5e7eb;
+    padding-bottom: 0.5rem;
+    margin-top: 0;
+}
+
+.tpl-cap-box-tech {
+    background-color: white;
+    border: 2px solid var(--charcoal);
+    padding: 1.25rem;
+    position: relative;
+    box-shadow: 4px 4px 0 #e5e7eb;
+    transform: rotate(-0.5deg);
+}
+
+.tpl-cap-title-tech {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: #7c3aed;
     font-weight: bold;
     text-transform: uppercase;
     letter-spacing: 0.1em;
@@ -975,4 +1071,183 @@
 
 .tpl-widget-layer:hover .btn-remove-widget {
     opacity: 1;
+}
+
+/* ===== CAPABILITIES TECH TAG CHIPS ===== */
+
+.tech-tags-wrapper {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    min-height: 2rem;
+    margin-bottom: 0.5rem;
+    padding: 0.4rem;
+    border: 1px dashed #d1d5db;
+    background: #f9fafb;
+}
+
+.tech-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    background: white;
+    border: 2px solid var(--charcoal);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: bold;
+    padding: 0.2rem 0.5rem;
+    box-shadow: 2px 2px 0 var(--charcoal);
+    color: var(--charcoal);
+}
+
+.tech-tag-fw {
+    border-color: #0891b2;
+    box-shadow: 2px 2px 0 #0891b2;
+    color: #0891b2;
+}
+
+.tech-tag-remove {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #ef4444;
+    font-size: 14px;
+    line-height: 1;
+    padding: 0;
+    margin-left: 0.1rem;
+    transition: color 0.2s;
+}
+
+.tech-tag-remove:hover {
+    color: #dc2626;
+}
+
+.tech-add-row {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.tech-add-input {
+    flex: 1;
+    min-width: 0;
+}
+
+.btn-add-tech {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: bold;
+    background-color: var(--charcoal);
+    color: white;
+    padding: 0.4rem 0.75rem;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    white-space: nowrap;
+}
+
+.btn-add-tech:hover {
+    background-color: var(--accent-orange);
+}
+
+.btn-add-tech-fw {
+    background-color: #0891b2;
+}
+
+.btn-add-tech-fw:hover {
+    background-color: #0e7490;
+}
+
+/* ===== INLINE TECH EDIT PANEL ===== */
+
+.tech-chip-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.tech-chip-name {
+    cursor: pointer;
+}
+
+.tech-chip-name:hover {
+    text-decoration: underline;
+}
+
+.tech-tag-active {
+    border-style: dashed !important;
+    box-shadow: none !important;
+}
+
+.tech-chip-has-desc {
+    font-size: 8px;
+    color: var(--accent-orange);
+    line-height: 1;
+}
+
+.tech-chip-has-desc-fw {
+    color: #0891b2;
+}
+
+.tech-edit-panel {
+    border: 1px dashed var(--charcoal);
+    border-top: none;
+    background: white;
+    padding: 0.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    margin-bottom: 0.4rem;
+    animation: slideDown 0.15s ease;
+    width: 100%;
+}
+
+.tech-edit-panel-fw {
+    border-color: #0891b2;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-4px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.tech-edit-row {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.tech-edit-textarea {
+    resize: vertical;
+    min-height: 3rem;
+}
+
+.tech-link-row {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.tech-link-select {
+    border: 1px solid var(--charcoal);
+    padding: 0.4rem 0.5rem;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    background: white;
+    cursor: pointer;
+    min-width: 110px;
+}
+
+.tech-link-input {
+    flex: 1;
+}
+
+.tech-link-input:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
 }

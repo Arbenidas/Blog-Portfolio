@@ -4,10 +4,11 @@ import { RouterModule } from '@angular/router';
 import { SeoService } from '../../services/seo.service';
 import { ContentService, DocumentEntry, ProfileData, CustomWidget } from '../../services/content.service';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import { NativeAdComponent } from '../../components/native-ad/native-ad';
 
 @Component({
   selector: 'app-home-view',
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, NativeAdComponent],
   templateUrl: './home-view.html',
   styleUrl: './home-view.css',
 })
@@ -19,6 +20,7 @@ export class HomeView implements OnInit, OnDestroy {
 
   works: DocumentEntry[] = [];
   logs: DocumentEntry[] = [];
+  isLoading = signal(true);
 
   profile = signal<ProfileData | null>(null);
   widgets = signal<CustomWidget[]>([]);
@@ -82,6 +84,7 @@ export class HomeView implements OnInit, OnDestroy {
       this.widgets.set(customWidgets);
     }
 
+    this.isLoading.set(false);
     this.cdr.detectChanges();
   }
 

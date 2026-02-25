@@ -1,22 +1,26 @@
-import { Component, inject, OnInit, ChangeDetectorRef, PLATFORM_ID, PendingTasks } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy, ChangeDetectorRef, ChangeDetectionStrategy, PLATFORM_ID, PendingTasks, ViewChild } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { ActivatedRoute, RouterModule } from '@angular/router';
+import { distinctUntilChanged, map } from 'rxjs/operators';
 import { ContentService, DocumentEntry, CustomWidget } from '../../services/content.service';
 import { DomSanitizer, SafeHtml, SafeResourceUrl } from '@angular/platform-browser';
 import { SeoService } from '../../services/seo.service';
 import { environment } from '../../../environments/environment';
 
-import { ShareButtons } from '../../components/share-buttons/share-buttons.component';
 import { FFlowModule } from '@foblex/flow';
+import { ShareButtons } from '../../components/share-buttons/share-buttons.component';
+import { AdModalComponent } from '../../components/ad-modal/ad-modal';
+import { PdfService } from '../../services/pdf.service';
 
 @Component({
   selector: 'app-case-study',
   standalone: true,
-  imports: [CommonModule, RouterModule, ShareButtons, FFlowModule],
+  imports: [CommonModule, RouterModule, FFlowModule, ShareButtons, AdModalComponent],
   templateUrl: './case-study.html',
   styleUrl: './case-study.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class CaseStudy implements OnInit {
+export class CaseStudy implements OnInit, OnDestroy {
   private contentService = inject(ContentService);
   private seoService = inject(SeoService);
   private route = inject(ActivatedRoute);
@@ -24,27 +28,122 @@ export class CaseStudy implements OnInit {
   private sanitizer = inject(DomSanitizer);
   private platformId = inject(PLATFORM_ID);
   private pendingTasks = inject(PendingTasks);
+  private pdfService = inject(PdfService);
+
+  @ViewChild('adModal') adModal!: AdModalComponent;
+  isModalOpen = false;
 
   work: DocumentEntry | undefined;
   availableWidgets: CustomWidget[] = [];
   isLoading = true;
 
+  showBibliography = false;
+
+  get bibliographyBlock(): any {
+    return this.work?.blocks.find(b => b.type === 'bibliography');
+  }
+
+  toggleBibliography(event?: Event) {
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+    this.showBibliography = !this.showBibliography;
+    this.cdr.markForCheck();
+  }
+
+  /** Auto-generated TOC from indexable blocks */
+  get tocItems(): { level: number; text: string; id: string; icon: string | null }[] {
+    if (!this.work) return [];
+    const items: { level: number; text: string; id: string; icon: string | null }[] = [];
+    this.work.blocks.forEach((b: any, i: number) => {
+      if (b.type === 'h1') {
+        items.push({ level: 1, text: b.content, id: 'cs-blk-' + i, icon: null });
+      } else if (b.type === 'h2') {
+        items.push({ level: 2, text: b.content, id: 'cs-blk-' + i, icon: null });
+      } else if (b.type === 'objective-header') {
+        items.push({ level: 1, text: b.data?.title || 'Objectives', id: 'cs-blk-' + i, icon: 'grid_view' });
+      } else if (b.type === 'diagram') {
+        items.push({ level: 2, text: 'System Diagram', id: 'cs-blk-' + i, icon: 'account_tree' });
+      } else if (b.type === 'comparison') {
+        const label = b.data?.col1Title && b.data?.col2Title
+          ? b.data.col1Title + ' vs ' + b.data.col2Title : 'Comparison';
+        items.push({ level: 2, text: label, id: 'cs-blk-' + i, icon: 'compare_arrows' });
+      }
+    });
+    return items;
+  }
+
+  /** Estimated read time in minutes */
+  get readingTime(): number {
+    if (!this.work) return 1;
+    const words = this.work.blocks
+      .filter((b: any) => b.type === 'p' || b.type === 'h1' || b.type === 'h2')
+      .map((b: any) => b.content.split(/\s+/).length)
+      .reduce((a: number, b: number) => a + b, 0);
+    return Math.max(1, Math.ceil(words / 200));
+  }
+
+  /** Currently visible section id */
+  activeSectionId = '';
+
+  /** Smooth-scroll with fixed navbar offset */
+  scrollToSection(id: string): void {
+    const el = document.getElementById(id);
+    if (el) {
+      const top = el.getBoundingClientRect().top + window.scrollY - 80 - 16;
+      window.scrollTo({ top, behavior: 'smooth' });
+    }
+  }
+
+  private sectionObserver: IntersectionObserver | null = null;
+
+  private setupScrollObserver(): void {
+    if (!isPlatformBrowser(this.platformId)) return;
+    this.sectionObserver?.disconnect();
+    const ids = this.tocItems.map(item => item.id);
+    if (ids.length === 0) return;
+
+    this.sectionObserver = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting && ids.includes(entry.target.id)) {
+          this.activeSectionId = entry.target.id;
+          this.cdr.markForCheck();
+        }
+      });
+    }, { rootMargin: '-96px 0px -55% 0px', threshold: 0 });
+
+    setTimeout(() => {
+      ids.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) this.sectionObserver!.observe(el);
+      });
+    }, 0);
+  }
+
+  ngOnDestroy(): void {
+    this.sectionObserver?.disconnect();
+  }
+
   ngOnInit() {
-    this.route.paramMap.subscribe(async params => {
+    this.route.paramMap.pipe(
+      map(p => p.get('slug') ?? ''),
+      distinctUntilChanged()
+    ).subscribe(async slug => {
       this.isLoading = true;
-      const slug = params.get('slug');
+      this.work = undefined;
+      this.cdr.markForCheck();
+
       if (slug) {
         const removeTask = this.pendingTasks.add();
         try {
           this.availableWidgets = await this.contentService.getCustomWidgets();
 
           if (slug === 'preview') {
-            // Load from localStorage preview data (localStorage is shared across tabs)
             if (isPlatformBrowser(this.platformId)) {
               const raw = localStorage.getItem('portfolio_preview');
               if (raw) {
                 this.work = JSON.parse(raw);
-                this.isLoading = false;
                 this.updateSeo();
               }
             }
@@ -54,14 +153,15 @@ export class CaseStudy implements OnInit {
               this.updateSeo();
             }
           }
-          this.isLoading = false;
-          this.cdr.detectChanges();
         } finally {
+          this.isLoading = false;
+          this.cdr.markForCheck();
+          this.setupScrollObserver();
           removeTask();
         }
       } else {
         this.isLoading = false;
-        this.cdr.detectChanges();
+        this.cdr.markForCheck();
       }
     });
   }
@@ -178,4 +278,37 @@ export class CaseStudy implements OnInit {
   isYoutubeUrl(url: string): boolean {
     return !!this.contentService.extractYoutubeId(url);
   }
+
+  // --- PDF DOWNLOAD ---
+  openPdfModal() {
+    this.isModalOpen = true;
+    setTimeout(() => {
+      if (this.adModal) {
+        this.adModal.open();
+      }
+    }, 0);
+  }
+
+  async generatePdf() {
+    try {
+      if (!isPlatformBrowser(this.platformId)) return;
+      const element = document.getElementById('pdf-content-area');
+      if (!element) {
+        console.error('PDF content area not found.');
+        return;
+      }
+
+      const filename = this.work?.title ? `Case_Study_${this.work.title.replace(/\s+/g, '_')}` : 'Case_Study_Download';
+      await this.pdfService.downloadElementToPdf(element, filename);
+    } catch (error) {
+      console.error('Failed to generate PDF', error);
+      alert('Error generating PDF.');
+    } finally {
+      this.isModalOpen = false;
+      if (this.adModal) {
+        this.adModal.isDownloading = false;
+      }
+    }
+  }
+
 }

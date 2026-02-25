@@ -33,6 +33,7 @@ export class BlockEditor implements OnInit, OnDestroy {
   title = '';
   slug = '';
   tags = '';
+  bibliography = '';
   category: 'work' | 'log' = 'work';
   indexLog = '';
   deployStatus = 'LIVE_PRODUCTION';
@@ -51,6 +52,7 @@ export class BlockEditor implements OnInit, OnDestroy {
 
   showPublishSticker = false;
   showWidgetGallery = false;
+  isUploadingCover = false;
   isUploadingVideo = false;
   lastAutoSaveTime: string = '';
   showToast = false;
@@ -64,6 +66,9 @@ export class BlockEditor implements OnInit, OnDestroy {
 
   contentBlocks: EditorBlock[] = [];
   widgetBlocks: EditorBlock[] = [];
+
+  // === GESTIÓN DE LA PORTADA ===
+  pendingCoverFile: File | null = null;
 
   availableWidgets = signal<CustomWidget[]>([]);
   customNodeTemplates: DiagramNodeConfig[] = [];
@@ -169,7 +174,17 @@ export class BlockEditor implements OnInit, OnDestroy {
       this.slug = doc.slug;
 
       // Extraer configuración del banner
-      if (doc.coverPhoto) {
+      if (doc.coverPhoto && doc.coverPhoto.startsWith('data:')) {
+        // ⚠️ AUTO-REPAIR: El cover_photo es un Base64 enorme guardado en la BD.
+        // Lo limpiamos en la BD ahora para que futuros loads sean instantáneos.
+        // El usuario tendrá que re-subir la imagen.
+        console.warn('[AutoRepair] Cover photo es Base64. Limpiando de Supabase...');
+        this.coverPhotoUrl = '';
+        if (this.documentId) {
+          this.contentService.clearCoverPhoto(this.documentId);
+        }
+        alert('⚠️ La portada de este documento estaba guardada como Base64 (formato antiguo muy pesado). Se eliminó automáticamente. Por favor, re-sube la imagen desde el editor.');
+      } else if (doc.coverPhoto) {
         if (doc.coverPhoto.includes('#')) {
           const parts = doc.coverPhoto.split('#');
           this.coverPhotoUrl = parts[0];
@@ -187,6 +202,7 @@ export class BlockEditor implements OnInit, OnDestroy {
         this.coverPhotoUrl = '';
       }
 
+
       this.category = doc.category;
       this.tags = doc.tags.join(', ');
       this.indexLog = doc.indexLog || '';
@@ -196,8 +212,13 @@ export class BlockEditor implements OnInit, OnDestroy {
         this.deployStatus = techBlock.data.status;
       }
 
+      const biblioBlock = doc.blocks.find((b: EditorBlock) => b.type === 'bibliography');
+      if (biblioBlock) {
+        this.bibliography = biblioBlock.content;
+      }
+
       // Separating standard blocks from widgets and tech-stack
-      this.contentBlocks = JSON.parse(JSON.stringify(doc.blocks.filter((b: EditorBlock) => b.type !== 'widget' && b.type !== 'tech-stack')));
+      this.contentBlocks = JSON.parse(JSON.stringify(doc.blocks.filter((b: EditorBlock) => b.type !== 'widget' && b.type !== 'tech-stack' && b.type !== 'bibliography')));
       this.widgetBlocks = JSON.parse(JSON.stringify(doc.blocks.filter((b: EditorBlock) => b.type === 'widget')));
       this.documentStatus = doc.status || 'published';
       this.cdr.detectChanges();
@@ -294,16 +315,41 @@ export class BlockEditor implements OnInit, OnDestroy {
   onCoverPhotoSelected(event: any) {
     const file = event.target.files[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onload = (e: any) => {
-        this.coverPhotoUrl = e.target.result;
-        this.coverPosX = 50;
-        this.coverPosY = 50;
-        this.coverScale = 100;
-      };
-      reader.readAsDataURL(file);
+      // 1. Guardamos el archivo físico en la RAM (No en el documento)
+      this.pendingCoverFile = file;
+
+      // 2. Creamos una URL temporal (blob:http://...) 
+      // Esto engaña al navegador para mostrar la imagen, y es súper ligero para el localStorage.
+      const tempUrl = URL.createObjectURL(file);
+
+      // 3. Asignamos la URL temporal al documento
+      this.coverPhotoUrl = tempUrl;
+      this.coverPosX = 50;
+      this.coverPosY = 50;
+      this.coverScale = 100;
+
+      // 4. Guardamos en localStorage. ¡Como es un texto corto, jamás dará QuotaExceededError!
+      this.saveDraftLocally();
+      this.saveSnapshot();
     }
   }
+
+  async uploadPendingCover(): Promise<string> {
+    if (!this.pendingCoverFile) throw new Error('No hay archivo pendiente.');
+
+    this.isUploadingCover = true;
+    this.cdr.detectChanges();
+
+    try {
+      const publicUrl = await this.contentService.uploadCoverImage(this.pendingCoverFile);
+      this.pendingCoverFile = null;
+      return publicUrl;
+    } finally {
+      this.isUploadingCover = false;
+      this.cdr.detectChanges();
+    }
+  }
+
 
   async onVideoFileSelected(event: any, block: EditorBlock) {
     const file = event.target.files[0];
@@ -394,6 +440,18 @@ export class BlockEditor implements OnInit, OnDestroy {
   }
 
   async save() {
+    // 1. ¡INTERCEPTAMOS! Si hay una imagen pendiente, la subimos primero.
+    if (this.pendingCoverFile) {
+      try {
+        const realUrl = await this.uploadPendingCover();
+        this.coverPhotoUrl = realUrl;
+      } catch (err) {
+        console.error('No se pudo subir la portada:', err);
+        alert('ERROR: No se pudo subir la imagen de portada a Supabase. Verifica que el bucket "blog_covers" exista y tenga permisos de escritura.');
+        return; // Cancelamos para no guardar con un blob: URL en la BD
+      }
+    }
+
     this.formatHeadings();
     const tagArray = this.tags.split(',').map(t => t.trim()).filter(t => t.length > 0);
     // Auto-update slug if empty (new document) or if user hasn't manually set one
@@ -410,6 +468,14 @@ export class BlockEditor implements OnInit, OnDestroy {
         data: { status: this.deployStatus }
       };
       allBlocks.unshift(techStackBlock);
+    }
+
+    if (this.bibliography.trim()) {
+      allBlocks.push({
+        id: 'bibliography-static',
+        type: 'bibliography',
+        content: this.bibliography
+      });
     }
 
     // Final cover photo with framing parameters
@@ -475,7 +541,21 @@ export class BlockEditor implements OnInit, OnDestroy {
     }
   }
 
-  preview() {
+  async preview() {
+    // 1. ¡INTERCEPTAMOS! Si hay una imagen pendiente, la subimos primero.
+    // IMPORTANTE: Los blob: URLs son locales a la pestaña que los creó y NO funcionan
+    // en otras pestañas. Por eso debemos subir la imagen ANTES de abrir el preview.
+    if (this.pendingCoverFile) {
+      try {
+        const realUrl = await this.uploadPendingCover();
+        this.coverPhotoUrl = realUrl;
+      } catch (err) {
+        console.error('No se pudo subir la portada para el preview:', err);
+        alert('ERROR: No se pudo subir la imagen de portada a Supabase. Verifica que el bucket "blog_covers" exista y tenga permisos de escritura.');
+        return; // Cancelamos el preview para no abrir una ventana con imagen rota
+      }
+    }
+
     this.formatHeadings();
     const tagArray = this.tags.split(',').map(t => t.trim()).filter(t => t.length > 0);
 
@@ -490,6 +570,14 @@ export class BlockEditor implements OnInit, OnDestroy {
       allBlocks.unshift(techStackBlock);
     }
 
+    if (this.bibliography.trim()) {
+      allBlocks.push({
+        id: 'bibliography-static',
+        type: 'bibliography',
+        content: this.bibliography
+      });
+    }
+
     // Construct final cover photo URL with framing params for preview
     let finalCover = this.coverPhotoUrl;
     if (finalCover && (this.coverPosX !== 50 || this.coverPosY !== 50 || this.coverScale !== 100)) {
@@ -502,6 +590,8 @@ export class BlockEditor implements OnInit, OnDestroy {
       title: this.title,
       coverPhoto: finalCover,
       category: this.category,
+      tags: tagArray,
+      indexLog: this.indexLog,
       blocks: allBlocks
     });
 
@@ -797,17 +887,32 @@ export class BlockEditor implements OnInit, OnDestroy {
     // No guardamos si el documento está completamente vacío
     if (!this.title && this.contentBlocks.length === 0) return;
 
+    // IMPORTANTE: No guardamos blob: URLs (solo válidas en la pestaña actual)
+    // ni data: URLs de Base64 (pesan demasiado y rompen el localStorage).
+    // Si la URL es una de estas, guardamos un string vacío — se perderá en el draft
+    // pero se subirá a Supabase cuando hagas Save/Preview.
+    const safeCoverUrl = (this.coverPhotoUrl &&
+      !this.coverPhotoUrl.startsWith('blob:') &&
+      !this.coverPhotoUrl.startsWith('data:'))
+      ? this.coverPhotoUrl
+      : '';
+
     const draftData = {
       title: this.title,
       blocks: this.contentBlocks,
-      coverPhoto: this.coverPhotoUrl,
+      coverPhoto: safeCoverUrl,
       status: this.documentStatus,
       timestamp: new Date().getTime()
     };
 
     // Guardamos en la memoria del navegador usando el slug actual o 'new'
     const storageKey = `autosave_${this.slug || 'new'}`;
-    localStorage.setItem(storageKey, JSON.stringify(draftData));
+    try {
+      localStorage.setItem(storageKey, JSON.stringify(draftData));
+    } catch (e) {
+      // QuotaExceededError: el draft sigue siendo demasiado grande
+      console.warn('Autosave fallido (localStorage lleno):', e);
+    }
 
     const now = new Date();
     this.lastAutoSaveTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
@@ -820,6 +925,14 @@ export class BlockEditor implements OnInit, OnDestroy {
     const rawDraft = localStorage.getItem(storageKey);
 
     if (rawDraft) {
+      // Guard: Si el draft guardado contiene una imagen Base64 enorme,
+      // lo descartamos automáticamente para no congelar el parse.
+      if (rawDraft.includes('"data:image')) {
+        console.warn('Draft descartado: contiene imagen Base64 pesada. Limpiando...');
+        localStorage.removeItem(storageKey);
+        return;
+      }
+
       // En lugar de usar 'confirm()', guardamos los datos temporalmente y mostramos nuestro modal
       this.pendingDraftData = JSON.parse(rawDraft);
       this.showDraftModal = true;
@@ -831,11 +944,15 @@ export class BlockEditor implements OnInit, OnDestroy {
     if (this.pendingDraftData) {
       this.title = this.pendingDraftData.title || '';
       this.contentBlocks = this.pendingDraftData.blocks || [];
-      this.coverPhotoUrl = this.pendingDraftData.coverPhoto || '';
+      // Solo restauramos la portada si es una URL real (no base64, no blob)
+      const savedCover = this.pendingDraftData.coverPhoto || '';
+      if (savedCover && !savedCover.startsWith('data:') && !savedCover.startsWith('blob:')) {
+        this.coverPhotoUrl = savedCover;
+      }
       this.documentStatus = this.pendingDraftData.status || 'draft';
 
       this.cdr.detectChanges();
-      this.saveSnapshot(); // Snapshot después de recuperar borrador
+      this.saveSnapshot();
     }
     this.closeDraftModal();
   }
@@ -865,6 +982,14 @@ export class BlockEditor implements OnInit, OnDestroy {
       this.historyStack = this.historyStack.slice(0, this.historyPointer + 1);
       this.historyStack.push(snapshot);
       this.historyPointer++;
+
+      // === CAP DE MEMORIA: máximo 50 snapshots en el historial ===
+      // Cada snapshot puede pesar varios KB; sin límite puede acumular MBs.
+      const MAX_HISTORY = 50;
+      if (this.historyStack.length > MAX_HISTORY) {
+        this.historyStack.shift(); // Eliminamos el snapshot más antiguo
+        this.historyPointer--;    // Ajustamos el puntero
+      }
     }
   }
 

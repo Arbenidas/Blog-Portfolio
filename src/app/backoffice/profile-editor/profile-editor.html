@@ -1,11 +1,21 @@
 <div class="profile-container">
+
+    <!-- ===== SAVE TOAST NOTIFICATION ===== -->
+    <div *ngIf="saveToast()" class="profile-toast" [class.profile-toast-error]="saveToast() === 'error'">
+        <span class="material-symbols-outlined profile-toast-icon">{{ saveToast() === 'success' ? 'check_circle' : 'error' }}</span>
+        <div>
+            <strong>{{ saveToast() === 'success' ? 'Profile Published' : 'Error Saving Profile' }}</strong>
+            <p>{{ saveToast() === 'success' ? 'Personnel file is now live on the public site.' : 'Something went wrong. Check the console.' }}</p>
+        </div>
+    </div>
+
     <div class="profile-header">
         <div>
             <h1 class="profile-title">Personnel Editor</h1>
-            <p class="profile-subtitle">Manage Profile & Stickers</p>
+            <p class="profile-subtitle">Manage Profile &amp; Stickers</p>
         </div>
         <button [disabled]="isSaving()" (click)="save()" class="btn-publish-profile">
-            <span class="material-symbols-outlined text-[16px]">{{ isSaving() ? 'hourglass_bottom' : 'save_as' }}</span>
+            <span class="material-symbols-outlined" style="font-size:16px;">{{ isSaving() ? 'hourglass_bottom' : 'save_as' }}</span>
             {{ isSaving() ? 'Saving...' : 'Publish Profile' }}
         </button>
     </div>
@@ -73,17 +83,129 @@
                     <textarea [(ngModel)]="profile().coreMission" rows="4" class="form-textarea"></textarea>
                 </div>
 
-                <!-- Tech Stack -->
                 <div class="form-section">
                     <h3 class="form-section-header">Capabilities</h3>
+
+                    <!-- Languages -->
                     <div class="form-field">
-                        <label class="form-label">Languages (comma separated)</label>
-                        <input type="text" [(ngModel)]="languagesStr" (ngModelChange)="languagesStr=$event" class="form-input">
+                        <label class="form-label">Languages</label>
+                        <div class="tech-tags-wrapper">
+                            <div *ngFor="let lang of profile().languages" class="tech-chip-group">
+                                <span class="tech-tag" [class.tech-tag-active]="editingTech === lang">
+                                    <span class="tech-chip-name" (click)="toggleEditTech(lang)">{{ lang.name }}</span>
+                                    <span *ngIf="lang.description" class="tech-chip-has-desc" title="Has description">●</span>
+                                    <button (click)="removeLanguage(lang)" class="tech-tag-remove" title="Remove">&times;</button>
+                                </span>
+                                <!-- Inline edit panel -->
+                                <div *ngIf="editingTech === lang" class="tech-edit-panel">
+                                    <div class="tech-edit-row">
+                                        <label class="form-label">Description (shown on hover)</label>
+                                        <textarea [(ngModel)]="lang.description" rows="2" class="form-textarea tech-edit-textarea"
+                                                  placeholder="e.g. Used for backend services at scale..."></textarea>
+                                    </div>
+                                    <div class="tech-edit-row">
+                                        <label class="form-label">Link to a Work/Log (optional)</label>
+                                        <div class="tech-link-row">
+                                            <select [(ngModel)]="lang.linkCategory" class="tech-link-select">
+                                                <option value="">— No link —</option>
+                                                <option value="work">Work</option>
+                                                <option value="log">Log</option>
+                                            </select>
+                                            <input type="text" [(ngModel)]="lang.linkSlug"
+                                                   placeholder="slug-del-proyecto" class="form-input tech-link-input"
+                                                   [disabled]="!lang.linkCategory" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="tech-add-row">
+                            <input type="text" [(ngModel)]="newLangInput" (keyup.enter)="addLanguage()"
+                                   placeholder="e.g. TypeScript" class="form-input tech-add-input" />
+                            <button (click)="addLanguage()" class="btn-add-tech">+ Add</button>
+                        </div>
                     </div>
+
+                    <!-- Frameworks / Tools -->
                     <div class="form-field">
-                        <label class="form-label">Frameworks (comma separated)</label>
-                        <input type="text" [(ngModel)]="frameworksStr" (ngModelChange)="frameworksStr=$event" class="form-input">
+                        <label class="form-label">Frameworks / Tools</label>
+                        <div class="tech-tags-wrapper">
+                            <div *ngFor="let fw of profile().frameworks" class="tech-chip-group">
+                                <span class="tech-tag tech-tag-fw" [class.tech-tag-active]="editingTech === fw">
+                                    <span class="tech-chip-name" (click)="toggleEditTech(fw)">{{ fw.name }}</span>
+                                    <span *ngIf="fw.description" class="tech-chip-has-desc tech-chip-has-desc-fw" title="Has description">●</span>
+                                    <button (click)="removeFramework(fw)" class="tech-tag-remove" title="Remove">&times;</button>
+                                </span>
+                                <!-- Inline edit panel -->
+                                <div *ngIf="editingTech === fw" class="tech-edit-panel tech-edit-panel-fw">
+                                    <div class="tech-edit-row">
+                                        <label class="form-label">Description (shown on hover)</label>
+                                        <textarea [(ngModel)]="fw.description" rows="2" class="form-textarea tech-edit-textarea"
+                                                  placeholder="e.g. Main framework for all frontend projects..."></textarea>
+                                    </div>
+                                    <div class="tech-edit-row">
+                                        <label class="form-label">Link to a Work/Log (optional)</label>
+                                        <div class="tech-link-row">
+                                            <select [(ngModel)]="fw.linkCategory" class="tech-link-select">
+                                                <option value="">— No link —</option>
+                                                <option value="work">Work</option>
+                                                <option value="log">Log</option>
+                                            </select>
+                                            <input type="text" [(ngModel)]="fw.linkSlug"
+                                                   placeholder="slug-del-proyecto" class="form-input tech-link-input"
+                                                   [disabled]="!fw.linkCategory" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="tech-add-row">
+                            <input type="text" [(ngModel)]="newFwInput" (keyup.enter)="addFramework()"
+                                   placeholder="e.g. Angular" class="form-input tech-add-input" />
+                            <button (click)="addFramework()" class="btn-add-tech btn-add-tech-fw">+ Add</button>
+                        </div>
                     </div>
+
+                    <!-- Technologies -->
+                    <div class="form-field">
+                        <label class="form-label">Technologies</label>
+                        <div class="tech-tags-wrapper">
+                            <div *ngFor="let tech of profile().technologies" class="tech-chip-group">
+                                <span class="tech-tag tech-tag-tech" [class.tech-tag-active]="editingTech === tech">
+                                    <span class="tech-chip-name" (click)="toggleEditTech(tech)">{{ tech.name }}</span>
+                                    <span *ngIf="tech.description" class="tech-chip-has-desc tech-chip-has-desc-tech" title="Has description">●</span>
+                                    <button (click)="removeTechnology(tech)" class="tech-tag-remove" title="Remove">&times;</button>
+                                </span>
+                                <!-- Inline edit panel -->
+                                <div *ngIf="editingTech === tech" class="tech-edit-panel tech-edit-panel-tech">
+                                    <div class="tech-edit-row">
+                                        <label class="form-label">Description (shown on hover)</label>
+                                        <textarea [(ngModel)]="tech.description" rows="2" class="form-textarea tech-edit-textarea"
+                                                  placeholder="e.g. Containerization platform..."></textarea>
+                                    </div>
+                                    <div class="tech-edit-row">
+                                        <label class="form-label">Link to a Work/Log (optional)</label>
+                                        <div class="tech-link-row">
+                                            <select [(ngModel)]="tech.linkCategory" class="tech-link-select">
+                                                <option value="">— No link —</option>
+                                                <option value="work">Work</option>
+                                                <option value="log">Log</option>
+                                            </select>
+                                            <input type="text" [(ngModel)]="tech.linkSlug"
+                                                   placeholder="slug-del-proyecto" class="form-input tech-link-input"
+                                                   [disabled]="!tech.linkCategory" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="tech-add-row">
+                            <input type="text" [(ngModel)]="newTechInput" (keyup.enter)="addTechnology()"
+                                   placeholder="e.g. Docker" class="form-input tech-add-input" />
+                            <button (click)="addTechnology()" class="btn-add-tech btn-add-tech-tech">+ Add</button>
+                        </div>
+                    </div>
+
                 </div>
 
                 <!-- Deployment History -->
@@ -223,13 +345,19 @@
                                     <div class="tpl-cap-box-lang">
                                         <p class="tpl-cap-title-lang">Languages</p>
                                         <div class="tpl-cap-tags">
-                                            <span *ngFor="let item of profile().languages" class="tpl-cap-tag">{{ item }}</span>
+                                            <span *ngFor="let item of profile().languages" class="tpl-cap-tag">{{ item.name }}</span>
                                         </div>
                                     </div>
                                     <div class="tpl-cap-box-fw">
                                         <p class="tpl-cap-title-fw">Frameworks</p>
                                         <div class="tpl-cap-tags">
-                                            <span *ngFor="let item of profile().frameworks" class="tpl-cap-tag">{{ item }}</span>
+                                            <span *ngFor="let item of profile().frameworks" class="tpl-cap-tag">{{ item.name }}</span>
+                                        </div>
+                                    </div>
+                                    <div class="tpl-cap-box-tech">
+                                        <p class="tpl-cap-title-tech">Technologies</p>
+                                        <div class="tpl-cap-tags">
+                                            <span *ngFor="let item of profile().technologies" class="tpl-cap-tag">{{ item.name }}</span>
                                         </div>
                                     </div>
                                 </div>
