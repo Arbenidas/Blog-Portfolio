@@ -1438,3 +1438,145 @@
 .share-container {
     margin-top: 2.5rem;
 }
+/* ==== READ MODE ==== */
+
+.case-study-main.read-mode {
+  /* Remove width restriction to allow the article to center, 
+     but we'll restrict the grid instead */
+}
+
+/* Hide the sidebar */
+.case-study-main.read-mode .log-sidebar {
+  display: none !important;
+}
+
+/* Change layout to single column and center */
+.case-study-main.read-mode .cs-page-grid {
+  grid-template-columns: 1fr;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+/* Hide background patterns, tapes, stains */
+.case-study-main.read-mode .bg-halftone,
+.case-study-main.read-mode .coffee-stain,
+.case-study-main.read-mode .tape-strip,
+.case-study-main.read-mode .hero-title-box,
+.case-study-main.read-mode .hero-image-wrapper .halftone-dots {
+  background-image: none !important;
+  display: none !important;
+}
+
+/* Make body background cleaner */
+.case-study-main.read-mode .article-container {
+  box-shadow: none;
+  border: none;
+  background-color: transparent;
+  padding: 0;
+}
+
+.case-study-main.read-mode .article-inner {
+  border: none;
+  background-color: transparent;
+}
+
+/* Typography adjustments */
+.case-study-main.read-mode .hero-title {
+  border: none;
+  box-shadow: none;
+  background-color: transparent;
+  padding: 0;
+  font-size: 2.5rem; /* Slightly smaller for read mode */
+  letter-spacing: normal;
+}
+
+@media (min-width: 768px) {
+  .case-study-main.read-mode .hero-title {
+      font-size: 3.5rem;
+  }
+}
+
+.case-study-main.read-mode .hero-subtitle {
+  background-color: transparent;
+  border: none;
+  box-shadow: none;
+  padding: 0;
+}
+
+.case-study-main.read-mode .content-section {
+  font-size: 1.25rem; /* Larger base font size */
+  line-height: 1.8;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+/* Adjust blocks */
+.case-study-main.read-mode .block-h1-title,
+.case-study-main.read-mode .block-h2-title {
+  border-bottom: none;
+}
+
+.case-study-main.read-mode .block-image-box,
+.case-study-main.read-mode .block-video-box {
+  background-color: transparent;
+  border: none;
+  padding: 0;
+}
+
+.case-study-main.read-mode .block-image-label {
+  display: none;
+}
+
+.case-study-main.read-mode .block-image-img,
+.case-study-main.read-mode .block-video-embed,
+.case-study-main.read-mode .block-video-direct {
+  border: none;
+  border-radius: 8px; /* Softer look for read mode */
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+/* Hide non-essential sections */
+.case-study-main.read-mode .data-matrix,
+.case-study-main.read-mode .hero-date-box,
+.case-study-main.read-mode .hero-ref-badge,
+.case-study-main.read-mode .case-study-footer,
+.case-study-main.read-mode .share-container {
+  display: none !important;
+}
+
+
+/* Floating Exit Button */
+.btn-floating-exit-read-mode {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  z-index: 9999;
+  background-color: var(--charcoal);
+  color: white;
+  border: 2px solid white;
+  border-radius: 50px;
+  padding: 0.75rem 1.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.15);
+  cursor: pointer;
+  transition: transform 0.2s, background-color 0.2s;
+}
+
+.btn-floating-exit-read-mode:hover {
+  transform: translateY(-2px);
+  background-color: var(--accent-orange);
+}
+
+@media (max-width: 768px) {
+  .btn-floating-exit-read-mode {
+      bottom: 1.5rem;
+      right: 1.5rem;
+      padding: 0.5rem 1rem;
+      font-size: 0.75rem;
+  }
+}

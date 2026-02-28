@@ -1,0 +1,230 @@
+.guides-main {
+    min-height: 100vh;
+    padding: 6rem 2rem 4rem;
+    position: relative;
+}
+
+.guides-content-wrap {
+    max-width: 1100px;
+    margin: 0 auto;
+}
+
+.guides-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 3rem;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+}
+
+.guides-title {
+    font-family: var(--font-display);
+    font-size: clamp(2.5rem, 5vw, 4rem);
+    font-weight: 900;
+    line-height: 1;
+    color: var(--charcoal);
+}
+
+.transparent-stroke {
+    -webkit-text-stroke: 2px var(--charcoal);
+    color: transparent;
+}
+
+.guides-stats {
+    text-align: right;
+}
+
+.guides-total-badge {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    font-weight: bold;
+    padding: 0.4rem 0.75rem;
+    border: 2px solid var(--charcoal);
+    display: inline-block;
+    margin-bottom: 0.5rem;
+}
+
+.guides-meta {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    color: #666;
+}
+
+.guides-status-online {
+    color: #22c55e;
+    font-weight: bold;
+}
+
+/* GRID */
+.guides-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 2rem;
+}
+
+/* CARD */
+.guide-card {
+    border: 2px solid var(--charcoal);
+    background: var(--white);
+    text-decoration: none;
+    color: inherit;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.2s, box-shadow 0.2s;
+    cursor: pointer;
+}
+
+.guide-card:hover {
+    transform: translate(-3px, -3px);
+    box-shadow: 6px 6px 0 var(--charcoal);
+}
+
+.guide-cover {
+    width: 100%;
+    height: 180px;
+    overflow: hidden;
+    border-bottom: 2px solid var(--charcoal);
+}
+
+.guide-cover-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.guide-cover-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--paper-cream);
+}
+
+.guide-body {
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    flex: 1;
+}
+
+.guide-meta-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.guide-id {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    font-weight: bold;
+    color: var(--accent-orange);
+}
+
+.guide-date {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    color: #999;
+}
+
+.guide-title {
+    font-family: var(--font-display);
+    font-size: 1.25rem;
+    font-weight: 800;
+    line-height: 1.2;
+    color: var(--charcoal);
+}
+
+.guide-preview {
+    font-family: var(--font-body);
+    font-size: 0.85rem;
+    color: #555;
+    line-height: 1.5;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.guide-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    margin-top: auto;
+    padding-top: 0.5rem;
+}
+
+.guide-tag {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    color: var(--primary);
+    background: rgba(20, 184, 166, 0.08);
+    padding: 0.15rem 0.5rem;
+    border: 1px solid rgba(20, 184, 166, 0.2);
+}
+
+/* EMPTY STATE */
+.empty-guides {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 4rem 2rem;
+    border: 2px dashed var(--charcoal);
+    background: var(--paper-cream);
+    text-align: center;
+}
+
+.empty-guides-text {
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    color: #666;
+}
+
+/* ANIMATIONS */
+.list-anim-item {
+    animation: fadeSlideUp 0.4s ease both;
+}
+
+@keyframes fadeSlideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.5;
+    }
+}
+
+@media (max-width: 768px) {
+    .guides-main {
+        padding: 5rem 1rem 3rem;
+    }
+
+    .guides-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .guides-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .guides-stats {
+        text-align: left;
+    }
+}

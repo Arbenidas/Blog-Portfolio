@@ -13,14 +13,14 @@ import { PdfService } from '../../services/pdf.service';
 import { FFlowModule } from '@foblex/flow';
 
 @Component({
-  selector: 'app-field-log',
+  selector: 'app-field-guide',
   standalone: true,
   imports: [CommonModule, FormsModule, RouterModule, ShareButtons, FFlowModule, AdModalComponent],
-  templateUrl: './field-log.html',
-  styleUrl: './field-log.css',
+  templateUrl: './field-guide.html',
+  styleUrl: './field-guide.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class FieldLog implements OnInit, OnDestroy {
+export class FieldGuide implements OnInit, OnDestroy {
   private contentService = inject(ContentService);
   private seoService = inject(SeoService);
   private route = inject(ActivatedRoute);
@@ -342,7 +342,7 @@ export class FieldLog implements OnInit, OnDestroy {
         return;
       }
 
-      const filename = this.log?.title ? `FieldLog_${this.log.title.replace(/\s+/g, '_')}` : 'FieldLog_Download';
+      const filename = this.log?.title ? `FieldGuide_${this.log.title.replace(/\s+/g, '_')}` : 'FieldGuide_Download';
       await this.pdfService.downloadElementToPdf(element, filename);
     } catch (error) {
       console.error('Failed to generate PDF', error);
@@ -375,6 +375,7 @@ export class FieldLog implements OnInit, OnDestroy {
       this.cdr.markForCheck();
     } catch (e) {
       console.error('Error toggling upvote:', e);
+      // Optional: show a toast or alert that they need to login
       alert('You must be logged in to like this document.');
     }
   }

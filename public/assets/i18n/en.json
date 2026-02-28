@@ -3,6 +3,7 @@
         "HOME": "HOME_HUB",
         "WORKS": "WORKS_DATABASE",
         "LOGS": "FIELD_LOGS",
+        "GUIDES": "FIELD_GUIDES",
         "CONTACT": "PERSONNEL_COMM",
         "STATUS": "SYS_ACTIVE"
     },

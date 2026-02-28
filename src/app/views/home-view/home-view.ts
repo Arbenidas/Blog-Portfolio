@@ -3,27 +3,44 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { SeoService } from '../../services/seo.service';
 import { ContentService, DocumentEntry, ProfileData, CustomWidget } from '../../services/content.service';
+import { SupabaseService } from '../../services/supabase.service';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
-import { NativeAdComponent } from '../../components/native-ad/native-ad';
 
 @Component({
   selector: 'app-home-view',
-  imports: [CommonModule, RouterModule, NativeAdComponent],
+  imports: [CommonModule, RouterModule],
   templateUrl: './home-view.html',
   styleUrl: './home-view.css',
 })
 export class HomeView implements OnInit, OnDestroy {
   private seoService = inject(SeoService);
   private contentService = inject(ContentService);
+  private supabaseService = inject(SupabaseService);
   private cdr = inject(ChangeDetectorRef);
   private sanitizer = inject(DomSanitizer);
 
   works: DocumentEntry[] = [];
   logs: DocumentEntry[] = [];
+  trendingLogs: DocumentEntry[] = [];
+  recentActivities: { title: string, category: string, author: string, time: string, slug: string }[] = [];
   isLoading = signal(true);
+  currentUser = this.supabaseService.currentUser$;
+
+  activeAgents = 0;
+  publishedLogs = 0;
+  archivedWorks = 0;
+
+  currentPage = 1;
+  logsPerPage = 10;
+  hasMoreLogs = true;
+  isLoadingMore = false;
 
   profile = signal<ProfileData | null>(null);
   widgets = signal<CustomWidget[]>([]);
+
+  // Real social data per document
+  upvoteCounts: Record<string, number> = {};
+  commentCounts: Record<string, number> = {};
 
   cpuGhz = signal(88.4);
   tempCelsius = signal(45.2);
@@ -36,7 +53,7 @@ export class HomeView implements OnInit, OnDestroy {
   }
 
   private intervalId: any;
-  private uptimeSeconds = 12 * 3600 + 4 * 60 + 11; // 12:04:11 in seconds
+  private uptimeSeconds = 12 * 3600 + 4 * 60 + 11;
 
   ngOnInit() {
     this.seoService.updateMetaTags({
@@ -47,45 +64,95 @@ export class HomeView implements OnInit, OnDestroy {
 
     this.loadData();
 
-    // Start the diagnostics simulation loop
     this.intervalId = setInterval(() => {
-      // Simulate CPU fluctuation between 86.0 and 89.9
       this.cpuGhz.set(86 + Math.random() * 3.9);
-
-      // Simulate Temp fluctuation between 44.0 and 46.5
       this.tempCelsius.set(44 + Math.random() * 2.5);
-
-      // Update uptime counter
       this.uptimeSeconds++;
       const h = Math.floor(this.uptimeSeconds / 3600);
       const m = Math.floor((this.uptimeSeconds % 3600) / 60);
       const s = this.uptimeSeconds % 60;
-
-      const formattedTime = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
-      this.uptime.set(formattedTime);
+      this.uptime.set(`${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`);
     }, 1000);
   }
 
   async loadData() {
-    const [allWorks, allLogs, profileObj, customWidgets] = await Promise.all([
-      this.contentService.getAllWorks(4),
-      this.contentService.getAllLogs(3),
-      this.contentService.getProfile(),
-      this.contentService.getCustomWidgets()
-    ]);
+    this.isLoading.set(true);
+    this.currentPage = 1;
+    this.hasMoreLogs = true;
+    try {
+      const [works, logs, profile, widgets, stats, trending, activity] = await Promise.all([
+        this.contentService.getAllWorks(3),
+        this.contentService.getAllLogs(this.currentPage, this.logsPerPage),
+        this.contentService.getProfile(),
+        this.contentService.getCustomWidgets(),
+        this.contentService.getPlatformStats(),
+        this.contentService.getTrendingLogs(5),
+        this.contentService.getRecentActivity(4)
+      ]);
 
-    this.works = allWorks;
-    this.logs = allLogs;
+      this.works = works;
+      this.logs = logs;
+      this.profile.set(profile);
+      this.widgets.set(widgets);
 
-    if (profileObj) {
-      this.profile.set(profileObj);
+      this.activeAgents = stats.activeAgents;
+      this.publishedLogs = stats.publishedLogs;
+      this.archivedWorks = stats.archivedWorks;
+      this.trendingLogs = trending;
+      this.recentActivities = activity;
+
+      if (logs.length < this.logsPerPage) {
+        this.hasMoreLogs = false;
+      }
+
+      // Load real social counts for displayed logs
+      const allDocIds = [...logs.map(l => l.id), ...trending.map(t => t.id)];
+      const uniqueIds = [...new Set(allDocIds)];
+      const [upvotes, comments] = await Promise.all([
+        this.contentService.getUpvoteCountsForDocuments(uniqueIds),
+        this.contentService.getCommentCountsForDocuments(uniqueIds)
+      ]);
+      this.upvoteCounts = upvotes;
+      this.commentCounts = comments;
+
+    } catch (error) {
+      console.error('Error loading home data:', error);
+    } finally {
+      this.isLoading.set(false);
+      this.cdr.detectChanges();
     }
-    if (customWidgets) {
-      this.widgets.set(customWidgets);
-    }
+  }
 
-    this.isLoading.set(false);
-    this.cdr.detectChanges();
+  async loadMoreLogs() {
+    if (this.isLoadingMore || !this.hasMoreLogs) return;
+
+    this.isLoadingMore = true;
+    this.currentPage++;
+
+    try {
+      const moreLogs = await this.contentService.getAllLogs(this.currentPage, this.logsPerPage);
+      if (moreLogs.length > 0) {
+        this.logs = [...this.logs, ...moreLogs];
+
+        // Load social counts for new logs
+        const newIds = moreLogs.map(l => l.id);
+        const [upvotes, comments] = await Promise.all([
+          this.contentService.getUpvoteCountsForDocuments(newIds),
+          this.contentService.getCommentCountsForDocuments(newIds)
+        ]);
+        this.upvoteCounts = { ...this.upvoteCounts, ...upvotes };
+        this.commentCounts = { ...this.commentCounts, ...comments };
+      }
+
+      if (moreLogs.length < this.logsPerPage) {
+        this.hasMoreLogs = false;
+      }
+    } catch (error) {
+      console.error('Error loading more logs:', error);
+    } finally {
+      this.isLoadingMore = false;
+      this.cdr.detectChanges();
+    }
   }
 
   getWidgetHtml(id: string): SafeHtml {

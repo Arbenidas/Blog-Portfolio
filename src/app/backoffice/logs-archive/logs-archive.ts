@@ -21,7 +21,7 @@ export class LogsArchiveAdmin implements OnInit {
 
   async loadLogs() {
     this.isLoading = true;
-    this.logs = await this.contentService.getAllLogs();
+    this.logs = await this.contentService.getAdminDocuments('log');
     this.isLoading = false;
     this.cdr.detectChanges();
   }

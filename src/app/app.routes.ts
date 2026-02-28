@@ -5,6 +5,8 @@ import { WorksDb } from './views/works-db/works-db';
 import { CaseStudy } from './views/case-study/case-study';
 import { LogsArchive } from './views/logs-archive/logs-archive';
 import { FieldLog } from './views/field-log/field-log';
+import { FieldGuide } from './views/field-guide/field-guide';
+import { GuidesArchive } from './views/guides-archive/guides-archive';
 import { ContactTerminal } from './views/contact-terminal/contact-terminal';
 
 import { AdminLayout } from './backoffice/admin-layout/admin-layout';
@@ -12,11 +14,15 @@ import { AdminDashboard } from './backoffice/admin-dashboard/admin-dashboard';
 import { BlockEditor } from './backoffice/block-editor/block-editor';
 import { WorksVaultAdmin } from './backoffice/works-vault/works-vault';
 import { LogsArchiveAdmin } from './backoffice/logs-archive/logs-archive';
-import { Login } from './backoffice/login/login';
+import { Login as AdminLogin } from './backoffice/login/login';
 import { AuthGuard } from './guards/auth.guard';
 import { DesignStudio } from './backoffice/design-studio/design-studio';
 import { ProfileEditor } from './backoffice/profile-editor/profile-editor';
 import { NotFound } from './views/not-found/not-found';
+
+import { Login as PublicLogin } from './views/auth/login/login';
+import { Register as PublicRegister } from './views/auth/register/register';
+import { UserProfile } from './views/user-profile/user-profile';
 
 export const routes: Routes = [
     {
@@ -28,10 +34,17 @@ export const routes: Routes = [
             { path: 'works/:slug', component: CaseStudy, data: { animation: 'CaseStudy' } },
             { path: 'logs', component: LogsArchive, data: { animation: 'Logs' } },
             { path: 'logs/:slug', component: FieldLog, data: { animation: 'FieldLog' } },
+            { path: 'guides', component: GuidesArchive, data: { animation: 'Guides' } },
+            { path: 'guides/:slug', component: FieldGuide, data: { animation: 'FieldGuide' } },
             { path: 'contact', component: ContactTerminal, data: { animation: 'Contact' } },
+            // Public Auth Routes
+            { path: 'login', component: PublicLogin, data: { animation: 'Login' } },
+            { path: 'register', component: PublicRegister, data: { animation: 'Register' } },
+            // Dynamic User Profile
+            { path: 'u/:username', component: UserProfile, data: { animation: 'Profile' } }
         ]
     },
-    { path: 'admin/login', component: Login },
+    { path: 'admin/login', component: AdminLogin },
     {
         path: 'admin',
         component: AdminLayout,

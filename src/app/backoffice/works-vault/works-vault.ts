@@ -21,7 +21,7 @@ export class WorksVaultAdmin implements OnInit {
 
   async loadWorks() {
     this.isLoading = true;
-    this.works = await this.contentService.getAllWorks();
+    this.works = await this.contentService.getAdminDocuments('work');
     this.isLoading = false;
     this.cdr.detectChanges();
   }

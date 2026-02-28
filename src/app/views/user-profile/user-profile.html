@@ -1,0 +1,287 @@
+<!-- Loading State -->
+<div *ngIf="isLoading()" class="profile-main" style="justify-content: center; align-items: center;">
+    <div class="spinner" style="width: 50px; height: 50px; border: 4px solid #f3f4f6; border-top: 4px solid var(--accent-orange); border-radius: 50%; animation: spin 1s linear infinite;"></div>
+    <h2 class="font-mono" style="font-family: var(--font-mono); font-weight: bold; margin-top: 1rem;">DECRYPTING_DOSSIER...</h2>
+</div>
+
+<!-- Error State -->
+<div *ngIf="!isLoading() && errorMsg()" class="profile-main" style="justify-content: center; align-items: center;">
+    <div style="text-align: center; padding: 5rem 2rem; background-color: white; border: 4px solid var(--charcoal); box-shadow: 8px 8px 0 var(--charcoal);">
+        <span class="material-symbols-outlined" style="font-size: 4rem; color: #ef4444; margin-bottom: 1rem;">error</span>
+        <h2 style="font-family: var(--font-display); font-weight: 900; font-size: 2rem;">DOSSIER NOT FOUND</h2>
+        <p style="font-family: var(--font-mono); color: #6b7280; margin-top: 0.5rem;">{{ errorMsg() }}</p>
+        <a routerLink="/" style="display: inline-block; margin-top: 2rem; padding: 1rem 2rem; background-color: var(--charcoal); color: white; text-decoration: none; font-family: var(--font-mono); font-weight: bold; border: 2px solid var(--charcoal);">RETURN TO BASE</a>
+    </div>
+</div>
+
+<!-- Profile Content -->
+<main *ngIf="!isLoading() && profileData()" class="profile-main" id="dossier">
+    <div class="noise-overlay"></div>
+    <div class="bg-grid-pattern"></div>
+    
+    <div class="coffee-stain stain-1"></div>
+    <div class="coffee-stain stain-2"></div>
+
+    <div class="dossier-container">
+        <!-- Header area -->
+        <div class="dossier-header">
+            <div>
+                <div class="classification-tag">
+                    <span class="material-symbols-outlined" style="font-size: 14px;">folder_open</span>
+                    <span>Classification: Level 4</span>
+                </div>
+                <h1 class="dossier-title">Personnel File</h1>
+                <div class="dossier-id">ID: {{ (profileData()?.username || 'GUEST').toUpperCase() }}_001</div>
+            </div>
+            
+            <!-- Dates -->
+            <div style="display:flex; gap: 1rem; align-items: center;">
+                <div class="date-box" *ngIf="isOwnProfile()">
+                    <a routerLink="/admin/profile" class="submit-btn" style="padding: 0.5rem 1rem;">
+                        <span class="material-symbols-outlined icon">edit</span> EDIT
+                    </a>
+                </div>
+                <div class="date-box">
+                    <div class="date-box-header">Date of Entry</div>
+                    <div class="date-box-value">{{ profileData()?.created_at | date:'dd MMM yyyy' | uppercase }}</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="main-grid">
+            <!-- Left Column: Portrait & Metrics -->
+            <div class="col-left">
+                <!-- Portrait -->
+                <div class="portrait-card">
+                    <div class="tape-strip"></div>
+                    <div class="portrait-img-box">
+                        <img *ngIf="profileData()?.personnel_photo || profileData()?.avatar_url; else initialsAvatar" 
+                             [src]="profileData()?.personnel_photo || profileData()?.avatar_url" alt="Agent Portrait" class="portrait-img">
+                        <ng-template #initialsAvatar>
+                            <div class="avatar-initials-large">{{ getAvatarInitials() }}</div>
+                        </ng-template>
+                        <div class="portrait-overlay"></div>
+                        <div class="stamp-classified">VERIFIED AGENT</div>
+                    </div>
+                </div>
+
+                <!-- Metrics Box -->
+                <div class="metrics-card">
+                    <div class="metrics-badge">LIVE METRICS</div>
+                    <h3 class="metrics-title">Agent_Reputation</h3>
+                    <div class="metrics-grid">
+                        <div class="metric-col">
+                            <span class="metric-label">LOGS</span>
+                            <span class="metric-val blue">{{ userLogs().length }}</span>
+                        </div>
+                        <div class="metric-col">
+                            <span class="metric-label">WORKS</span>
+                            <span class="metric-val orange">{{ userWorks().length }}</span>
+                        </div>
+                        <div class="metric-col">
+                            <span class="metric-label">PRESTIGE</span>
+                            <span class="metric-val white">Lvl.{{ 1 + userLogs().length + (userWorks().length * 2) }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Details & Mission -->
+            <div class="col-right">
+                <!-- Data Detail Box -->
+                <div class="details-card">
+                    <div class="detail-row">
+                        <span class="detail-label">.NAME:</span>
+                        <span class="detail-value name">{{ profileData()?.name || profileData()?.username | uppercase }}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">.ROLE:</span>
+                        <span class="detail-value text-charcoal">{{ profileData()?.role || 'SYSTEM OPERATIVE' | uppercase }}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">.LOCATION:</span>
+                        <span class="detail-value text-charcoal">{{ profileData()?.location || 'UNKNOWN SECTOR' | uppercase }}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">.CLEARANCE:</span>
+                        <span class="detail-value green">{{ profileData()?.clearance || 'LEVEL 1' | uppercase }}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">.STATUS:</span>
+                        <div class="status-indicator">
+                            <span class="status-dot"></span>
+                            <span class="status-tag">{{ profileData()?.status || 'OFFLINE' | uppercase }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Core Mission / Bio -->
+                <div>
+                    <div class="section-header">
+                        <span class="section-num">01</span>
+                        <h2 class="section-title">Core Mission</h2>
+                    </div>
+                    <div class="mission-card">
+                        <p class="mission-text" [innerHTML]="profileData()?.coreMission || 'No mission parameters established. Agent is operating without a documented directive.'"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Deployment History -->
+        <div style="margin-bottom: 4rem;" *ngIf="profileData()?.experience?.length">
+            <div class="section-header">
+                <span class="section-num">02</span>
+                <h2 class="section-title">Deployment History</h2>
+            </div>
+            
+            <div class="timeline-container">
+                <div *ngFor="let exp of profileData()?.experience; let i = index" class="timeline-item timeline-card">
+                    <div class="timeline-dot">
+                        <div class="timeline-dot-inner" [class.active]="i === 0"></div>
+                    </div>
+                    <div class="timeline-card-header">
+                        <h3 class="timeline-card-title">{{ exp.role }} @ {{ exp.company }}</h3>
+                        <span class="timeline-card-badge">{{ exp.location }}</span>
+                    </div>
+                    <div class="timeline-card-date" [class.active]="i === 0">{{ exp.years | uppercase }}</div>
+                    <p class="timeline-card-body">{{ exp.description }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Service Records (Works/Logs) -->
+        <div style="margin-bottom: 4rem;">
+            <div class="section-header">
+                <span class="section-num" [innerText]="profileData()?.experience?.length ? '03' : '02'"></span>
+                <h2 class="section-title">Active Service Records</h2>
+            </div>
+            
+            <div class="tabs-container" style="margin-top: 2rem;">
+                <div class="tabs-strip">
+                    <button class="folder-tab" [class.active]="activeTab() === 'logs'" (click)="activeTab.set('logs')">
+                        <span class="material-symbols-outlined" style="font-size: 1rem;">folder_open</span> Active Logs
+                    </button>
+                    <button class="folder-tab" [class.active]="activeTab() === 'works'" (click)="activeTab.set('works')">
+                        <span class="material-symbols-outlined" style="font-size: 1rem;">architecture</span> Works Database
+                    </button>
+                </div>
+            </div>
+
+            <div class="timeline-container">
+                <!-- Works Tab -->
+                <ng-container *ngIf="activeTab() === 'works'">
+                    <a *ngFor="let work of userWorks()" [routerLink]="['/works', work.slug]" class="timeline-item timeline-card">
+                        <div class="timeline-dot">
+                            <div class="timeline-dot-inner active"></div>
+                        </div>
+                        <div class="timeline-card-header">
+                            <h3 class="timeline-card-title">{{ work.title }}</h3>
+                            <span class="timeline-card-badge">BLUEPRINT</span>
+                        </div>
+                        <div class="timeline-card-date active">{{ work.created_at | date:'MMM yyyy' | uppercase }}</div>
+                        <p class="timeline-card-body">Work blueprint deployed to the main branch successfully.</p>
+                    </a>
+                    <div *ngIf="userWorks().length === 0" class="timeline-item timeline-card" style="box-shadow: none; border-style: dashed; opacity: 0.7;">
+                        <div class="timeline-dot"><div class="timeline-dot-inner"></div></div>
+                        <p class="timeline-card-body">No deployment records found for Works.</p>
+                    </div>
+                </ng-container>
+
+                <!-- Logs Tab -->
+                <ng-container *ngIf="activeTab() === 'logs'">
+                    <a *ngFor="let log of userLogs()" [routerLink]="['/logs', log.slug]" class="timeline-item timeline-card">
+                        <div class="timeline-dot">
+                            <div class="timeline-dot-inner"></div>
+                        </div>
+                        <div class="timeline-card-header">
+                            <h3 class="timeline-card-title">{{ log.title }}</h3>
+                            <span class="timeline-card-badge">DEV LOG</span>
+                        </div>
+                        <div class="timeline-card-date">{{ log.created_at | date:'dd MMM yyyy' | uppercase }}</div>
+                        <p class="timeline-card-body">Field log recorded in the system.</p>
+                    </a>
+                    <div *ngIf="userLogs().length === 0" class="timeline-item timeline-card" style="box-shadow: none; border-style: dashed; opacity: 0.7;">
+                        <div class="timeline-dot"><div class="timeline-dot-inner"></div></div>
+                        <p class="timeline-card-body">No deployment records found for Logs.</p>
+                    </div>
+                </ng-container>
+            </div>
+        </div>
+
+        <!-- Verified Capabilities -->
+        <div style="margin-bottom: 4rem;">
+            <div class="section-header">
+                <span class="section-num" [innerText]="profileData()?.experience?.length ? '04' : '03'"></span>
+                <h2 class="section-title">Verified Capabilities</h2>
+            </div>
+            <div class="cap-grid">
+                <div class="cap-card" *ngIf="profileData()?.languages?.length">
+                    <h3 class="cap-card-title orange">Languages</h3>
+                    <div class="cap-tags">
+                        <span class="cap-tag hover-dark" *ngFor="let item of profileData()?.languages">{{ item.name }}</span>
+                    </div>
+                </div>
+                <div class="cap-card tilt" *ngIf="profileData()?.frameworks?.length">
+                    <h3 class="cap-card-title blue">Frameworks</h3>
+                    <div class="cap-tags">
+                        <span class="cap-tag hover-primary" *ngFor="let item of profileData()?.frameworks">{{ item.name }}</span>
+                    </div>
+                </div>
+                <div class="cap-card" *ngIf="profileData()?.technologies?.length">
+                    <h3 class="cap-card-title redacted">Technologies</h3>
+                    <div class="cap-tags">
+                        <span class="cap-tag hover-dark" *ngFor="let item of profileData()?.technologies">{{ item.name }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+    </div>
+
+    <!-- Contact Footer -->
+    <div class="profile-footer-contact" id="contact">
+        <div class="contact-container">
+            <div class="contact-outer-box">
+                <div class="contact-inner-box">
+                    <div class="contact-bg-decor"></div>
+                    
+                    <div class="contact-header">
+                        <div class="contact-title-area">
+                            <span class="material-symbols-outlined animate-bounce" style="font-size: 2rem; color: var(--accent-orange);">mail</span>
+                            <div>
+                                <h2 class="contact-title">Initiate Protocol</h2>
+                                <p class="contact-subtitle">Transmission bridge secured // 256-bit AES</p>
+                            </div>
+                        </div>
+                        <div class="contact-status online">
+                            STATUS: <span>ONLINE</span>
+                        </div>
+                    </div>
+                    
+                    <form (submit)="$event.preventDefault()" style="display: flex; flex-direction: column; gap: 1.5rem;">
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 2rem;">
+                            <div>
+                                <label class="form-label">Agent_Name:</label>
+                                <input type="text" class="typewriter-input" placeholder="> Enter identification...">
+                            </div>
+                            <div>
+                                <label class="form-label">Subject_Line:</label>
+                                <input type="text" class="typewriter-input" placeholder="> Purpose of inquiry...">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="form-label">Transmission_Body:</label>
+                            <textarea class="typewriter-input" rows="3" placeholder="> Begin message decryption..." style="resize: none;"></textarea>
+                        </div>
+                        <div style="display: flex; justify-content: flex-end; margin-top: 1rem;">
+                            <button type="button" class="submit-btn" style="width: auto;">
+                                Execute Transmission <span class="material-symbols-outlined icon">send</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>

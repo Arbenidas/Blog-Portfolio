@@ -15,34 +15,21 @@ export class ProfileEditor implements OnInit {
   private contentService = inject(ContentService);
   private sanitizer = inject(DomSanitizer);
 
-  // Raw widgets available from DB
   availableWidgets = signal<CustomWidget[]>([]);
 
-  // Default fallback profile structure
   profile = signal<ProfileData>({
-    name: 'Arbe [REDACTED]',
-    role: 'Full Stack Operative',
-    location: 'Sector 7 (Remote)',
-    clearance: 'Top Level / Admin',
+    name: '',
+    username: '',
+    avatar_url: '',
+    role: '',
+    location: '',
+    clearance: '',
     status: 'Active Duty',
-    coreMission: 'To engineer digital ecosystems that merge Industrial reliability with futuristic interactivity.',
-    experience: [
-      { role: 'Senior Engineer', company: 'CyberDyne Systems', location: 'San Francisco, CA', years: '2021 - Present', description: 'Spearheading the development of neural network interfaces.' }
-    ],
-    languages: [
-      { name: 'JavaScript (ES6+)' },
-      { name: 'TypeScript' },
-      { name: 'Python' }
-    ],
-    frameworks: [
-      { name: 'Angular' },
-      { name: 'Next.js' },
-      { name: 'Node.js' }
-    ],
-    technologies: [
-      { name: 'Docker' },
-      { name: 'Git' }
-    ],
+    coreMission: '',
+    experience: [],
+    languages: [],
+    frameworks: [],
+    technologies: [],
     widgets: []
   });
 
@@ -50,12 +37,20 @@ export class ProfileEditor implements OnInit {
   saveToast = signal<'success' | 'error' | null>(null);
   draggingWidget = signal<CustomWidget | null>(null);
 
-  // Inputs for adding new tech
+  // Nickname
+  nicknameInput = '';
+  nicknameError = '';
+  nicknameSaving = false;
+  canChangeNickname = true;
+  daysUntilChange = 0;
+
+  // Photo upload
+  uploadingAvatar = false;
+  uploadingPhoto = false;
+
   newLangInput = '';
   newFwInput = '';
   newTechInput = '';
-
-  // The tech currently being edited (to show description/link fields inline)
   editingTech: TechEntry | null = null;
 
   ngOnInit() {
@@ -69,21 +64,98 @@ export class ProfileEditor implements OnInit {
     const p = await this.contentService.getProfile();
     if (p) {
       this.profile.set(p);
+      this.nicknameInput = p.username || '';
+
+      // Check if nickname change is allowed
+      if (p.username_updated_at) {
+        const lastChange = new Date(p.username_updated_at);
+        const daysSince = (Date.now() - lastChange.getTime()) / (1000 * 60 * 60 * 24);
+        if (daysSince < 30) {
+          this.canChangeNickname = false;
+          this.daysUntilChange = Math.ceil(30 - daysSince);
+        }
+      }
     }
+  }
+
+  // ===== NICKNAME =====
+  async changeNickname() {
+    const nick = this.nicknameInput.trim();
+    if (!nick) return;
+    if (nick === this.profile().username) return;
+
+    this.nicknameSaving = true;
+    this.nicknameError = '';
+
+    const result = await this.contentService.updateUsername(nick);
+    if (result.success) {
+      this.profile.update(p => ({ ...p, username: nick, username_updated_at: new Date().toISOString() }));
+      this.canChangeNickname = false;
+      this.daysUntilChange = 30;
+      this.saveToast.set('success');
+      setTimeout(() => this.saveToast.set(null), 3500);
+    } else {
+      this.nicknameError = result.error || 'Failed to update nickname.';
+    }
+    this.nicknameSaving = false;
+  }
+
+  // ===== AVATAR UPLOAD =====
+  async onAvatarFileSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (!input.files?.length) return;
+    const file = input.files[0];
+
+    if (file.size > 2 * 1024 * 1024) {
+      alert('Image must be less than 2MB.');
+      return;
+    }
+
+    this.uploadingAvatar = true;
+    try {
+      const url = await this.contentService.uploadAvatar(file);
+      this.profile.update(p => ({ ...p, avatar_url: url }));
+    } catch (e) {
+      console.error('Avatar upload failed:', e);
+      alert('Failed to upload avatar. Check console.');
+    }
+    this.uploadingAvatar = false;
+  }
+
+  // ===== PERSONNEL PHOTO UPLOAD =====
+  async onPersonnelPhotoSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (!input.files?.length) return;
+    const file = input.files[0];
+
+    if (file.size > 2 * 1024 * 1024) {
+      alert('Image must be less than 2MB.');
+      return;
+    }
+
+    this.uploadingAvatar = true;
+    try {
+      const url = await this.contentService.uploadAvatar(file);
+      this.profile.update(p => ({ ...p, personnel_photo: url }));
+    } catch (e) {
+      console.error('Personnel photo upload failed:', e);
+      alert('Failed to upload photo. Check console.');
+    }
+    this.uploadingAvatar = false;
   }
 
   // ===== LANGUAGE METHODS =====
   addLanguage() {
     const val = this.newLangInput.trim();
     if (!val) return;
-    if (!this.profile().languages.find(l => l.name === val)) {
-      this.profile.update(p => ({ ...p, languages: [...p.languages, { name: val }] }));
+    if (!this.profile().languages?.find(l => l.name === val)) {
+      this.profile.update(p => ({ ...p, languages: [...(p.languages || []), { name: val }] }));
     }
     this.newLangInput = '';
   }
 
   removeLanguage(tech: TechEntry) {
-    this.profile.update(p => ({ ...p, languages: p.languages.filter(l => l !== tech) }));
+    this.profile.update(p => ({ ...p, languages: (p.languages || []).filter(l => l !== tech) }));
     if (this.editingTech === tech) this.editingTech = null;
   }
 
@@ -91,14 +163,14 @@ export class ProfileEditor implements OnInit {
   addFramework() {
     const val = this.newFwInput.trim();
     if (!val) return;
-    if (!this.profile().frameworks.find(f => f.name === val)) {
-      this.profile.update(p => ({ ...p, frameworks: [...p.frameworks, { name: val }] }));
+    if (!this.profile().frameworks?.find(f => f.name === val)) {
+      this.profile.update(p => ({ ...p, frameworks: [...(p.frameworks || []), { name: val }] }));
     }
     this.newFwInput = '';
   }
 
   removeFramework(tech: TechEntry) {
-    this.profile.update(p => ({ ...p, frameworks: p.frameworks.filter(f => f !== tech) }));
+    this.profile.update(p => ({ ...p, frameworks: (p.frameworks || []).filter(f => f !== tech) }));
     if (this.editingTech === tech) this.editingTech = null;
   }
 
@@ -106,18 +178,17 @@ export class ProfileEditor implements OnInit {
   addTechnology() {
     const val = this.newTechInput.trim();
     if (!val) return;
-    if (!this.profile().technologies.find(t => t.name === val)) {
-      this.profile.update(p => ({ ...p, technologies: [...p.technologies, { name: val }] }));
+    if (!this.profile().technologies?.find(t => t.name === val)) {
+      this.profile.update(p => ({ ...p, technologies: [...(p.technologies || []), { name: val }] }));
     }
     this.newTechInput = '';
   }
 
   removeTechnology(tech: TechEntry) {
-    this.profile.update(p => ({ ...p, technologies: p.technologies.filter(t => t !== tech) }));
+    this.profile.update(p => ({ ...p, technologies: (p.technologies || []).filter(t => t !== tech) }));
     if (this.editingTech === tech) this.editingTech = null;
   }
 
-  // Toggle editing panel for a tech chip
   toggleEditTech(tech: TechEntry) {
     this.editingTech = this.editingTech === tech ? null : tech;
   }
@@ -126,13 +197,13 @@ export class ProfileEditor implements OnInit {
   addExperience() {
     this.profile.update(p => ({
       ...p,
-      experience: [...p.experience, { role: 'New Role', company: 'Company', location: 'City', years: 'Year', description: '' }]
+      experience: [...(p.experience || []), { role: 'New Role', company: 'Company', location: 'City', years: 'Year', description: '' }]
     }));
   }
 
   removeExperience(index: number) {
     this.profile.update(p => {
-      const arr = [...p.experience];
+      const arr = [...(p.experience || [])];
       arr.splice(index, 1);
       return { ...p, experience: arr };
     });

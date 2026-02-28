@@ -1,5 +1,6 @@
 import { Component, inject, OnInit, OnDestroy, ChangeDetectorRef, ChangeDetectionStrategy, PLATFORM_ID, PendingTasks, ViewChild } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { distinctUntilChanged, map } from 'rxjs/operators';
 import { ContentService, DocumentEntry, CustomWidget } from '../../services/content.service';
@@ -15,7 +16,7 @@ import { PdfService } from '../../services/pdf.service';
 @Component({
   selector: 'app-case-study',
   standalone: true,
-  imports: [CommonModule, RouterModule, FFlowModule, ShareButtons, AdModalComponent],
+  imports: [CommonModule, FormsModule, RouterModule, FFlowModule, ShareButtons, AdModalComponent],
   templateUrl: './case-study.html',
   styleUrl: './case-study.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -33,11 +34,20 @@ export class CaseStudy implements OnInit, OnDestroy {
   @ViewChild('adModal') adModal!: AdModalComponent;
   isModalOpen = false;
 
+  // Read Mode State
+  isReadMode = false;
+
   work: DocumentEntry | undefined;
   availableWidgets: CustomWidget[] = [];
   isLoading = true;
 
   showBibliography = false;
+
+  // Social State
+  upvoteCount = 0;
+  userHasUpvoted = false;
+  comments: any[] = [];
+  newCommentText = '';
 
   get bibliographyBlock(): any {
     return this.work?.blocks.find(b => b.type === 'bibliography');
@@ -151,6 +161,14 @@ export class CaseStudy implements OnInit, OnDestroy {
             this.work = await this.contentService.getDocument(slug);
             if (this.work) {
               this.updateSeo();
+
+              // Fetch social data
+              if (this.work.id) {
+                const upvoteData = await this.contentService.getUpvoteCount(this.work.id);
+                this.upvoteCount = upvoteData.count;
+                this.userHasUpvoted = upvoteData.userHasUpvoted;
+                this.comments = await this.contentService.getComments(this.work.id);
+              }
             }
           }
         } finally {
@@ -164,6 +182,16 @@ export class CaseStudy implements OnInit, OnDestroy {
         this.cdr.markForCheck();
       }
     });
+  }
+
+  // --- Read Mode ---
+  toggleReadMode() {
+    this.isReadMode = !this.isReadMode;
+    if (this.isReadMode) {
+      document.body.classList.add('read-mode-active');
+    } else {
+      document.body.classList.remove('read-mode-active');
+    }
   }
 
   private updateSeo() {
@@ -308,6 +336,34 @@ export class CaseStudy implements OnInit, OnDestroy {
       if (this.adModal) {
         this.adModal.isDownloading = false;
       }
+    }
+  }
+
+  // --- SOCIAL (Upvotes & Comments) ---
+  async toggleUpvote() {
+    if (!this.work || !this.work.id) return;
+    try {
+      this.userHasUpvoted = await this.contentService.toggleUpvote(this.work.id, this.userHasUpvoted);
+      // Update count optimistically
+      this.upvoteCount += this.userHasUpvoted ? 1 : -1;
+      this.cdr.markForCheck();
+    } catch (e) {
+      console.error('Error toggling upvote:', e);
+      alert('You must be logged in to like this document.');
+    }
+  }
+
+  async submitComment() {
+    if (!this.work || !this.work.id || !this.newCommentText.trim()) return;
+    try {
+      await this.contentService.addComment(this.work.id, this.newCommentText);
+      this.newCommentText = '';
+      // Reload comments
+      this.comments = await this.contentService.getComments(this.work.id);
+      this.cdr.markForCheck();
+    } catch (e) {
+      console.error('Error adding comment:', e);
+      alert('Failed to post comment. Make sure you are logged in.');
     }
   }
 

@@ -11,7 +11,7 @@
   </div>
 
   <!-- STATS -->
-  <div class="stats-grid">
+  <div class="stats-grid stats-grid-4">
     <div class="stat-card stat-card-total">
       <div class="stat-header">
         <span class="material-symbols-outlined stat-icon stat-icon-primary">folder_managed</span>
@@ -28,6 +28,14 @@
       <span class="stat-val" *ngIf="!loading">{{ logsCount }}</span>
       <span class="stat-val-loading" *ngIf="loading">--</span>
     </div>
+    <div class="stat-card stat-card-upvotes">
+      <div class="stat-header">
+        <span class="material-symbols-outlined stat-icon stat-icon-red">favorite</span>
+        <h2 class="stat-title">Total Upvotes</h2>
+      </div>
+      <span class="stat-val" *ngIf="!loading">{{ totalUpvotes }}</span>
+      <span class="stat-val-loading" *ngIf="loading">--</span>
+    </div>
     <div class="stat-card">
       <div class="stat-header">
         <span class="material-symbols-outlined stat-icon stat-icon-green">visibility</span>
@@ -37,7 +45,7 @@
     </div>
   </div>
 
-  <!-- RECENT ENTRIES -->
+  <!-- RECENT ENTRIES WITH SOCIAL STATS -->
   <div class="recent-entries-container">
     <div class="recent-entries-inner">
       <h2 class="recent-entries-title">
@@ -61,27 +69,162 @@
       </div>
 
       <div *ngIf="!loading" class="entries-list">
-        <div *ngFor="let entry of recentEntries" class="entry-row">
-          <div class="entry-info">
-            <div class="entry-badge"
-              [ngClass]="entry.category === 'work' ? 'entry-badge-work' : 'entry-badge-log'">
-              {{ entry.category === 'work' ? 'WORK' : 'LOG' }}
+        <div *ngFor="let entry of recentEntries" class="entry-block">
+          <div class="entry-row">
+            <div class="entry-info">
+              <div class="entry-badge"
+                [ngClass]="entry.category === 'work' ? 'entry-badge-work' : 'entry-badge-log'">
+                {{ entry.category | uppercase }}
+              </div>
+              <div class="entry-details">
+                <h3 class="entry-title"
+                  [ngClass]="entry.category === 'work' ? 'entry-title-work' : 'entry-title-log'"
+                  [routerLink]="'/admin/editor/' + entry.slug">{{ entry.title }}</h3>
+                <p class="entry-meta">Edited {{ timeAgo(entry.updatedAt) }}</p>
+              </div>
             </div>
-            <div class="entry-details">
-              <h3 class="entry-title"
-                [ngClass]="entry.category === 'work' ? 'entry-title-work' : 'entry-title-log'"
-                [routerLink]="'/admin/editor/' + entry.slug">{{ entry.title }}</h3>
-              <p class="entry-meta">Edited {{ timeAgo(entry.updatedAt) }}</p>
+            <div class="entry-social-actions">
+              <!-- Upvote count -->
+              <span class="entry-social-badge entry-social-upvotes" title="Upvotes">
+                <span class="material-symbols-outlined" style="font-size: 14px;">thumb_up</span>
+                {{ upvoteCounts[entry.id] || 0 }}
+              </span>
+              <!-- Comment count + toggle -->
+              <button class="entry-social-badge entry-social-comments" 
+                      title="View Comments"
+                      (click)="toggleExpandComments(entry)"
+                      [class.entry-social-active]="expandedEntryId === entry.id">
+                <span class="material-symbols-outlined" style="font-size: 14px;">chat_bubble</span>
+                {{ commentCounts[entry.id] || 0 }}
+              </button>
+              <!-- Actions -->
+              <button class="btn-action btn-action-edit"
+                [routerLink]="'/admin/editor/' + entry.slug">
+                <span class="material-symbols-outlined btn-action-icon">edit</span>
+              </button>
+              <button (click)="deleteEntry(entry)" class="btn-action btn-action-delete">
+                <span class="material-symbols-outlined btn-action-icon">delete</span>
+              </button>
             </div>
           </div>
-          <div class="entry-actions">
-            <button class="btn-action btn-action-edit"
-              [routerLink]="'/admin/editor/' + entry.slug">
-              <span class="material-symbols-outlined btn-action-icon">edit</span>
+
+          <!-- EXPANDED COMMENTS for this entry -->
+          <div *ngIf="expandedEntryId === entry.id" class="entry-comments-panel">
+            <div *ngIf="loadingExpandedComments" class="comments-loading">
+              <span class="material-symbols-outlined" style="animation: spin 1s linear infinite;">progress_activity</span>
+              Loading comments...
+            </div>
+            
+            <div *ngIf="!loadingExpandedComments && expandedComments.length === 0" class="comments-empty">
+              No comments yet on this post.
+            </div>
+            
+            <div *ngIf="!loadingExpandedComments && expandedComments.length > 0" class="comments-thread">
+              <div *ngFor="let c of expandedComments" class="comment-card">
+                <div class="comment-card-header">
+                  <div class="comment-card-avatar">
+                    <img *ngIf="c.profiles?.avatar_url" [src]="c.profiles.avatar_url">
+                    <span *ngIf="!c.profiles?.avatar_url" class="material-symbols-outlined" style="font-size: 16px; color: white;">person</span>
+                  </div>
+                  <div class="comment-card-meta">
+                    <span class="comment-card-author">{{ c.profiles?.username || c.profiles?.full_name || 'Unknown' }}</span>
+                    <span class="comment-card-date">{{ c.created_at | date:'short' }}</span>
+                  </div>
+                  <div class="comment-card-actions">
+                    <button (click)="startReply(c.id)" class="btn-comment-action" title="Reply">
+                      <span class="material-symbols-outlined" style="font-size: 14px;">reply</span>
+                    </button>
+                    <button (click)="deleteComment(c.id, entry.id)" class="btn-comment-action btn-comment-delete" title="Delete">
+                      <span class="material-symbols-outlined" style="font-size: 14px;">delete</span>
+                    </button>
+                  </div>
+                </div>
+                <p class="comment-card-body">{{ c.content }}</p>
+
+                <!-- Reply box -->
+                <div *ngIf="replyingTo === c.id" class="reply-box">
+                  <textarea [(ngModel)]="replyText" placeholder="Write a reply..." rows="2" class="reply-textarea"></textarea>
+                  <div class="reply-actions">
+                    <button (click)="replyingTo = null" class="btn-reply-cancel">Cancel</button>
+                    <button (click)="sendReply(c)" [disabled]="sendingReply || !replyText.trim()" class="btn-reply-send">
+                      {{ sendingReply ? 'Sending...' : 'Reply' }}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Quick add comment -->
+            <div class="quick-reply-box">
+              <textarea [(ngModel)]="replyText" *ngIf="!replyingTo" placeholder="Add a comment to this post..." rows="2" class="reply-textarea"></textarea>
+              <button *ngIf="!replyingTo" (click)="sendReply({document_id: entry.id})" 
+                      [disabled]="sendingReply || !replyText.trim()" class="btn-reply-send">
+                {{ sendingReply ? 'Sending...' : 'Comment' }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RECENT COMMENTS FEED -->
+    <div class="recent-entries-inner" style="margin-top: 2rem;">
+      <h2 class="recent-entries-title">
+        <span class="material-symbols-outlined">forum</span> Recent_Comments
+        <span class="comment-feed-count" *ngIf="!loadingComments">{{ allComments.length }}</span>
+      </h2>
+
+      <div *ngIf="loadingComments" class="skeleton-list">
+        <div *ngFor="let _ of [1,2,3]" class="skeleton-row">
+          <div class="skeleton-icon"></div>
+          <div class="skeleton-content">
+            <div class="skeleton-text-1"></div>
+            <div class="skeleton-text-2"></div>
+          </div>
+        </div>
+      </div>
+
+      <div *ngIf="!loadingComments && allComments.length === 0" class="empty-state-box">
+        No comments yet across any publications.
+      </div>
+
+      <div *ngIf="!loadingComments && allComments.length > 0" class="comment-feed">
+        <div *ngFor="let c of allComments" class="comment-feed-item">
+          <div class="comment-feed-left">
+            <div class="comment-feed-avatar">
+              <img *ngIf="c.profiles?.avatar_url" [src]="c.profiles.avatar_url">
+              <span *ngIf="!c.profiles?.avatar_url" class="material-symbols-outlined" style="font-size: 14px; color: white;">person</span>
+            </div>
+            <div class="comment-feed-body">
+              <div class="comment-feed-header">
+                <span class="comment-feed-author">{{ c.profiles?.username || 'Unknown' }}</span>
+                <span class="comment-feed-on">on</span>
+                <a class="comment-feed-doc-link" 
+                   [routerLink]="'/' + (c.documents?.category === 'work' ? 'works' : (c.documents?.category === 'guide' ? 'guides' : 'logs')) + '/' + c.documents?.slug">
+                  {{ c.documents?.title || 'Unknown Post' }}
+                </a>
+              </div>
+              <p class="comment-feed-text">{{ c.content }}</p>
+              <span class="comment-feed-time">{{ timeAgo(c.created_at) }}</span>
+            </div>
+          </div>
+          <div class="comment-feed-actions">
+            <button (click)="startReply(c.id)" class="btn-comment-action" title="Reply">
+              <span class="material-symbols-outlined" style="font-size: 14px;">reply</span>
             </button>
-            <button (click)="deleteEntry(entry)" class="btn-action btn-action-delete">
-              <span class="material-symbols-outlined btn-action-icon">delete</span>
+            <button (click)="deleteComment(c.id, c.document_id)" class="btn-comment-action btn-comment-delete" title="Delete">
+              <span class="material-symbols-outlined" style="font-size: 14px;">delete</span>
             </button>
+          </div>
+          <!-- Inline reply -->
+          <div *ngIf="replyingTo === c.id" class="reply-box" style="margin-left: 2.75rem; margin-top: 0.5rem;">
+            <textarea [(ngModel)]="replyText" placeholder="Write a reply..." rows="2" class="reply-textarea"></textarea>
+            <div class="reply-actions">
+              <button (click)="replyingTo = null" class="btn-reply-cancel">Cancel</button>
+              <button (click)="sendReply(c)" [disabled]="sendingReply || !replyText.trim()" class="btn-reply-send">
+                {{ sendingReply ? 'Sending...' : 'Reply' }}
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -98,29 +241,32 @@
       </div>
 
       <div *ngIf="!loading && drafts.length > 0" class="entries-list">
-        <div *ngFor="let draft of drafts" class="entry-row">
-          <div class="entry-info">
-            <div class="entry-badge entry-badge-draft">
-              {{ draft.category }}
+        <div *ngFor="let draft of drafts" class="entry-block">
+          <div class="entry-row">
+            <div class="entry-info">
+              <div class="entry-badge entry-badge-draft">
+                {{ draft.category }}
+              </div>
+              <div class="entry-details">
+                <h3 class="entry-title entry-title-draft"
+                  [routerLink]="'/admin/editor/' + draft.slug">{{ draft.title || 'Untitled Document' }}</h3>
+                <p class="entry-meta">Last edited {{ draft.updatedAt | date:'short' }}</p>
+              </div>
             </div>
-            <div class="entry-details">
-              <h3 class="entry-title entry-title-draft"
-                [routerLink]="'/admin/editor/' + draft.slug">{{ draft.title || 'Untitled Document' }}</h3>
-              <p class="entry-meta">Last edited {{ draft.updatedAt | date:'short' }}</p>
+            <div class="entry-social-actions">
+              <button class="btn-action btn-action-edit"
+                [routerLink]="'/admin/editor/' + draft.slug">
+                <span class="material-symbols-outlined btn-action-icon">edit</span>
+              </button>
+              <button (click)="deleteEntry(draft)" class="btn-action btn-action-delete">
+                <span class="material-symbols-outlined btn-action-icon">delete</span>
+              </button>
             </div>
-          </div>
-          <div class="entry-actions">
-            <button class="btn-action btn-action-edit"
-              [routerLink]="'/admin/editor/' + draft.slug">
-              <span class="material-symbols-outlined btn-action-icon">edit</span>
-            </button>
-            <button (click)="deleteEntry(draft)" class="btn-action btn-action-delete">
-              <span class="material-symbols-outlined btn-action-icon">delete</span>
-            </button>
           </div>
         </div>
       </div>
     </div>
+
   <!-- TAG MANAGER -->
   <div class="tech-stack-dictionary-container">
     <div class="dictionary-header">

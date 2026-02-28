@@ -18,7 +18,31 @@
         <span class="public-nav-separator">/</span>
         <a routerLink="/logs" routerLinkActive="active-link" class="public-nav-link">{{ 'NAV.LOGS' | translate }}</a>
         <span class="public-nav-separator">/</span>
+        <a routerLink="/guides" routerLinkActive="active-link" class="public-nav-link">{{ 'NAV.GUIDES' | translate }}</a>
+        <span class="public-nav-separator">/</span>
         <a routerLink="/contact" routerLinkActive="active-link" class="public-nav-link">{{ 'NAV.CONTACT' | translate }}</a>
+      </div>
+
+      <!-- Authentication Links -->
+      <div class="public-auth-group">
+        
+        <!-- Logged Out State -->
+        <ng-container *ngIf="!(currentUser | async)">
+          <a routerLink="/login" class="nav-auth-link">LOGIN</a>
+          <a routerLink="/register" class="nav-auth-link highlight">ENROLL</a>
+        </ng-container>
+
+        <!-- Logged In State -->
+        <ng-container *ngIf="currentUser | async as user">
+          <div class="user-menu">
+            <a [routerLink]="['/u', user.user_metadata['username'] || 'me']" class="nav-auth-link highlight">
+              <span class="material-symbols-outlined" style="font-size: 14px;">account_circle</span>
+              PROFILE
+            </a>
+            <button (click)="logout()" class="nav-auth-btn">LOGOUT</button>
+          </div>
+        </ng-container>
+
       </div>
 
       <div class="public-status-group">
@@ -34,6 +58,8 @@
   </div>
 </nav>
 
-<div [@routeAnimations]="animationState()">
+<div class="content-wrapper" [@routeAnimations]="animationState()">
   <router-outlet #outlet="outlet" (activate)="prepareRoute(outlet)"></router-outlet>
 </div>
+
+<app-site-footer></app-site-footer>

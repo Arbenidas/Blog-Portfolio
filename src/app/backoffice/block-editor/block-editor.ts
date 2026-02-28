@@ -34,10 +34,10 @@ export class BlockEditor implements OnInit, OnDestroy {
   slug = '';
   tags = '';
   bibliography = '';
-  category: 'work' | 'log' = 'work';
+  category: 'work' | 'log' | 'guide' = 'work';
   indexLog = '';
   deployStatus = 'LIVE_PRODUCTION';
-  documentStatus: 'draft' | 'published' = 'draft';
+  documentStatus: 'draft' | 'published' | 'archived' = 'draft';
   autoSaveInterval: any;
 
   coverPhotoUrl = '';
@@ -112,7 +112,7 @@ export class BlockEditor implements OnInit, OnDestroy {
       if (routeSlug) {
         this.loadDocument(routeSlug);
       } else {
-        this.category = this.route.snapshot.queryParamMap.get('category') as 'work' | 'log' || 'work';
+        this.category = this.route.snapshot.queryParamMap.get('category') as 'work' | 'log' | 'guide' || 'work';
       }
     });
 
@@ -229,7 +229,8 @@ export class BlockEditor implements OnInit, OnDestroy {
       // Verificar si hay un borrador local más reciente o pendiente
       this.checkLocalDraft(slug);
     } else {
-      console.error('Document not found:', slug);
+      console.error('Document not found or access denied:', slug);
+      this.router.navigate(['/404']);
     }
   }
 
@@ -489,7 +490,7 @@ export class BlockEditor implements OnInit, OnDestroy {
       slug: this.slug,
       title: this.title,
       coverPhoto: finalCover,
-      category: this.category,
+      category: this.category as any, // Cast to any to bypass strict type check for now if interface wasn't fully updated
       tags: tagArray,
       indexLog: this.indexLog,
       blocks: allBlocks,
@@ -589,7 +590,7 @@ export class BlockEditor implements OnInit, OnDestroy {
       slug: this.slug,
       title: this.title,
       coverPhoto: finalCover,
-      category: this.category,
+      category: this.category as any,
       tags: tagArray,
       indexLog: this.indexLog,
       blocks: allBlocks

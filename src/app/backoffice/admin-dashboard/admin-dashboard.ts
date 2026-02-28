@@ -16,9 +16,26 @@ export class AdminDashboard {
 
   worksCount = 0;
   logsCount = 0;
+  totalUpvotes = 0;
   recentEntries: DocumentEntry[] = [];
   drafts: DocumentEntry[] = [];
   loading = true;
+
+  // Social stats per document
+  upvoteCounts: Record<string, number> = {};
+  commentCounts: Record<string, number> = {};
+
+  // Comments management
+  allComments: any[] = [];
+  loadingComments = true;
+  replyingTo: string | null = null;
+  replyText = '';
+  sendingReply = false;
+
+  // Expanded entry for inline comments
+  expandedEntryId: string | null = null;
+  expandedComments: any[] = [];
+  loadingExpandedComments = false;
 
   systemTags: string[] = [];
   newTagInput = '';
@@ -31,25 +48,96 @@ export class AdminDashboard {
   }
 
   async loadData() {
-    const [works, logs, drafts, systemTags] = await Promise.all([
-      this.contentService.getAllWorks(),
-      this.contentService.getAllLogs(),
+    const [works, logs, drafts, systemTags, totalUpvotes] = await Promise.all([
+      this.contentService.getAdminDocuments('work'),
+      this.contentService.getAdminDocuments('log'),
       this.contentService.getDraftDocuments(),
-      this.contentService.getSystemTags()
+      this.contentService.getSystemTags(),
+      this.contentService.getTotalUpvotes()
     ]);
 
     this.worksCount = works.length;
     this.logsCount = logs.length;
+    this.totalUpvotes = totalUpvotes;
     this.drafts = drafts;
     this.systemTags = systemTags;
 
-    // Merge and sort by updatedAt descending, take latest 6
+    // Merge and sort by updatedAt descending, take latest 10
     this.recentEntries = [...works, ...logs]
       .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
-      .slice(0, 6);
+      .slice(0, 10);
+
+    // Get social stats for all entries
+    const allDocIds = [...works, ...logs].map(e => e.id);
+    const [upvotes, comments] = await Promise.all([
+      this.contentService.getUpvoteCountsForDocuments(allDocIds),
+      this.contentService.getCommentCountsForDocuments(allDocIds)
+    ]);
+    this.upvoteCounts = upvotes;
+    this.commentCounts = comments;
+
+    // Load recent comments
+    this.allComments = await this.contentService.getAllCommentsForAdmin();
+    this.loadingComments = false;
 
     this.loading = false;
     this.cdr.detectChanges();
+  }
+
+  async toggleExpandComments(entry: DocumentEntry) {
+    if (this.expandedEntryId === entry.id) {
+      this.expandedEntryId = null;
+      this.expandedComments = [];
+      return;
+    }
+    this.expandedEntryId = entry.id;
+    this.loadingExpandedComments = true;
+    this.cdr.detectChanges();
+
+    this.expandedComments = await this.contentService.getComments(entry.id);
+    this.loadingExpandedComments = false;
+    this.cdr.detectChanges();
+  }
+
+  startReply(commentId: string) {
+    this.replyingTo = this.replyingTo === commentId ? null : commentId;
+    this.replyText = '';
+  }
+
+  async sendReply(comment: any) {
+    if (!this.replyText.trim()) return;
+    this.sendingReply = true;
+    try {
+      const docId = comment.document_id || comment.documents?.id;
+      await this.contentService.addComment(docId, this.replyText.trim());
+      this.replyText = '';
+      this.replyingTo = null;
+
+      // Refresh comments
+      if (this.expandedEntryId === docId) {
+        this.expandedComments = await this.contentService.getComments(docId);
+      }
+      this.allComments = await this.contentService.getAllCommentsForAdmin();
+      // Update count
+      this.commentCounts[docId] = (this.commentCounts[docId] || 0) + 1;
+    } catch (e) {
+      console.error('Error sending reply:', e);
+    }
+    this.sendingReply = false;
+    this.cdr.detectChanges();
+  }
+
+  async deleteComment(commentId: string, docId: string) {
+    if (!confirm('Delete this comment?')) return;
+    try {
+      await this.contentService.deleteComment(commentId);
+      this.allComments = this.allComments.filter(c => c.id !== commentId);
+      this.expandedComments = this.expandedComments.filter(c => c.id !== commentId);
+      this.commentCounts[docId] = Math.max(0, (this.commentCounts[docId] || 1) - 1);
+      this.cdr.detectChanges();
+    } catch (e) {
+      console.error('Error deleting comment:', e);
+    }
   }
 
   async addTag() {
@@ -58,7 +146,6 @@ export class AdminDashboard {
       this.newTagInput = '';
       return;
     }
-
     this.savingTags = true;
     this.systemTags.push(t);
     await this.contentService.saveSystemTags(this.systemTags);

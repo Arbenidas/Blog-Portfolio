@@ -1,0 +1,54 @@
+<!-- login.html -->
+<main class="auth-main fade-in-up">
+    <div class="fixed inset-0 z-0 bg-halftone opacity-10 pointer-events-none" style="background-size: 8px 8px;"></div>
+    
+    <div class="auth-container">
+        <!-- Decorativos -->
+        <div class="tape-strip" style="top: -10px; left: 5%; transform: rotate(-2deg);"></div>
+        
+        <div class="auth-box">
+            <header class="auth-header">
+                <span class="material-symbols-outlined auth-icon">login</span>
+                <h1 class="auth-title">SYS_LOGIN</h1>
+            </header>
+
+            <form (ngSubmit)="onLogin()" #loginForm="ngForm" class="auth-form">
+                
+                <div class="form-group">
+                    <label class="form-label" for="email">USER_IDENTIFIER (EMAIL)</label>
+                    <input type="email" id="email" class="form-input" 
+                           [ngModel]="email()" (ngModelChange)="email.set($event)" 
+                           name="email" required autocomplete="email" placeholder="agent@network.com">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="password">ACCESS_CODE (PWD)</label>
+                    <input type="password" id="password" class="form-input" 
+                           [ngModel]="password()" (ngModelChange)="password.set($event)" 
+                           name="password" required autocomplete="current-password" placeholder="••••••••">
+                </div>
+
+                <div *ngIf="errorMsg()" class="auth-error">
+                    <span class="material-symbols-outlined" style="font-size: 14px;">warning</span>
+                    {{ errorMsg() }}
+                </div>
+
+                <button type="submit" class="btn-submit" [disabled]="isLoading() || loginForm.invalid">
+                    <span *ngIf="!isLoading()">AUTHENTICATE //</span>
+                    <span *ngIf="isLoading()">PROCESSING...</span>
+                </button>
+
+            </form>
+
+            <footer class="auth-footer">
+                <p>UNAUTHORIZED_ACCESS? <a routerLink="/register" class="auth-link">REQUEST_CLEARANCE_HERE</a></p>
+                <div style="margin-top: 1rem;">
+                    <a routerLink="/" class="auth-link-back">
+                        <span class="material-symbols-outlined" style="font-size: 14px;">west</span>
+                        RETURN_TO_HOME
+                    </a>
+                </div>
+            </footer>
+        </div>
+    </div>
+</main>

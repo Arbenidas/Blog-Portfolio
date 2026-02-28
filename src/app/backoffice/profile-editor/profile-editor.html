@@ -53,9 +53,47 @@
                 <!-- Basic Info -->
                 <div class="form-section">
                     <h3 class="form-section-header">Identity File</h3>
+
+                    <!-- AVATAR UPLOAD -->
+                    <div class="avatar-upload-section">
+                        <div class="avatar-preview-box">
+                            <img *ngIf="profile().avatar_url" [src]="profile().avatar_url" class="avatar-preview-img">
+                            <span *ngIf="!profile().avatar_url" class="material-symbols-outlined avatar-placeholder-icon">person</span>
+                        </div>
+                        <div class="avatar-upload-controls">
+                            <label class="btn-upload-avatar">
+                                <span class="material-symbols-outlined" style="font-size: 14px;">upload</span>
+                                {{ uploadingAvatar ? 'Uploading...' : 'Upload Photo' }}
+                                <input type="file" accept="image/*" (change)="onAvatarFileSelected($event)" style="display:none;" [disabled]="uploadingAvatar">
+                            </label>
+                            <span class="avatar-hint">Used for comments & public profile. Max 2MB.</span>
+                        </div>
+                    </div>
+
+                    <!-- NICKNAME -->
+                    <div class="nickname-section">
+                        <label class="form-label">Public Nickname <span class="nickname-hint">(shown on comments & publications)</span></label>
+                        <div class="nickname-input-row">
+                            <span class="nickname-at">@</span>
+                            <input type="text" [(ngModel)]="nicknameInput" class="form-input nickname-input" placeholder="your_nickname" [disabled]="!canChangeNickname || nicknameSaving">
+                            <button class="btn-change-nickname" 
+                                    (click)="changeNickname()" 
+                                    [disabled]="!canChangeNickname || nicknameSaving || nicknameInput.trim() === profile().username"
+                                    *ngIf="canChangeNickname">
+                                {{ nicknameSaving ? 'Saving...' : 'Change' }}
+                            </button>
+                        </div>
+                        <span *ngIf="!canChangeNickname" class="nickname-cooldown">
+                            <span class="material-symbols-outlined" style="font-size: 12px;">lock_clock</span>
+                            Locked — you can change again in {{ daysUntilChange }} days
+                        </span>
+                        <span *ngIf="nicknameError" class="nickname-error">{{ nicknameError }}</span>
+                    </div>
+
+                    <!-- REAL NAME + FIELDS -->
                     <div class="form-grid-2">
                         <div class="form-field">
-                            <label class="form-label">Code Name</label>
+                            <label class="form-label">Full Name <span class="nickname-hint">(private, for Personnel File)</span></label>
                             <input type="text" [(ngModel)]="profile().name" class="form-input">
                         </div>
                         <div class="form-field">
@@ -273,13 +311,18 @@
                             <div class="tpl-profile-section">
                                 <div class="tpl-photo-col">
                                     <div class="tpl-photo-tape tape-strip"></div>
-                                    <div class="tpl-photo-box">
-                                        <img src="profile.jpg" class="tpl-photo-img">
+                                    <div class="tpl-photo-box tpl-photo-uploadable" (click)="personnelPhotoInput.click()">
+                                        <img [src]="profile().personnel_photo || 'profile.jpg'" class="tpl-photo-img">
                                         <div class="halftone-dots"></div>
                                         <div class="stamp-classified-wrapper">
                                             <span class="stamp-classified-text">CONFIDENTIAL</span>
                                         </div>
+                                        <div class="tpl-photo-upload-overlay">
+                                            <span class="material-symbols-outlined" style="font-size: 24px;">photo_camera</span>
+                                            <span style="font-size: 8px;">CHANGE PHOTO</span>
+                                        </div>
                                     </div>
+                                    <input #personnelPhotoInput type="file" accept="image/*" (change)="onPersonnelPhotoSelected($event)" style="display:none;">
                                 </div>
                                 <div class="tpl-info-col">
                                     <div class="tpl-info-row">

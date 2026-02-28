@@ -1,412 +1,228 @@
-<main class="home-main" id="home">
-<div class="coffee-stain" style="top: 8rem; right: 5rem;"></div>
-<div class="coffee-stain" style="bottom: 5rem; left: 2.5rem; opacity: 0.6; transform: scale(0.75);"></div>
-
-<div class="home-content-grid">
-  <!-- LEFT COLUMN -->
-  <div class="home-left-col">
-
-    <!-- Subject Metrics -->
-    <div class="metrics-card shadow-sketch">
-      <div class="metrics-card-tape"></div>
-      <h5 class="metrics-title">SUBJECT_METRICS</h5>
-      <div style="display: flex; flex-direction: column; gap: 1rem;">
-        <div class="metric-item">
-          <div class="metric-header"><span>DESIGN</span><span>85%</span></div>
-          <div class="metric-bar-bg">
-            <div class="metric-bar-fill metric-design bg-grid-pattern"></div>
-          </div>
-        </div>
-        <div class="metric-item">
-          <div class="metric-header"><span>CODE</span><span>92%</span></div>
-          <div class="metric-bar-bg">
-            <div class="metric-bar-fill metric-code bg-grid-pattern"></div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Stats -->
-    <div class="stats-card shadow-sketch">
-      <div class="stat-item">
-        <p class="stat-item-title">CAFFEINE_LEVELS</p>
-        <div class="stat-bar-container"><div class="stat-caffeine"></div></div>
-      </div>
-      <div class="stat-item" style="margin-bottom:0;">
-        <p class="stat-item-title">BUGS_RESOLVED</p>
-        <div class="stat-bar-container"><div class="stat-bugs"></div></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- CENTER COLUMN -->
-  <div class="home-center-col" id="works">
-    <!-- Header -->
-    <div class="header-section">
-      <div>
-        <div class="badges-row">
-          <span class="badge-primary"><span class="material-symbols-outlined badge-settings-icon">settings</span>CURRENT_STUDY</span>
-          <span class="badge-ref">REF: 894-XB // PROJECT_NEURAL</span>
-        </div>
-        <h1 class="main-title">
-          <span class="typewriter-text" style="display:inline-block">Project Dossier: </span><br/>
-          <span class="transparent-stroke typewriter-text delay-1" style="display:inline-block; animation-play-state: running;">Central Hub</span>
+<main class="hub-main" id="home">
+  <div class="coffee-stain" style="top: 6rem; left: -20px; opacity: 0.4;"></div>
+  
+  <section class="hub-hero">
+    <div class="stamp-join">OPEN<br/>REGISTRY</div>
+    
+    <div class="hero-content">
+      <div class="hero-title-container">
+        <div class="hero-title-bg"></div>
+        <h1 class="hero-title">
+          Craft, Code <br/>
+          <span class="transparent-stroke">
+            & Collaborate
+            <svg preserveAspectRatio="none" viewBox="0 0 100 10">
+              <path d="M0 5 Q 50 10 100 5" fill="none" stroke="currentColor" stroke-width="2"></path>
+            </svg>
+          </span>
         </h1>
       </div>
-      <div class="header-metadata">
-        <span class="typewriter-text delay-1" style="display:inline-block; border-right:none;">TIMESTAMP: 2024.11.08_14:22</span><br/>
-        <span class="typewriter-text delay-2" style="display:inline-block; border-right:none;">LOCATION: SECTOR_07_LAB</span><br/>
-        <span class="typewriter-text delay-3" style="display:inline-block; border-right:none; color:var(--accent-orange); font-weight:bold;">STATUS: UNCLASSIFIED</span>
+      
+      <p class="hero-subtitle">
+        // A decentralized collective for technical documentation, engineering logs, and creative works.
+      </p>
+      
+      <div class="hero-actions">
+        <a routerLink="/register" class="btn-primary" *ngIf="!(currentUser | async)">
+          <span class="material-symbols-outlined">login</span>
+          START_LOGGING
+        </a>
+        <a routerLink="/logs" class="btn-primary" *ngIf="currentUser | async">
+          <span class="material-symbols-outlined">history_edu</span>
+          WRITE_A_LOG
+        </a>
+        <a routerLink="/works" class="btn-secondary">
+          READ_MANIFESTO
+        </a>
       </div>
     </div>
-
-    <!-- Tabs Container -->
-    <div style="position:relative; margin-top:1rem;">
-      <div class="tabs-container">
-        <div (click)="setTab('about')" class="tab" [ngClass]="activeTab() === 'about' ? 'tab-active' : 'tab-inactive'">
-          <span class="material-symbols-outlined" style="font-size:14px; color:#0d9488;">badge</span> Personnel File
+  </section>
+  
+  <section class="stats-grid">
+    <div class="stat-card rotate-1">
+      <div class="stat-header">
+        <h3 class="stat-title">Active_Agents</h3>
+        <span class="material-symbols-outlined" style="color:var(--charcoal);">group</span>
+      </div>
+      <div style="text-align: center; padding: 0.5rem 0;">
+        <span class="nixie-tube">{{ activeAgents | number:'2.0-0' }}</span>
+      </div>
+      <div class="stat-footer" style="color: #16a34a;">
+        <span class="material-symbols-outlined" style="font-size: 12px;">trending_up</span> SYSTEM_ONLINE
+      </div>
+    </div>
+    
+    <div class="stat-card rotate-neg-1" style="z-index: 10;">
+      <div class="tape-strip" style="left: 40%; transform: rotate(2deg); opacity: 0.8;"></div>
+      <div class="stat-header">
+        <h3 class="stat-title">Comm_Logs_Published</h3>
+        <span class="material-symbols-outlined" style="color:var(--charcoal);">library_books</span>
+      </div>
+      <div style="text-align: center; padding: 0.5rem 0;">
+        <span class="nixie-tube">{{ publishedLogs | number:'2.0-0' }}</span>
+      </div>
+      <div style="height: 4px; width: 100%; background-color: #e5e7eb; overflow: hidden; margin-top: 0.5rem;">
+        <div style="height: 100%; background-color: var(--accent-orange); width: 75%;"></div>
+      </div>
+    </div>
+    
+    <div class="stat-card rotate-2">
+      <div class="stat-header">
+        <h3 class="stat-title">Works_Archived</h3>
+        <span class="material-symbols-outlined" style="color:var(--charcoal);">inventory_2</span>
+      </div>
+      <div style="text-align: center; padding: 0.5rem 0;">
+        <span class="nixie-tube">{{ archivedWorks | number:'2.0-0' }}</span>
+      </div>
+      <div class="stat-footer">
+        LAST UPDATE: {{ uptime() }} AGO
+      </div>
+    </div>
+  </section>
+  
+  <div class="main-grid">
+    <aside class="side-panel">
+      <!-- Directory Box -->
+      <div class="directory-box">
+        <div class="directory-header">
+          <span>DIRECTORY</span>
+          <span class="material-symbols-outlined" style="font-size: 14px;">folder_open</span>
         </div>
-        <div (click)="setTab('works')" class="tab" [ngClass]="activeTab() === 'works' ? 'tab-active' : 'tab-inactive'">
-          <span class="material-symbols-outlined" style="font-size:14px; color:var(--accent-orange);">folder_open</span> Classified Works
-        </div>
-        <div (click)="setTab('logs')" class="tab" [ngClass]="activeTab() === 'logs' ? 'tab-active' : 'tab-inactive'">
-          <span class="material-symbols-outlined" style="font-size:14px; color:var(--primary);">history_edu</span> Mission Logs
+        <ul class="directory-list">
+          <li>
+            <a routerLink="/logs" class="directory-link">
+              <span class="material-symbols-outlined">terminal</span>
+              <span>Dev_Logs</span>
+            </a>
+          </li>
+          <li>
+            <a routerLink="/works" class="directory-link">
+              <span class="material-symbols-outlined">architecture</span>
+              <span>Design_Blueprints</span>
+            </a>
+          </li>
+          <li>
+            <a routerLink="#" class="directory-link">
+              <span class="material-symbols-outlined">build</span>
+              <span>Workshop_Guides</span>
+            </a>
+          </li>
+          <li>
+            <a routerLink="#" class="directory-link">
+              <span class="material-symbols-outlined">forum</span>
+              <span>Open_Channels</span>
+            </a>
+          </li>
+        </ul>
+      </div>
+      
+      <!-- Trending Signal (Top 5 by engagement) -->
+      <div class="trending-box">
+        <h4 class="trending-title">Top_Engagement</h4>
+        <div class="trending-list">
+          <div class="trending-item" *ngFor="let tLog of trendingLogs; let i = index">
+            <span class="trending-num">#{{ i + 1 }}</span>
+            <div>
+              <p class="trending-text" [routerLink]="['/' + (tLog.category === 'work' ? 'works' : 'logs'), tLog.slug]">{{ tLog.title }}</p>
+              <span class="trending-meta">
+                <span *ngIf="tLog.author">@{{ tLog.author.username }} · </span>
+                <span style="color: var(--accent-orange);">↑{{ upvoteCounts[tLog.id] || 0 }}</span>
+                <span> · </span>
+                <span style="color: var(--primary);">💬{{ commentCounts[tLog.id] || 0 }}</span>
+              </span>
+            </div>
+          </div>
+          <div *ngIf="trendingLogs.length === 0" class="trending-meta">No signals detected.</div>
         </div>
       </div>
-
-      <!-- Tab Content Area -->
-      <div class="content-area">
-        
-        <!-- === WORKS TAB === -->
-        <div *ngIf="activeTab() === 'works'" class="works-tab-bg">
-          <div class="tab-header">
-            <h3 class="tab-title">Case Files_Grid</h3>
-            <span class="tab-badge">INDEX_LOADED</span>
-          </div>
-
-          <!-- SKELETON -->
-          <div *ngIf="isLoading()" class="works-grid">
-            <div *ngFor="let i of [1,2,3,4]" class="work-card skeleton-card">
-              <div class="skel skel-image"></div>
-              <div class="skel-body">
-                <div class="skel skel-title"></div>
-                <div class="skel skel-tag"></div>
-                <div class="skel skel-btn"></div>
+    </aside>
+    
+    <div class="center-panel">
+      <!-- DYNAMIC LOGS WITH REAL SOCIAL DATA -->
+      <ng-container *ngFor="let log of logs; let first = first">
+        <a [routerLink]="['/logs', log.slug]" class="post-card">
+          <div *ngIf="first && (upvoteCounts[log.id] || 0) + (commentCounts[log.id] || 0) > 0" class="hot-topic-badge">TOP_POST</div>
+          <div class="post-content">
+            <div class="post-meta">
+              <span style="display:flex; align-items:center; gap:0.25rem;"><span class="material-symbols-outlined" style="font-size:12px;">account_circle</span> @{{ log.author?.username || 'sys_admin_01' }}</span>
+              <span>•</span>
+              <span>{{ log.createdAt | date:'MMM dd yyyy' }}</span>
+              <span *ngIf="log.tags.length">
+                <span>•</span>
+                <span class="post-tag">#{{log.tags[0]}}</span>
+              </span>
+            </div>
+            <h3 class="post-title">
+              {{ log.title }}
+            </h3>
+            <p class="post-body">
+              {{ log.blocks.length > 0 ? (log.blocks[0].content | slice:0:150) + '...' : 'System analysis indicates optimal function. Further metrics pending...' }}
+            </p>
+            <div class="post-footer">
+              <div class="post-actions">
+                <span class="post-action-btn" (click)="$event.preventDefault()"><span class="material-symbols-outlined" style="font-size:14px;">arrow_upward</span> {{ upvoteCounts[log.id] || 0 }}</span>
+                <span class="post-action-btn" (click)="$event.preventDefault()"><span class="material-symbols-outlined" style="font-size:14px;">chat_bubble</span> {{ commentCounts[log.id] || 0 }} Comments</span>
+                <span class="post-action-btn" (click)="$event.preventDefault()"><span class="material-symbols-outlined" style="font-size:14px;">share</span></span>
               </div>
+              <span class="post-id">ID: {{ log.category === 'work' ? 'WORK' : 'LOG' }}_{{ log.id.substring(0,4).toUpperCase() }}</span>
             </div>
           </div>
-
-          <!-- REAL CONTENT -->
-          <div *ngIf="!isLoading()" class="works-grid">
-            <ng-container *ngFor="let work of works; let i = index">
-              <div class="work-card shadow-sketch group">
-                <div *ngIf="i === 0" class="work-featured-badge">FEATURED</div>
-                
-                <div class="work-image-container">
-                  <img *ngIf="work.coverPhoto" [alt]="work.title" class="work-image riso-print" [src]="work.coverPhoto"/>
-                  <div *ngIf="!work.coverPhoto" class="work-no-image-bg bg-blueprint"></div>
-                  <div *ngIf="!work.coverPhoto" class="work-no-image-text">NO_IMG</div>
-                  <div class="halftone-dots" style="position:absolute; inset:0; pointer-events:none;"></div>
-                </div>
-                
-                <div class="work-info">
-                  <h4 class="work-title">{{ work.title }}</h4>
-                  <span class="work-version">v.1.0</span>
-                </div>
-                
-                <div class="work-tags">
-                  <span *ngFor="let tag of work.tags; let ti = index" 
-                    class="work-tag" 
-                    [ngClass]="'work-tag-color-' + (ti % 5)">{{ tag }}</span>
-                </div>
-                
-                <button class="btn-access" [routerLink]="['/works', work.slug]">
-                  Access File <span class="material-symbols-outlined btn-access-icon">arrow_forward</span>
-                </button>
-              </div>
-              <!-- Native Ad every 3rd card -->
-              <app-native-ad *ngIf="(i + 1) % 3 === 0 && i !== works.length - 1"></app-native-ad>
-            </ng-container>
-          </div>
-        </div>
-
-        <!-- === ABOUT TAB === -->
-        <div *ngIf="activeTab() === 'about'" class="about-tab-bg">
-          <div class="coffee-stain" style="top:-2.5rem; right:-2.5rem; transform:rotate(45deg); opacity:0.2;"></div>
-          
-          <!-- About Header -->
-          <div class="about-header">
-            <div class="about-class"><span class="material-symbols-outlined" style="font-size:14px;">folder_special</span> Classification: Level 4</div>
-            <h2 class="about-title">Personnel File</h2>
-            <div class="about-id-row">
-              <span class="about-id">ID: ARBE_DEV_001</span>
-              <div class="about-date-box">
-                <span class="about-date-label">Date of Entry</span>
-                <span class="about-date-val">24 OCT 2024</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Loading State -->
-          <div *ngIf="!profile()" style="padding: 2.5rem 0; text-align:center; font-family:var(--font-mono); font-size:12px; color:#9ca3af; animation:pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;">
-            LOADING PERSONNEL DATA...
-          </div>
-
-          <!-- Profile Grid -->
-          <div *ngIf="profile()" class="profile-section">
-            <div class="profile-img-col">
-              <div class="tape-strip" style="left:50%; transform:translateX(-50%) rotate(2deg); top:-4px; filter:blur(0.5px); z-index:20;"></div>
-              <div class="profile-img-wrapper group">
-                <img src="profile.jpg" alt="Arbe" class="profile-img">
-                <div class="halftone-dots" style="position:absolute; inset:0; pointer-events:none; opacity:0.4; mix-blend-mode:overlay;"></div>
-                <div style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; pointer-events:none; z-index:10;">
-                  <span class="stamp-classified" style="background-color:rgba(255,255,255,0.2);">CONFIDENTIAL</span>
-                </div>
-              </div>
-            </div>
-            
-            <div class="profile-info-col">
-              <div class="profile-info-row"><span class="profile-info-label">Name:</span><span class="profile-info-val">{{profile()?.name}}</span></div>
-              <div class="profile-info-row"><span class="profile-info-label">Role:</span><span class="profile-info-val">{{profile()?.role}}</span></div>
-              <div class="profile-info-row"><span class="profile-info-label">Location:</span><span class="profile-info-val">{{profile()?.location}}</span></div>
-              <div class="profile-info-row"><span class="profile-info-label">Clearance:</span><span class="profile-info-clearance">{{profile()?.clearance}}</span></div>
-              <div class="profile-info-row" style="border-bottom:none;"><span class="profile-info-label">Status:</span>
-                <span style="display:flex; align-items:center; gap:0.5rem; text-transform:uppercase; color:var(--charcoal);">
-                  <span class="profile-status-indicator"></span>{{profile()?.status}}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Section 1: Core Mission -->
-          <div *ngIf="profile()" class="section-content">
-            <div class="section-header">
-              <span class="section-num" style="transform:rotate(-2deg);">01</span>
-              <h3 class="section-title">Core Mission</h3>
-            </div>
-            <p class="mission-text" [innerHTML]="getSafeHtml(profile()!.coreMission)"></p>
-          </div>
-
-          <!-- Section 2: History -->
-          <div *ngIf="profile()" class="section-content">
-            <div class="section-header" style="margin-bottom:2rem;">
-              <span class="section-num" style="transform:rotate(1deg);">02</span>
-              <h3 class="section-title">Deployment History</h3>
-            </div>
-            <div class="history-timeline">
-              <div *ngFor="let exp of profile()!.experience; let i = index" [ngClass]="i === 0 ? 'history-item history-item-featured' : 'history-item'">
-                <div [ngClass]="i === 0 ? 'history-dot history-dot-featured' : 'history-dot history-dot-normal'"></div>
-                <div class="history-header">
-                  <h4 class="history-role" [style.opacity]="i !== 0 ? 0.8 : 1">{{ exp.role }} @ {{ exp.company }}</h4>
-                  <span class="history-location">{{ exp.location }}</span>
-                </div>
-                <p class="history-years" [style.color]="i === 0 ? 'var(--accent-orange)' : '#6b7280'">{{ exp.years }}</p>
-                <p class="history-desc">{{ exp.description }}</p>
-              </div>
-            </div>
-          </div>
-
-          <!-- Section 3: Capabilities -->
-          <div *ngIf="profile()" class="section-content" style="margin-bottom:1rem;">
-            <div class="section-header" style="margin-bottom:1.5rem;">
-              <span class="section-num" style="transform:rotate(2deg);">03</span>
-              <h3 class="section-title">Verified Capabilities</h3>
-            </div>
-            <div class="capabilities-grid">
-
-              <!-- Languages -->
-              <div class="capability-card capability-lang group">
-                <div class="capability-bg"></div>
-                <p class="capability-title" style="color:var(--accent-orange);">Languages</p>
-                <div class="capability-list">
-                  <span *ngFor="let item of profile()!.languages" class="capability-item capability-item-hoverable">
-                    {{ item.name }}
-                    <!-- Hover tooltip -->
-                    <span *ngIf="item.description || item.linkSlug" class="tech-tooltip">
-                      <span *ngIf="item.description" class="tech-tooltip-desc">{{ item.description }}</span>
-                      <a *ngIf="item.linkSlug && item.linkCategory"
-                         [routerLink]="'/' + item.linkCategory + 's/' + item.linkSlug"
-                         class="tech-tooltip-link">
-                        View {{ item.linkCategory === 'work' ? 'Project' : 'Log' }}
-                        <span class="material-symbols-outlined" style="font-size:11px;">arrow_forward</span>
-                      </a>
-                    </span>
-                  </span>
-                </div>
-              </div>
-
-              <!-- Frameworks -->
-              <div class="capability-card capability-framework group">
-                <div class="capability-bg"></div>
-                <p class="capability-title" style="color:var(--primary);">Frameworks</p>
-                <div class="capability-list">
-                  <span *ngFor="let item of profile()!.frameworks" class="capability-item capability-item-hoverable">
-                    {{ item.name }}
-                    <!-- Hover tooltip -->
-                    <span *ngIf="item.description || item.linkSlug" class="tech-tooltip">
-                      <span *ngIf="item.description" class="tech-tooltip-desc">{{ item.description }}</span>
-                      <a *ngIf="item.linkSlug && item.linkCategory"
-                         [routerLink]="'/' + item.linkCategory + 's/' + item.linkSlug"
-                         class="tech-tooltip-link">
-                        View {{ item.linkCategory === 'work' ? 'Project' : 'Log' }}
-                        <span class="material-symbols-outlined" style="font-size:11px;">arrow_forward</span>
-                      </a>
-                    </span>
-                  </span>
-                </div>
-              </div>
-
-              <!-- Technologies -->
-              <div class="capability-card capability-tech group">
-                <div class="capability-bg"></div>
-                <p class="capability-title" style="color:#7c3aed;">Technologies</p>
-                <div class="capability-list">
-                  <span *ngFor="let item of profile()!.technologies" class="capability-item capability-item-hoverable">
-                    {{ item.name }}
-                    <!-- Hover tooltip -->
-                    <span *ngIf="item.description || item.linkSlug" class="tech-tooltip">
-                      <span *ngIf="item.description" class="tech-tooltip-desc">{{ item.description }}</span>
-                      <a *ngIf="item.linkSlug && item.linkCategory"
-                         [routerLink]="'/' + item.linkCategory + 's/' + item.linkSlug"
-                         class="tech-tooltip-link">
-                        View {{ item.linkCategory === 'work' ? 'Project' : 'Log' }}
-                        <span class="material-symbols-outlined" style="font-size:11px;">arrow_forward</span>
-                      </a>
-                    </span>
-                  </span>
-                </div>
-              </div>
-
-            </div>
-          </div>
-
-          <!-- Placed Widgets -->
-          <div *ngIf="profile()">
-            <div *ngFor="let w of profile()!.widgets" 
-                 style="position:absolute; pointer-events:none; z-index:50; transition:transform 0.3s;"
-                 [style.left.px]="w.x" 
-                 [style.top.px]="w.y">
-                <div [innerHTML]="getWidgetHtml(w.widgetId)"></div>
-            </div>
-          </div>
-        </div>
-
-        <!-- === LOGS TAB === -->
-        <div *ngIf="activeTab() === 'logs'" class="logs-tab-bg">
-          <div class="tab-header">
-            <h3 class="tab-title">Field Logs_Archive</h3>
-            <span class="tab-badge">TIMESTAMPS_SYNCED</span>
-          </div>
-
-          <!-- SKELETON -->
-          <div *ngIf="isLoading()" class="logs-list">
-            <div *ngFor="let i of [1,2,3]" class="log-card skeleton-card">
-              <div class="skel-body" style="padding: 1rem; width:100%;">
-                <div style="display:flex; gap:1rem; align-items:flex-start;">
-                  <div class="skel skel-log-num"></div>
-                  <div style="flex:1; display:flex; flex-direction:column; gap:0.5rem;">
-                    <div class="skel skel-log-title"></div>
-                    <div class="skel skel-log-title" style="width:55%;"></div>
-                    <div class="skel skel-log-meta"></div>
-                    <div class="skel skel-log-preview"></div>
-                    <div class="skel skel-log-preview" style="width:70%;"></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- REAL CONTENT -->
-          <div *ngIf="!isLoading()" class="logs-list">
-            <ng-container *ngFor="let log of logs; let i = index">
-              <a [routerLink]="['/logs', log.slug]" class="log-card group/log">
-                <div class="log-card-inner">
-                  <div class="log-number">0{{ i + 1 }}</div>
-                  <div class="log-header">
-                    <h3 class="log-title" [ngClass]="i === 0 ? 'log-title-featured' : ''">LOG_0{{ log.id.slice(0, 2) }}: {{ log.title }}</h3>
-                    <span class="log-date">{{ log.createdAt | date:'yyyy.MM.dd' }}</span>
-                  </div>
-                  <p class="log-preview">
-                    {{ log.blocks.length > 0 ? log.blocks[0].content : 'No content' }}
-                  </p>
-                  <div class="log-action">
-                    <span class="log-action-line"></span>
-                    Open Log
-                    <span class="material-symbols-outlined" style="font-size:12px; margin-left:0.25rem;">arrow_forward</span>
-                  </div>
-                </div>
-              </a>
-              <!-- Native Ad every 3rd card -->
-              <app-native-ad *ngIf="(i + 1) % 3 === 0 && i !== logs.length - 1"></app-native-ad>
-            </ng-container>
-          </div>
-        </div>
-
-      </div>
-
-      <!-- Bottom Links -->
-      <div class="bottom-link-container">
-        <button *ngIf="activeTab() === 'works'" class="bottom-link" routerLink="/works">
-          View Full Works Database <span class="material-symbols-outlined" style="font-size:14px;">arrow_forward</span>
-        </button>
-        <button *ngIf="activeTab() === 'logs'" class="bottom-link" routerLink="/logs">
-          Access Entire Log Archive <span class="material-symbols-outlined" style="font-size:14px;">arrow_forward</span>
+        </a>
+      </ng-container>
+      
+      <div style="text-align: center; padding: 1rem 0;" *ngIf="hasMoreLogs">
+        <button class="load-more-btn" (click)="loadMoreLogs()" [disabled]="isLoadingMore">
+          {{ isLoadingMore ? 'LOADING_SIGNAL...' : 'LOAD_MORE_LOGS_↓' }}
         </button>
       </div>
     </div>
+    
+    <aside class="side-panel">
+      <!-- Join Guild Box -->
+      <div class="guild-box">
+        <div class="guild-blob"></div>
+        <h3 class="guild-title">Join The Guild</h3>
+        <p class="guild-desc">
+          Become a verified agent. Access private channels, workshop tools, and contribute to the core repo.
+        </p>
+        <button class="guild-btn" routerLink="/register">INITIATE_SIGNUP</button>
+      </div>
+      
+      <!-- Activity Box -->
+      <div class="activity-box">
+        <div class="activity-header">
+          <h4 class="activity-title">Recent_Activity</h4>
+          <div class="activity-dot"></div>
+        </div>
+        <ul class="activity-list">
+          <li class="activity-item" *ngFor="let activity of recentActivities">
+            <span class="activity-time">{{ activity.time | date:'HH:mm' }}</span>
+            <span *ngIf="activity.category === 'log'">
+              @{{ activity.author }} logged 
+              <a [routerLink]="['/logs', activity.slug]" style="color:var(--primary); font-weight:bold; text-decoration: none;">{{ activity.title | slice:0:15 }}{{activity.title.length > 15 ? '...' : ''}}</a>
+            </span>
+            <span *ngIf="activity.category === 'work'">
+              @{{ activity.author }} deployed 
+              <a [routerLink]="['/works', activity.slug]" style="color:var(--accent-orange); font-weight:bold; text-decoration: none;">{{ activity.title | slice:0:15 }}{{activity.title.length > 15 ? '...' : ''}}</a>
+            </span>
+          </li>
+          <li class="activity-item" *ngIf="recentActivities.length === 0">
+            <span class="activity-time">XX:XX</span>
+            <span>No recent activity detected.</span>
+          </li>
+        </ul>
+      </div>
+      
+      <!-- Sponsored Box -->
+      <div class="sponsored-box">
+        <span class="sponsored-label">SPONSORED_TRANSMISSION</span>
+        <div class="sponsored-banner">
+          <p class="sponsored-banner-text">Mechanical<br/>Keyboards</p>
+        </div>
+        <p class="sponsored-desc">Upgrade your input terminal today.</p>
+      </div>
+    </aside>
   </div>
-
-  <!-- RIGHT COLUMN -->
-  <div class="home-right-col">
-    <!-- Diag Card -->
-    <div class="diag-card shadow-sketch">
-      <div class="tape-strip" style="top:-15px; left:10%; transform:rotate(-2deg);"></div>
-      <h5 class="diag-title">Sys_Diagnostics</h5>
-      <div class="diag-main-val">
-        {{ cpuGhz() | number:'1.1-1' }} <span class="diag-unit">GHZ</span>
-      </div>
-      <div class="diag-list">
-        <div class="diag-item diag-item-border"><span>TEMP:</span><span class="diag-val">{{ tempCelsius() | number:'1.1-1' }}°C</span></div>
-        <div class="diag-item diag-item-border"><span>UPTIME:</span><span class="diag-val">{{ uptime() }}</span></div>
-        <div class="diag-item"><span>PACKET:</span><span class="diag-nominal">NOMINAL</span></div>
-      </div>
-    </div>
-
-    <!-- Feed Card (Terminal Mode) -->
-    <div class="terminal-feed-card shadow-sketch">
-      <div class="terminal-feed-header">
-        <div class="terminal-feed-dots">
-          <span style="background-color: #ef4444;"></span>
-          <span style="background-color: #f59e0b;"></span>
-          <span style="background-color: #10b981;"></span>
-        </div>
-        <span class="terminal-feed-title">system ~ zsh</span>
-      </div>
-      <div class="terminal-feed-body logs-scroll">
-        <div class="terminal-feed-item fade-in-sequence delay-1">
-          <span class="terminal-prompt">&gt;</span>
-          <span class="terminal-time">[14:02]</span>
-          <span class="terminal-command">REFACTOR</span>
-          <p class="terminal-text">Optimized node traversal logic in core module.</p>
-        </div>
-        <div class="terminal-feed-item fade-in-sequence delay-2">
-          <span class="terminal-prompt">&gt;</span>
-          <span class="terminal-time">[12:15]</span>
-          <span class="terminal-command">ACCESS</span>
-          <p class="terminal-text">Project files 'Neural_Dashboard' accessed by user.</p>
-        </div>
-        <div class="terminal-feed-item fade-in-sequence delay-3">
-          <span class="terminal-prompt">&gt;</span>
-          <span class="terminal-time">[09:30]</span>
-          <span class="terminal-command">BOOT</span>
-          <p class="terminal-text">Workbench initialized successfully.</p>
-        </div>
-        <div class="terminal-feed-item fade-in-sequence delay-4">
-          <span class="terminal-prompt">&gt;</span>
-          <span class="terminal-cursor"></span>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
 </main>
+
+
