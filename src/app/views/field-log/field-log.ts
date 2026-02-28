@@ -21,6 +21,10 @@ import { FFlowModule } from '@foblex/flow';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class FieldLog implements OnInit, OnDestroy {
+  // Gallery Lightbox
+  lightboxImage: string | null = null;
+  openLightbox(src: string) { this.lightboxImage = src; }
+  closeLightbox() { this.lightboxImage = null; }
   private contentService = inject(ContentService);
   private seoService = inject(SeoService);
   private route = inject(ActivatedRoute);

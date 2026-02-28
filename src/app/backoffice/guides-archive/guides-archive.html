@@ -1,0 +1,54 @@
+<div class="archive-container">
+  <div class="archive-header">
+    <div>
+      <h1 class="archive-title">Guides_Archive</h1>
+      <p class="archive-subtitle">Manage technical documentation, guides, and tutorials.</p>
+    </div>
+    
+    <a routerLink="/admin/editor" [queryParams]="{category: 'guide'}" class="btn-create-log">
+      <span class="material-symbols-outlined text-[16px]">add</span> Create New Guide
+    </a>
+  </div>
+
+  <div class="archive-box-outer">
+    <div class="archive-box-inner">
+      
+      <div *ngIf="isLoading" class="archive-empty-state" style="opacity: 0.7;">
+        <span class="material-symbols-outlined archive-empty-icon" style="animation: pulse 2s infinite;">sync</span>
+        <h3 class="archive-empty-title">Accessing Secure Guides...</h3>
+        <p class="archive-empty-text">Retrieving filed guides. Please stand by.</p>
+      </div>
+
+      <div *ngIf="!isLoading && guides.length === 0" class="archive-empty-state">
+        <span class="material-symbols-outlined archive-empty-icon">article</span>
+        <h3 class="archive-empty-title">No guides found</h3>
+        <p class="archive-empty-text">Create a new field guide to populate the archive.</p>
+      </div>
+
+      <div *ngIf="guides.length > 0" class="logs-list">
+        <!-- Item -->
+        <div *ngFor="let guide of guides" class="log-item group">
+          <div class="log-info-group">
+            <div class="log-badge">GUIDE</div>
+            <div>
+              <h3 class="log-title" [routerLink]="['/admin/editor', guide.slug || guide.id]">{{ guide.title || 'Untitled Guide' }}</h3>
+              <p class="log-meta">Created: {{ guide.createdAt | date:'shortDate' }} | ID: {{ guide.id }}</p>
+              <div *ngIf="guide.tags && guide.tags.length > 0" class="log-tags-list">
+                <span *ngFor="let tag of guide.tags" class="log-tag">{{ tag }}</span>
+              </div>
+            </div>
+          </div>
+          <div class="log-actions">
+            <button class="btn-action-icon" [routerLink]="['/admin/editor', guide.slug || guide.id]" title="Edit">
+              <span class="material-symbols-outlined text-[16px]">edit</span>
+            </button>
+            <button (click)="deleteGuide(guide.id)" class="btn-action-icon btn-action-icon-delete" title="Delete">
+              <span class="material-symbols-outlined text-[16px]">delete</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>

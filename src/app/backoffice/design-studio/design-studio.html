@@ -3,25 +3,11 @@
   <div class="ds-header">
     <div>
       <h1 class="ds-title">Design_Studio</h1>
-      <p class="ds-subtitle">CREATE STICKERS & DIAGRAM NODES // MINI_FIGMA_PROTOCOL</p>
+      <p class="ds-subtitle">CREATE DIAGRAM NODES // MINI_FIGMA_PROTOCOL</p>
     </div>
   </div>
 
-  <!-- === MODE TOGGLE === -->
-  <div class="ds-mode-toggle">
-    <button (click)="setMode('sticker')"
-      [class]="mode() === 'sticker' ? 'btn-mode-active' : 'btn-mode-inactive'"
-      class="btn-mode">
-      <span class="material-symbols-outlined btn-mode-icon">sticky_note_2</span>
-      Sticker
-    </button>
-    <button (click)="setMode('node')"
-      [class]="mode() === 'node' ? 'btn-mode-active' : 'btn-mode-inactive btn-mode-border-l'"
-      class="btn-mode">
-      <span class="material-symbols-outlined btn-mode-icon">account_tree</span>
-      Diagram Node
-    </button>
-  </div>
+
 
   <div class="ds-grid">
     <!-- ==================== -->
@@ -34,51 +20,20 @@
         <!-- Header Bar -->
         <div class="ds-panel-header">
           <div class="ds-panel-title-group">
-            <span class="material-symbols-outlined ds-panel-title-icon">{{ mode() === 'sticker' ? 'sticky_note_2' : 'account_tree' }}</span>
+            <span class="material-symbols-outlined ds-panel-title-icon">account_tree</span>
             <h2 class="ds-panel-title">
-              {{ mode() === 'sticker' ? 'Sticker_Workbench' : 'Node_Workbench' }}
+              Node_Workbench
             </h2>
           </div>
           <span class="ds-panel-badge">LIVE_PREVIEW</span>
         </div>
 
-        <!-- =============================== -->
-        <!-- STICKER MODE EDITOR             -->
-        <!-- =============================== -->
-        <div *ngIf="mode() === 'sticker'" class="ds-editor-content">
-          <div class="ds-form-group">
-            <label class="ds-label">Sticker Name</label>
-            <input [(ngModel)]="editingWidget().name" class="ds-input" placeholder="e.g. Draft Tag" type="text" />
-          </div>
 
-          <div class="ds-form-group">
-            <label class="ds-label">HTML / CSS Content</label>
-            <textarea [(ngModel)]="editingWidget().html_content" class="ds-textarea" rows="8" placeholder='<div style="...">Your Sticker</div>'></textarea>
-          </div>
-
-          <!-- Sticker Live Preview -->
-          <div class="ds-form-group">
-            <label class="ds-label">Preview</label>
-            <div class="ds-preview-box">
-              <div [innerHTML]="getSafeHtml(editingWidget().html_content)"></div>
-            </div>
-          </div>
-
-          <div class="ds-actions">
-            <button (click)="saveSticker()" [disabled]="isSaving()" class="btn-save">
-              <span class="material-symbols-outlined" style="font-size: 18px;">save</span>
-              {{ isSaving() ? 'Saving...' : 'Save Sticker' }}
-            </button>
-            <button (click)="createNewSticker()" class="btn-reset">
-              Reset
-            </button>
-          </div>
-        </div>
 
         <!-- =============================== -->
         <!-- NODE MODE EDITOR                -->
         <!-- =============================== -->
-        <div *ngIf="mode() === 'node'" class="ds-editor-content">
+        <div class="ds-editor-content">
           <!-- Node Name -->
           <div class="ds-form-group">
             <label class="ds-label">Node Name / Label</label>
@@ -219,36 +174,15 @@
       <div class="ds-panel-box ds-panel-box-right">
         <div class="ds-panel-header">
           <h3 class="ds-panel-subtitle">
-            {{ mode() === 'sticker' ? 'Saved Stickers' : 'Saved Nodes' }}
+            Saved Nodes
           </h3>
           <span class="ds-panel-meta">
-            {{ mode() === 'sticker' ? widgets().length : nodes().length }} ITEMS
+            {{ nodes().length }} ITEMS
           </span>
         </div>
 
-        <!-- STICKER LIST -->
-        <div *ngIf="mode() === 'sticker'" class="ds-list-container">
-          <div *ngIf="widgets().length === 0" class="ds-list-empty">
-            NO_STICKERS_FOUND
-          </div>
-          <div *ngFor="let w of widgets()" class="ds-list-item group">
-            <div class="ds-list-item-header">
-              <span class="ds-list-item-title">{{ w.name }}</span>
-              <div class="ds-list-item-actions">
-                <button (click)="editSticker(w)" class="btn-list-action btn-list-action-edit">
-                  <span class="material-symbols-outlined" style="font-size: 16px;">edit</span>
-                </button>
-                <button (click)="deleteSticker(w.id!)" class="btn-list-action btn-list-action-delete">
-                  <span class="material-symbols-outlined" style="font-size: 16px;">delete</span>
-                </button>
-              </div>
-            </div>
-            <div class="ds-sticker-preview-sm" [innerHTML]="getSafeHtml(w.html_content)"></div>
-          </div>
-        </div>
-
         <!-- NODE LIST -->
-        <div *ngIf="mode() === 'node'" class="ds-list-container">
+        <div class="ds-list-container">
           <div *ngIf="nodes().length === 0" class="ds-list-empty">
             NO_NODES_FOUND
           </div>

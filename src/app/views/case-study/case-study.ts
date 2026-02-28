@@ -22,6 +22,10 @@ import { PdfService } from '../../services/pdf.service';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CaseStudy implements OnInit, OnDestroy {
+  // Gallery Lightbox
+  lightboxImage: string | null = null;
+  openLightbox(src: string) { this.lightboxImage = src; }
+  closeLightbox() { this.lightboxImage = null; }
   private contentService = inject(ContentService);
   private seoService = inject(SeoService);
   private route = inject(ActivatedRoute);

@@ -1,6 +1,7 @@
 {
     "NAV": {
         "HOME": "HOME_HUB",
+        "FEED": "FEED_GALLERY",
         "WORKS": "WORKS_DATABASE",
         "LOGS": "FIELD_LOGS",
         "GUIDES": "FIELD_GUIDES",
@@ -11,5 +12,26 @@
         "LANGUAGE": "IDIOMA",
         "SELECT_EN": "ENGLISH",
         "SELECT_ES": "ESPAÑOL"
+    },
+    "MANIFESTO": {
+        "TAB_TITLE": "CORE_MANIFESTO",
+        "TITLE": "MANIFIESTO",
+        "META_VERSION": "// VERSION: 1.0.0",
+        "META_STATUS": "// STATUS: ACTIVE",
+        "META_AUTHOR": "// AUTHOR: ARBE",
+        "R1_NUM": "01",
+        "R1_TITLE": "KNOWLEDGE IS OPEN SOURCE",
+        "R1_BODY": "En un mundo digital cerrado, compartir conocimiento es un acto de rebeldía. Documentar, enseñar y abrir los procesos creativos y técnicos es nuestra responsabilidad principal. El conocimiento retenido muere; el conocimiento compartido evoluciona.",
+        "R2_NUM": "02",
+        "R2_TITLE": "THE HUMAN IN THE LOOP",
+        "R2_BODY": "La IA es una herramienta, no un reemplazo. Depender exclusivamente de la inteligencia artificial para programar conduce al estancamiento cognitivo. Escribimos código, rompemos cosas, y aprendemos del fallo. Usamos la computación para acelerar, no para dejar de pensar.",
+        "R3_NUM": "03",
+        "R3_TITLE": "PERPETUAL ITERATION",
+        "R3_BODY": "El software nunca está \"terminado\". Rechazamos el conformismo. Seguir avanzando significa refactorizar, experimentar con nuevos lenguajes, y empujar los límites de lo que construimos ayer. El confort es el enemigo del progreso.",
+        "R4_NUM": "04",
+        "R4_TITLE": "CREATE TO TEACH",
+        "R4_BODY": "La mejor forma de solidificar una habilidad es explicársela a alguien más. Cada log, cada guía y cada línea de código documentada aquí existe bajo la premisa de que alguien, en algún lugar, puede usarla para construir algo mejor.",
+        "FOOTER_SYSTEM": ">_ SYSTEM: ACKNOWLEDGE AND PROCEED",
+        "BTN_ENTER": "ENTER_THE_GRID"
     }
 }

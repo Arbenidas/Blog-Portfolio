@@ -194,10 +194,25 @@
             <p class="block-p-text">{{ block.content }}</p>
           </div>
 
-          <div *ngIf="block.type === 'image'" class="block-image-container">
+          <div *ngIf="block.type === 'image'" class="block-image-container clearfix">
             <div class="block-image-box">
               <div class="block-image-label">FIG.{{ i }} : ARCHIVE_IMG</div>
-              <img [src]="block.content" class="block-image-img">
+              <div [ngClass]="['img-size-' + (block.data?.size || 'full'), 'img-align-' + (block.data?.align || 'center')]">
+                <img [src]="block.content" class="block-image-img riso-print" loading="lazy">
+              </div>
+            </div>
+            <p *ngIf="block.data?.text" class="block-p-text" style="white-space: pre-wrap;">{{ block.data.text }}</p>
+          </div>
+
+          <div *ngIf="block.type === 'gallery' && block.data?.images?.length" style="margin: 2rem 0;">
+            <div style="font-family: var(--font-mono); font-size: 0.7rem; font-weight: bold; color: #6b7280; text-transform: uppercase; margin-bottom: 0.75rem;">
+              <span class="material-symbols-outlined" style="font-size: 14px; vertical-align: text-bottom;">auto_awesome_mosaic</span>
+              GALLERY — {{ block.data.images.length }} ITEMS
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 0.75rem;">
+              <div *ngFor="let img of block.data.images" style="border: 2px solid var(--charcoal); box-shadow: 4px 4px 0 var(--charcoal); overflow: hidden; cursor: pointer;" (click)="openLightbox(img)">
+                <img [src]="img" loading="lazy" alt="Gallery item" style="width: 100%; height: 100%; object-fit: cover; display: block; aspect-ratio: 4/3;" />
+              </div>
             </div>
           </div>
 
@@ -205,9 +220,9 @@
             <div class="block-video-box">
               <div class="block-image-label">FIG.{{ i }} : ARCHIVE_VID</div>
               <!-- YouTube embed -->
-              <div *ngIf="isYoutubeUrl(block.content)" class="block-video-embed">
-                <iframe [src]="getSafeVideoUrl(block.content)" style="width: 100%; height: 100%;" frameborder="0" allowfullscreen allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"></iframe>
-              </div>
+                <div *ngIf="isYoutubeUrl(block.content)" class="block-video-embed">
+                  <iframe [src]="getSafeVideoUrl(block.content)" style="width:100%;height:100%;" frameborder="0" allowfullscreen allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture" loading="lazy"></iframe>
+                </div>
               <!-- Direct video -->
               <div *ngIf="!isYoutubeUrl(block.content)">
                 <video [src]="block.content" controls class="block-video-direct"></video>
@@ -324,12 +339,13 @@
       <div class="cs-footer-wrap">
         <footer class="log-footer">
           <div class="author-info">
-            <div class="author-avatar">
-              <span class="material-symbols-outlined author-icon">person</span>
+            <div class="author-avatar" style="overflow: hidden; border-radius: 50%;">
+              <img *ngIf="work.author?.avatar_url" [src]="work.author?.avatar_url" style="width:100%; height:100%; object-fit:cover;">
+              <span *ngIf="!work.author?.avatar_url" class="material-symbols-outlined author-icon">person</span>
             </div>
-            <div>
+            <div style="display: flex; flex-direction: column;">
               <span class="author-label">LOGGED_BY</span>
-              <span class="author-name">ADMIN</span>
+              <a [routerLink]="['/u', work.author?.username]" class="author-name" style="text-decoration:none;">@{{work.author?.username || 'ADMIN'}}</a>
             </div>
           </div>
           
@@ -498,4 +514,13 @@
     <h2 class="not-found-title">WORK NOT FOUND</h2>
     <a routerLink="/works" class="not-found-link">Return to Database</a>
   </div>
+
+<!-- Gallery Lightbox -->
+<div *ngIf="lightboxImage" class="gallery-lightbox" (click)="closeLightbox()">
+  <button class="lightbox-close" (click)="closeLightbox()">
+    <span class="material-symbols-outlined">close</span>
+  </button>
+  <img [src]="lightboxImage" alt="Full size preview" class="lightbox-img" (click)="$event.stopPropagation()" />
+</div>
+
 </main>

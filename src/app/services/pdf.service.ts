@@ -19,14 +19,31 @@ export class PdfService {
 
         try {
             // Dynamically import html2canvas to avoid SSR issues
-            const html2canvas = (await import('html2canvas')).default;
+            const html2canvasModule = await import('html2canvas');
+            const html2canvas = html2canvasModule.default || html2canvasModule;
+
+            if (typeof html2canvas !== 'function') {
+                throw new Error('html2canvas failed to resolve as a function.');
+            }
 
             // 1. Capture the element
+            // Save original scroll position
+            const originalScrollY = window.scrollY;
+            window.scrollTo(0, 0);
+
             const canvas = await html2canvas(element, {
                 scale: 2,
                 useCORS: true,
-                logging: false
+                logging: true, // Turn on logging to see where it breaks in console
+                scrollY: 0,
+                x: 0,
+                y: 0,
+                width: element.scrollWidth,
+                height: element.scrollHeight
             });
+
+            // Restore scroll position
+            window.scrollTo(0, originalScrollY);
 
             // 2. Calculate dimensions for A4 format (210 x 297 mm)
             const imgWidth = 210;

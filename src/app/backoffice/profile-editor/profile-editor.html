@@ -26,27 +26,6 @@
         <!-- LEFT COLUMN: Data Entry & Sticker Drawer -->
         <div class="profile-sidebar custom-scrollbar">
             
-            <!-- STICKERS DRAWER -->
-            <div class="drawer-box group">
-                <div class="drawer-overlay"></div>
-                <h3 class="drawer-header">
-                    <span>Available Stickers</span>
-                    <span class="drawer-badge">DRAG TO PREVIEW</span>
-                </h3>
-                
-                <div class="drawer-grid custom-scrollbar">
-                    <div *ngFor="let widget of availableWidgets()" 
-                         draggable="true" 
-                         (dragstart)="onDragStart($event, widget)"
-                         class="drawer-item">
-                         <div class="drawer-item-scale" [innerHTML]="getSafeHtml(widget.html_content)"></div>
-                         <div class="drawer-item-label">{{ widget.name }}</div>
-                    </div>
-                    <div *ngIf="availableWidgets().length === 0" class="drawer-empty-text">
-                        No custom widgets found. Create them in Sticker Creator.
-                    </div>
-                </div>
-            </div>
 
             <!-- PROFILE DATA FORM -->
             <div class="form-box">
@@ -280,10 +259,7 @@
                 </div>
                 
                 <!-- The Canvas -->
-                <div class="canvas-area custom-scrollbar"
-                     (dragover)="onDragOver($event)"
-                     (drop)="onDrop($event)">
-                    
+                <div class="canvas-area custom-scrollbar">
                     <!-- Inner Container simulating the exact Home screen width limits and scale -->
                     <div class="canvas-scaler">
                         
@@ -406,18 +382,6 @@
                                 </div>
                             </div>
                             
-                            <!-- RENDER DRAGGED STICKERS OVERLAY -->
-                            <div *ngFor="let w of profile().widgets; let i = index" 
-                                 class="tpl-widget-layer group"
-                                 title="Click to remove sticker"
-                                 (click)="removePlacedWidget(i)"
-                                 [style.left.px]="w.x" 
-                                 [style.top.px]="w.y">
-                                 <div [innerHTML]="getWidgetHtml(w.widgetId)" class="tpl-widget-inner"></div>
-                                 <div class="btn-remove-widget">
-                                     <span class="material-symbols-outlined text-[10px]">close</span>
-                                 </div>
-                            </div>
                         </div>
 
                     </div>

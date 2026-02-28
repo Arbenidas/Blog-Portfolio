@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterModule, Router } from '@angular/router';
 import { SupabaseService } from '../../services/supabase.service';
 import { ContentService, ProfileData } from '../../services/content.service';
+import { SeoService } from '../../services/seo.service';
 import { ChangeDetectorRef } from '@angular/core';
 
 @Component({
@@ -17,6 +18,7 @@ export class UserProfile implements OnInit {
   private router = inject(Router);
   private supabaseService = inject(SupabaseService);
   private contentService = inject(ContentService);
+  private seoService = inject(SeoService);
   private cdr = inject(ChangeDetectorRef);
 
   username = signal<string | null>(null);
@@ -83,6 +85,14 @@ export class UserProfile implements OnInit {
       } else {
         this.profileData.set(data);
         this.checkOwnership(this.supabaseService.currentUserVal);
+
+        // Update SEO Meta Tags
+        this.seoService.updateMetaTags({
+          title: data.name || data.username || 'User Profile',
+          description: (data as any).bio || `View ${data.username}'s portfolio and logs on arbes.blog.`,
+          image: data.avatar_url || undefined,
+          type: 'profile'
+        });
 
         // Fetch user's documents
         if (data && (data as any).id) {

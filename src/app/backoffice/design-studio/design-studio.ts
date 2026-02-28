@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { ContentService, CustomWidget, DiagramNodeConfig } from '../../services/content.service';
 
-type StudioMode = 'sticker' | 'node';
+
 
 interface ShapeOption { id: string; label: string; icon: string; }
 interface ColorOption { id: string; label: string; preview: string; tailwind: string; }
@@ -21,22 +21,11 @@ interface FontOption { id: string; label: string; family: string; }
 })
 export class DesignStudio implements OnInit {
   private contentService = inject(ContentService);
-  private sanitizer = inject(DomSanitizer);
-
-  // Mode toggle: sticker vs node
-  mode = signal<StudioMode>('sticker');
 
   // Saved items lists
-  widgets = signal<CustomWidget[]>([]);
   nodes = signal<DiagramNodeConfig[]>([]);
 
   isSaving = signal(false);
-
-  // === STICKER MODE STATE ===
-  editingWidget = signal<CustomWidget>({
-    name: 'New Sticker',
-    html_content: '<div style="padding: 10px; background: yellow; border: 2px solid black; font-weight: bold;">DRAFT</div>'
-  });
 
   // === NODE MODE STATE ===
   nodeName = '';
@@ -127,57 +116,8 @@ export class DesignStudio implements OnInit {
   }
 
   async loadAll() {
-    const [w, n] = await Promise.all([
-      this.contentService.getCustomWidgets(),
-      this.contentService.getDiagramNodes()
-    ]);
-    this.widgets.set(w);
-    this.nodes.set(n);
-  }
-
-  setMode(m: StudioMode) {
-    this.mode.set(m);
-  }
-
-  // ====== STICKER METHODS ====== //
-  getSafeHtml(html: string): SafeHtml {
-    return this.sanitizer.bypassSecurityTrustHtml(html);
-  }
-
-  createNewSticker() {
-    this.editingWidget.set({
-      name: 'New Sticker',
-      html_content: '<div style="padding: 10px; background: yellow; border: 2px solid black; font-weight: bold;">DRAFT</div>'
-    });
-  }
-
-  editSticker(widget: CustomWidget) {
-    this.editingWidget.set({ ...widget });
-  }
-
-  async saveSticker() {
-    const current = this.editingWidget();
-    if (!current.name || !current.html_content) return;
-
-    this.isSaving.set(true);
-    try {
-      await this.contentService.saveCustomWidget(current);
-      await this.loadAll();
-      this.createNewSticker();
-    } catch (e) {
-      console.error(e);
-    } finally {
-      this.isSaving.set(false);
-    }
-  }
-
-  async deleteSticker(id: string) {
-    if (!confirm('Delete this sticker?')) return;
-    try {
-      await this.contentService.deleteCustomWidget(id);
-      await this.loadAll();
-      if (this.editingWidget().id === id) this.createNewSticker();
-    } catch (e) { console.error(e); }
+    const ns = await this.contentService.getDiagramNodes();
+    this.nodes.set(ns);
   }
 
   // ====== NODE METHODS ====== //

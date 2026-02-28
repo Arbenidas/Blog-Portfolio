@@ -1,0 +1,265 @@
+<main class="feed-main-container">
+    <!-- Header Section -->
+    <div class="feed-header">
+        <div class="feed-header-left">
+            <div class="feed-title-wrapper">
+                <span class="material-symbols-outlined icon-large">dynamic_feed</span>
+                <h1 class="feed-title">
+                    Community<br/>
+                    <span class="text-primary transparent-stroke">Feed_Gallery</span>
+                </h1>
+            </div>
+            <div class="feed-status-line">
+                <span>// SYNCING_DATABASES...</span>
+                <span *ngIf="!isLoading()">// PUBLIC_ACCESS_GRANTED</span>
+                <span *ngIf="isLoading()" class="status-pulse">// READING_TAPE...</span>
+            </div>
+        </div>
+        <div class="feed-header-right">
+            <div class="search-box">
+                <span class="material-symbols-outlined text-charcoal">search</span>
+                <input type="text" placeholder="QUERY_DATABASE..." class="search-input">
+            </div>
+            <button class="btn-upload">
+                + Upload_Entry
+            </button>
+        </div>
+    </div>
+
+    <!-- Layout Grid -->
+    <div class="feed-layout-grid">
+        <!-- Sidebar -->
+        <div class="feed-sidebar">
+            
+            <!-- Filters -->
+            <div class="filter-box">
+                <div class="filter-header">
+                    <span>SECTOR_FILTERS</span>
+                    <span class="material-symbols-outlined text-sm">filter_list</span>
+                </div>
+                <div class="filter-content">
+                    <label class="filter-item">
+                        <input type="checkbox" [checked]="isFilterActive('all')" class="filter-checkbox filter-all" (change)="toggleFilter('all')">
+                        <span class="filter-label" [class.active-all]="isFilterActive('all')">ALL_SECTORS</span>
+                    </label>
+                    
+                    <div class="filter-divider"></div>
+                    
+                    <label class="filter-item">
+                        <input type="checkbox" [checked]="isFilterActive('guide') && !isFilterActive('all')" class="hidden" (change)="toggleFilter('guide')">
+                        <span class="filter-indicator indicator-guide" [class.indicator-active]="isFilterActive('guide') && !isFilterActive('all')"></span>
+                        <span class="filter-label" [class.active-label]="isFilterActive('guide') && !isFilterActive('all')">GUIDES (Manuals)</span>
+                    </label>
+                    <label class="filter-item">
+                        <input type="checkbox" [checked]="isFilterActive('log') && !isFilterActive('all')" class="hidden" (change)="toggleFilter('log')">
+                        <span class="filter-indicator indicator-log" [class.indicator-active]="isFilterActive('log') && !isFilterActive('all')"></span>
+                        <span class="filter-label" [class.active-label]="isFilterActive('log') && !isFilterActive('all')">LOGS (Field Notes)</span>
+                    </label>
+                    <label class="filter-item">
+                        <input type="checkbox" [checked]="isFilterActive('work') && !isFilterActive('all')" class="hidden" (change)="toggleFilter('work')">
+                        <span class="filter-indicator indicator-work" [class.indicator-active]="isFilterActive('work') && !isFilterActive('all')"></span>
+                        <span class="filter-label" [class.active-label]="isFilterActive('work') && !isFilterActive('all')">WORKS (Projects)</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Tags Placeholder -->
+            <div class="tag-box">
+                <div class="tag-header">
+                    <span>TAG_STACK</span>
+                    <span class="material-symbols-outlined text-sm">label</span>
+                </div>
+                <div class="tag-list" *ngIf="availableTags().length > 0">
+                    <span *ngFor="let tag of availableTags()" 
+                          class="tag-item pointer"
+                          [class.tag-active]="isTagActive(tag)"
+                          (click)="toggleTagFilter(tag)">
+                        #{{tag | uppercase}}
+                    </span>
+                </div>
+                <!-- Empty state for tags while loading -->
+                <div class="tag-list" *ngIf="availableTags().length === 0">
+                    <span class="tag-item" style="opacity: 0.5;">LOADING_TAGS...</span>
+                </div>
+            </div>
+
+            <!-- Top Contributors -->
+            <div class="contributors-box">
+                <div class="contributors-bg-grid"></div>
+                <div class="contributors-header">
+                    TOP_CONTRIBUTORS
+                </div>
+                <div class="contributors-list">
+                    <div *ngFor="let user of topContributors()" class="contributor-item" [ngClass]="user.is_top ? 'item-top' : 'item-regular'">
+                        <div class="contributor-badge" [ngClass]="user.is_top ? 'badge-top' : 'badge-regular'">
+                            {{user.badge}}
+                        </div>
+                        <div class="contributor-info">
+                            <a [routerLink]="['/u', user.username]" class="contributor-name">{{user.username || 'System_User'}}</a>
+                            <div class="contributor-score">SCORE: {{user.total_score | number}}</div>
+                        </div>
+                        <span *ngIf="user.is_top" class="material-symbols-outlined contributor-icon">military_tech</span>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+
+        <!-- Main Feed Masonry -->
+        <div class="feed-main-content">
+            
+            <div class="loading-spinner-container" *ngIf="isLoading() && documents().length === 0">
+                <span class="material-symbols-outlined spinner-icon">autorenew</span>
+            </div>
+            
+            <div class="masonry-grid" *ngIf="documents().length > 0">
+                <div *ngFor="let doc of documents()" class="masonry-item">
+                    
+                    <!-- WORK CARD -->
+                    <div *ngIf="doc.category === 'work'" class="card-work">
+                        <div class="folder-tab card-work-tab"></div>
+                        <div class="card-work-inner">
+                            
+                            <!-- Verified Stamp -->
+                            <div *ngIf="doc.status === 'published'" class="stamp-container">
+                                <div class="stamp-validate">
+                                    VERIFIED
+                                </div>
+                            </div>
+                            
+                            <a [routerLink]="['/works', doc.slug]" class="card-work-image-container">
+                                <div class="card-work-halftone"></div>
+                                <img *ngIf="doc.coverPhoto" [src]="doc.coverPhoto" alt="Cover" class="card-cover-photo" loading="lazy">
+                                <div *ngIf="!doc.coverPhoto" class="card-work-no-image">
+                                    <span class="material-symbols-outlined icon-xl">image</span>
+                                </div>
+                                <div class="card-work-filename">
+                                    {{doc.slug | slice:0:15}}.DAT
+                                </div>
+                            </a>
+                            
+                            <div class="card-work-content">
+                                <div class="card-work-header">
+                                    <h3 class="card-work-title" [routerLink]="['/works', doc.slug]">{{doc.title}}</h3>
+                                    <span class="badge-work">WORK</span>
+                                </div>
+                                
+                                <p class="card-work-excerpt line-clamp-3">
+                                    {{getExcerpt(doc)}}
+                                </p>
+                                
+                                <div class="card-work-tags">
+                                    <span *ngFor="let tag of doc.tags | slice:0:3" class="doc-tag">#{{tag}}</span>
+                                </div>
+                                
+                                <div class="card-work-footer">
+                                    <div class="card-work-actions">
+                                        <button class="action-btn">
+                                            <span class="material-symbols-outlined icon-sm">thumb_up</span>
+                                            <span class="action-count">{{doc.upvoteCount || 0}}</span>
+                                        </button>
+                                        <a [routerLink]="['/u', doc.author?.username]" class="author-link">@{{doc.author?.username || 'admin'}}</a>
+                                    </div>
+                                    <div class="reply-threads">
+                                        REPLY_THREADS: {{doc.commentCount || 0}}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- LOG CARD -->
+                    <div *ngIf="doc.category === 'log'" class="card-log">
+                        <div class="tape-strip"></div>
+                        <div class="paper-slip card-log-inner" [routerLink]="['/logs', doc.slug]">
+                            <div class="card-log-header">
+                                <span class="card-log-title">{{doc.title}}</span>
+                                <span class="badge-log">LOG</span>
+                            </div>
+                            
+                            <p class="card-log-excerpt line-clamp-3">
+                                {{getExcerpt(doc)}}
+                            </p>
+                            
+                            <div class="card-log-author">
+                                <div class="author-avatar">
+                                    <img *ngIf="doc.author?.avatar_url" [src]="doc.author?.avatar_url" class="avatar-img">
+                                    <svg *ngIf="!doc.author?.avatar_url" class="avatar-placeholder" fill="currentColor" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"></path></svg>
+                                </div>
+                                <span class="author-name" (click)="$event.stopPropagation()" [routerLink]="['/u', doc.author?.username]">@{{doc.author?.username || 'admin'}}</span>
+                                <span class="log-date">{{doc.createdAt | date:'MMM dd'}}</span>
+                            </div>
+                            
+                            <div class="card-log-footer">
+                                <div class="log-actions">
+                                    <span class="stamp-mini stamp-validate">VALIDATE ({{doc.upvoteCount || 0}})</span>
+                                    <span *ngIf="doc.status !== 'published'" class="stamp-mini stamp-encrypt">ENCRYPTED</span>
+                                </div>
+                                <span class="log-replies">REPLIES[{{doc.commentCount || 0}}]</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- GUIDE CARD -->
+                    <div *ngIf="doc.category === 'guide'" class="card-guide bg-blueprint" [routerLink]="['/guides', doc.slug]">
+                        <div class="card-guide-inner">
+                            <div class="guide-bg-pattern"></div>
+                            
+                            <div class="card-guide-header">
+                                <h3 class="card-guide-title">
+                                    &gt; {{doc.title}}
+                                </h3>
+                                <span class="badge-guide">GUIDE</span>
+                            </div>
+                            
+                            <div class="card-guide-content box-borders">
+                                <div class="guide-meta">
+                                    <span class="guide-author" (click)="$event.stopPropagation()" [routerLink]="['/u', doc.author?.username]" style="cursor: pointer; text-decoration: underline;">AUTHOR: @{{doc.author?.username || 'SYSTEM'}}</span>
+                                    <span>[{{doc.createdAt | date:'yy.MM.dd'}}]</span>
+                                </div>
+                                <div class="guide-excerpt">
+                                    {{getExcerpt(doc)}}
+                                </div>
+                            </div>
+                            
+                            <div class="card-guide-footer">
+                                <div class="guide-actions">
+                                    <button class="guide-btn" (click)="$event.stopPropagation()">
+                                        <span class="material-symbols-outlined icon-sm">chat</span>
+                                        COMMENTS: {{doc.commentCount || 0}}
+                                    </button>
+                                </div>
+                                <div class="guide-upvotes">
+                                    <span class="material-symbols-outlined icon-sm action-icon" (click)="$event.stopPropagation()">thumb_up</span>
+                                    <span class="action-count">{{doc.upvoteCount || 0}}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div *ngIf="documents().length === 0 && !isLoading()" class="empty-state">
+                <span class="material-symbols-outlined icon-xl text-muted">search_off</span>
+                <p class="empty-title">NO_RECORDS_FOUND</p>
+                <p class="empty-subtitle">Adjust your sector filters or try a different query.</p>
+            </div>
+
+            <!-- Load More -->
+            <div class="load-more-container" *ngIf="hasMore() && documents().length > 0">
+                <button class="btn-load-more" (click)="loadMore()" [disabled]="isLoadingMore()">
+                    <span>{{ isLoadingMore() ? 'SYNCING...' : 'Load_Next_Batch' }}</span>
+                    <span class="material-symbols-outlined icon-spin" [class.spinning]="isLoadingMore()">autorenew</span>
+                </button>
+            </div>
+            
+            <div class="end-transmission" *ngIf="!hasMore() && documents().length > 0">
+                <div class="end-text">
+                    // END_OF_TRANSMISSION //
+                </div>
+            </div>
+
+        </div>
+    </div>
+</main>

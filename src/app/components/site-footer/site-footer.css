@@ -2,15 +2,23 @@
 .hub-footer {
     width: 100%;
     background-color: var(--charcoal);
+    background-image: none !important;
+    /* Force remove any inherited grids from global body/bg wraps */
     color: var(--paper-cream);
     padding: 2rem 1.5rem;
     border-top: 1px solid var(--charcoal);
     margin-top: auto;
+    position: relative;
+    /* Ensure z-index bounds */
+    z-index: 10;
 }
 
 .footer-container {
     max-width: 1400px;
     margin: 0 auto;
+    position: relative;
+    z-index: 2;
+    /* Keep content above any global background layers */
 }
 
 .footer-grid {

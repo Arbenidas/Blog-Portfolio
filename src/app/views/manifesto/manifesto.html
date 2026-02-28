@@ -1,0 +1,53 @@
+<main class="manifesto-container page-transition">
+  <div class="manifesto-header">
+    <div class="stamp-bg">{{ 'MANIFESTO.TAB_TITLE' | translate }}</div>
+    <h1 class="manifesto-title">THE<br/><span class="highlight-text">{{ 'MANIFESTO.TITLE' | translate }}</span></h1>
+    <div class="manifesto-meta">
+      <span>{{ 'MANIFESTO.META_VERSION' | translate }}</span>
+      <span>{{ 'MANIFESTO.META_STATUS' | translate }}</span>
+      <span>{{ 'MANIFESTO.META_AUTHOR' | translate }}</span>
+    </div>
+  </div>
+
+  <section class="manifesto-body">
+    <div class="rule-block">
+      <div class="rule-number">{{ 'MANIFESTO.R1_NUM' | translate }}</div>
+      <div class="rule-content">
+        <h2>{{ 'MANIFESTO.R1_TITLE' | translate }}</h2>
+        <p>{{ 'MANIFESTO.R1_BODY' | translate }}</p>
+      </div>
+    </div>
+
+    <div class="rule-block">
+      <div class="rule-number">{{ 'MANIFESTO.R2_NUM' | translate }}</div>
+      <div class="rule-content">
+        <h2>{{ 'MANIFESTO.R2_TITLE' | translate }}</h2>
+        <p>{{ 'MANIFESTO.R2_BODY' | translate }}</p>
+      </div>
+    </div>
+
+    <div class="rule-block">
+      <div class="rule-number">{{ 'MANIFESTO.R3_NUM' | translate }}</div>
+      <div class="rule-content">
+        <h2>{{ 'MANIFESTO.R3_TITLE' | translate }}</h2>
+        <p>{{ 'MANIFESTO.R3_BODY' | translate }}</p>
+      </div>
+    </div>
+
+    <div class="rule-block">
+      <div class="rule-number">{{ 'MANIFESTO.R4_NUM' | translate }}</div>
+      <div class="rule-content">
+        <h2>{{ 'MANIFESTO.R4_TITLE' | translate }}</h2>
+        <p>{{ 'MANIFESTO.R4_BODY' | translate }}</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="manifesto-footer">
+    <p class="blink-text">{{ 'MANIFESTO.FOOTER_SYSTEM' | translate }}</p>
+    <a routerLink="/feed" class="btn-primary">
+      <span class="material-symbols-outlined">api</span>
+      {{ 'MANIFESTO.BTN_ENTER' | translate }}
+    </a>
+  </div>
+</main>

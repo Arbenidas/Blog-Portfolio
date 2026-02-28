@@ -8,16 +8,20 @@ import { FieldLog } from './views/field-log/field-log';
 import { FieldGuide } from './views/field-guide/field-guide';
 import { GuidesArchive } from './views/guides-archive/guides-archive';
 import { ContactTerminal } from './views/contact-terminal/contact-terminal';
+import { Feed } from './views/feed/feed';
+import { Manifesto } from './views/manifesto/manifesto';
 
 import { AdminLayout } from './backoffice/admin-layout/admin-layout';
 import { AdminDashboard } from './backoffice/admin-dashboard/admin-dashboard';
 import { BlockEditor } from './backoffice/block-editor/block-editor';
 import { WorksVaultAdmin } from './backoffice/works-vault/works-vault';
 import { LogsArchiveAdmin } from './backoffice/logs-archive/logs-archive';
+import { GuidesArchiveAdmin } from './backoffice/guides-archive/guides-archive';
 import { Login as AdminLogin } from './backoffice/login/login';
 import { AuthGuard } from './guards/auth.guard';
 import { DesignStudio } from './backoffice/design-studio/design-studio';
 import { ProfileEditor } from './backoffice/profile-editor/profile-editor';
+import { AuthorDashboard } from './backoffice/author-dashboard/author-dashboard';
 import { NotFound } from './views/not-found/not-found';
 
 import { Login as PublicLogin } from './views/auth/login/login';
@@ -30,6 +34,7 @@ export const routes: Routes = [
         component: PublicLayout,
         children: [
             { path: '', component: HomeView, data: { animation: 'Home' } },
+            { path: 'feed', component: Feed, data: { animation: 'Feed' } },
             { path: 'works', component: WorksDb, data: { animation: 'Works' } },
             { path: 'works/:slug', component: CaseStudy, data: { animation: 'CaseStudy' } },
             { path: 'logs', component: LogsArchive, data: { animation: 'Logs' } },
@@ -37,6 +42,7 @@ export const routes: Routes = [
             { path: 'guides', component: GuidesArchive, data: { animation: 'Guides' } },
             { path: 'guides/:slug', component: FieldGuide, data: { animation: 'FieldGuide' } },
             { path: 'contact', component: ContactTerminal, data: { animation: 'Contact' } },
+            { path: 'manifesto', component: Manifesto, data: { animation: 'Manifesto' } },
             // Public Auth Routes
             { path: 'login', component: PublicLogin, data: { animation: 'Login' } },
             { path: 'register', component: PublicRegister, data: { animation: 'Register' } },
@@ -53,10 +59,12 @@ export const routes: Routes = [
             { path: '', component: AdminDashboard },
             { path: 'works', component: WorksVaultAdmin },
             { path: 'logs', component: LogsArchiveAdmin },
+            { path: 'guides', component: GuidesArchiveAdmin },
             { path: 'editor', component: BlockEditor },
             { path: 'editor/:slug', component: BlockEditor },
             { path: 'profile', component: ProfileEditor },
             { path: 'design-studio', component: DesignStudio },
+            { path: 'author-hub', component: AuthorDashboard },
         ]
     },
     { path: '**', component: NotFound }

@@ -1,0 +1,87 @@
+<div class="dashboard-wrapper">
+  <div class="dashboard-header">
+    <h1 class="font-nixie">Author_Hub //</h1>
+    <p class="font-mono text-charcoal" style="opacity: 0.7;">Metrics & Engagement Overview</p>
+  </div>
+
+  <div *ngIf="isLoading" class="loading-state font-mono">
+    Fetching telemetry...
+  </div>
+
+  <ng-container *ngIf="!isLoading">
+    <!-- TOP METRICS GRID -->
+    <div class="metrics-grid">
+      
+      <!-- Content Volume -->
+      <div class="metric-card bg-white border-2 border-charcoal shadow-[4px_4px_0_#1a1a1a]">
+        <div class="metric-icon bg-accent-orange text-white">
+          <span class="material-symbols-outlined">library_books</span>
+        </div>
+        <div class="metric-info">
+          <span class="metric-value font-display text-charcoal">{{ publishedDocs.length }}</span>
+          <span class="metric-label font-mono">Total Docs</span>
+        </div>
+        <div class="metric-breakdown font-mono" style="font-size: 0.75rem; color: #666; margin-top: 0.5rem;">
+          {{ totalWorks }} Works / {{ totalLogs }} Logs / {{ totalGuides }} Guides
+        </div>
+      </div>
+
+      <!-- Engagement: Likes -->
+      <div class="metric-card bg-paper-cream border-2 border-charcoal shadow-[4px_4px_0_#1a1a1a]">
+        <div class="metric-icon bg-red-500 text-white">
+          <span class="material-symbols-outlined">favorite</span>
+        </div>
+        <div class="metric-info">
+          <span class="metric-value font-display text-charcoal">{{ totalLikes }}</span>
+          <span class="metric-label font-mono">Total Upvotes</span>
+        </div>
+      </div>
+
+      <!-- Engagement: Comments -->
+      <div class="metric-card bg-yellow-100 border-2 border-charcoal shadow-[4px_4px_0_#1a1a1a]">
+        <div class="metric-icon bg-teal-500 text-white">
+          <span class="material-symbols-outlined">forum</span>
+        </div>
+        <div class="metric-info">
+          <span class="metric-value font-display text-charcoal">{{ totalComments }}</span>
+          <span class="metric-label font-mono">Comments</span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- RECENT INTERACTIONS -->
+    <div class="interactions-panel mt-2rem">
+      <h2 class="font-mono" style="margin-bottom: 1rem; border-bottom: 2px solid #1a1a1a; padding-bottom: 0.5rem;">[ Recent Activity Log ]</h2>
+      
+      <div *ngIf="recentInteractions.length === 0" class="empty-state font-mono">
+        No recent interactions on your content.
+      </div>
+
+      <div class="interaction-list" *ngIf="recentInteractions.length > 0">
+        <div *ngFor="let item of recentInteractions" class="interaction-item border-2 border-charcoal bg-white">
+          <div class="interaction-icon" [ngClass]="item.type === 'like' ? 'bg-red-500' : 'bg-teal-500'">
+            <span class="material-symbols-outlined text-white" style="font-size: 1.2rem;">
+              {{ item.type === 'like' ? 'favorite' : 'chat_bubble' }}
+            </span>
+          </div>
+          <div class="interaction-content">
+            <div class="font-body" style="font-size: 0.9rem;">
+              <strong>User_{{ item.user_id.substring(0,6) }}</strong> 
+              {{ item.type === 'like' ? 'upvoted' : 'commented on' }} 
+              <span class="font-mono bg-paper-cream px-1 border-1 border-dashed">{{ getDocumentTitle(item.collectionId) }}</span>
+            </div>
+            
+            <div *ngIf="item.type === 'comment' && item.content" class="comment-preview font-hand">
+              "{{ item.content }}"
+            </div>
+
+            <div class="interaction-meta font-mono">
+              {{ item.created_at | date:'medium' }}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </ng-container>
+</div>

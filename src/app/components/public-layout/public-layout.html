@@ -7,20 +7,20 @@
       <div class="public-brand-logo">
         <img src="logo.png" alt="Arbe Logo" class="public-brand-img" />
       </div>
-      <h2 class="public-brand-text">arbe_Workshop_Rev</h2>
+      <h2 class="public-brand-text">arbes.blog</h2>
     </a>
 
     <div class="public-nav-right">
       <div class="public-nav-links">
         <a routerLink="/" routerLinkActive="active-link" [routerLinkActiveOptions]="{exact: true}" class="public-nav-link">{{ 'NAV.HOME' | translate }}</a>
         <span class="public-nav-separator">/</span>
+        <a routerLink="/feed" routerLinkActive="active-link" class="public-nav-link">{{ 'NAV.FEED' | translate }}</a>
+        <span class="public-nav-separator">/</span>
         <a routerLink="/works" routerLinkActive="active-link" class="public-nav-link">{{ 'NAV.WORKS' | translate }}</a>
         <span class="public-nav-separator">/</span>
         <a routerLink="/logs" routerLinkActive="active-link" class="public-nav-link">{{ 'NAV.LOGS' | translate }}</a>
         <span class="public-nav-separator">/</span>
         <a routerLink="/guides" routerLinkActive="active-link" class="public-nav-link">{{ 'NAV.GUIDES' | translate }}</a>
-        <span class="public-nav-separator">/</span>
-        <a routerLink="/contact" routerLinkActive="active-link" class="public-nav-link">{{ 'NAV.CONTACT' | translate }}</a>
       </div>
 
       <!-- Authentication Links -->
@@ -34,7 +34,17 @@
 
         <!-- Logged In State -->
         <ng-container *ngIf="currentUser | async as user">
-          <div class="user-menu">
+          
+          <a *ngIf="notifications.unreadCount() > 0" routerLink="/admin/author-hub" class="nav-alert-pill" style="display: flex; align-items: center; gap: 0.25rem; font-family: 'Space Mono', monospace; font-size: 0.75rem; background: var(--accent-orange); color: white; padding: 0.2rem 0.6rem; text-decoration: none; border: 1px dashed white;">
+             <span class="material-symbols-outlined" style="font-size: 14px;">warning</span>
+             [ {{ notifications.unreadCount() }} SYSTEM ALERT ]
+          </a>
+
+          <div class="user-menu" style="display: flex; gap: 1rem; align-items: center;">
+            <a routerLink="/admin/editor" class="nav-auth-btn" style="background: var(--accent-orange); color: white; border: none; padding: 0.25rem 0.75rem; font-weight: bold; cursor: pointer;">
+              <span class="material-symbols-outlined" style="font-size: 14px; vertical-align: text-bottom;">add</span>
+              CREATE
+            </a>
             <a [routerLink]="['/u', user.user_metadata['username'] || 'me']" class="nav-auth-link highlight">
               <span class="material-symbols-outlined" style="font-size: 14px;">account_circle</span>
               PROFILE

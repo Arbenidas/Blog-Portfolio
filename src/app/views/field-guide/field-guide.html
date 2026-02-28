@@ -36,8 +36,7 @@
 
   <!-- ===== REAL CONTENT ===== -->
   <ng-container *ngIf="log && !isLoading">
-    <div class="coffee-stain" style="top: 8rem; left: -2.5rem; opacity: 0.5;"></div>
-
+    
     <!-- FLUID WIDGET LAYER (Outside the white paper) -->
     <div class="absolute inset-0 pointer-events-none z-50 overflow-visible hidden md:block">
       <ng-container *ngFor="let widget of log.blocks">
@@ -49,21 +48,43 @@
       </ng-container>
     </div>
 
-    <div class="field-log-nav">
-      <a class="btn-back-nav" routerLink="/logs">
-        <span class="material-symbols-outlined" style="font-size: 16px;">arrow_back</span>
-        RETURN_TO_ARCHIVES
-      </a>
-    </div>
+    <!-- 3-COLUMN DOCS LAYOUT -->
+    <div class="docs-layout-grid">
 
-    <!-- 2-COLUMN: ARTICLE + SIDEBAR -->
-    <div class="log-page-grid">
+      <!-- LEFT SIDEBAR: Navigation Menu -->
+      <aside class="docs-left-sidebar">
+        <div class="docs-sidebar-header">
+          <span class="material-symbols-outlined" style="font-size: 16px;">library_books</span>
+          <span class="docs-sidebar-title">Getting Started Course</span>
+        </div>
+        <nav class="docs-nav-menu">
+           <ng-container *ngFor="let guide of allGuides">
+             <a [routerLink]="['/guides', guide.slug || guide.id]"
+                routerLinkActive="docs-nav-link-active"
+                #rla="routerLinkActive"
+                class="docs-nav-link">
+                {{ guide.title }}
+             </a>
+             <!-- Table of contents under the active guide -->
+             <div *ngIf="rla.isActive && tocItems.length > 0" class="docs-nav-toc" style="padding-left: 1rem; margin-top: 0.25rem; display: flex; flex-direction: column; gap: 0.25rem;">
+               <button *ngFor="let item of tocItems"
+                  class="toc-item"
+                  style="border: none; background: transparent; text-align: left; padding: 0.2rem 0.5rem; font-family: var(--font-body); font-size: 0.85rem; color: rgba(26,26,26,0.6); cursor: pointer; display: flex; align-items: center; gap: 0.4rem; transition: color 0.2s;"
+                  [style.padding-left]="item.level === 2 ? '1.5rem' : '0.5rem'"
+                  [style.color]="activeSectionId === item.id ? 'var(--primary)' : 'rgba(26,26,26,0.6)'"
+                  [style.font-weight]="activeSectionId === item.id ? 'bold' : 'normal'"
+                  (click)="scrollToSection(item.id)">
+                 <span class="toc-text">{{ item.text }}</span>
+               </button>
+             </div>
+           </ng-container>
+        </nav>
+      </aside>
 
-      <!-- LEFT: ARTICLE -->
-      <article class="article-container" id="pdf-content-area">
+      <!-- MAIN CONTENT: Article -->
+      <article class="docs-main-content" id="pdf-content-area">
         <div class="article-inner">
           <!-- Decoratives -->
-          <div class="tape-strip" style="top: -10px; left: 5%; transform: rotate(-2deg);"></div>
           <div class="file-ref-badge">
             <span class="file-ref-val">{{ (log.id || 'PRV').slice(0, 3) | uppercase }}</span>
             <span class="file-ref-label">FILE_REF</span>
@@ -104,20 +125,52 @@
                 <pre><code>{{ block.content }}</code></pre>
               </div>
 
-              <div *ngIf="block.type === 'image'" class="block-image">
-                 <div class="block-image-tape"></div>
-                 <img [src]="block.content" class="block-image-img riso-print">
+              <div *ngIf="block.type === 'image'" class="block-image clearfix">
+                 <div [ngClass]="['img-size-' + (block.data?.size || 'full'), 'img-align-' + (block.data?.align || 'center')]">
+                   <img [src]="block.content" class="block-image-img riso-print" loading="lazy">
+                 </div>
+                 <p *ngIf="block.data?.text" style="margin-top: 0.5rem; white-space: pre-wrap;">{{ block.data.text }}</p>
+              </div>
+
+              <div *ngIf="block.type === 'gallery' && block.data?.images?.length" style="margin: 1.5rem 0;">
+                <div style="font-family: var(--font-mono); font-size: 0.7rem; font-weight: bold; color: #6b7280; text-transform: uppercase; margin-bottom: 0.5rem;">
+                  <span class="material-symbols-outlined" style="font-size: 14px; vertical-align: text-bottom;">auto_awesome_mosaic</span>
+                  GALLERY — {{ block.data.images.length }} ITEMS
+                </div>
+                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 0.5rem;">
+                  <div *ngFor="let img of block.data.images" style="border: 2px solid var(--charcoal); box-shadow: 3px 3px 0 var(--charcoal); overflow: hidden; cursor: pointer;" (click)="openLightbox(img)">
+                    <img [src]="img" loading="lazy" alt="Gallery item" style="width: 100%; height: 100%; object-fit: cover; display: block; aspect-ratio: 4/3;" />
+                  </div>
+                </div>
               </div>
 
               <div *ngIf="block.type === 'video'" class="block-video">
                 <div class="block-image-tape"></div>
                 <div *ngIf="isYoutubeUrl(block.content)" class="block-video-embed">
-                  <iframe [src]="getSafeVideoUrl(block.content)" style="width:100%;height:100%;" frameborder="0" allowfullscreen allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture"></iframe>
+                  <iframe [src]="getSafeVideoUrl(block.content)" style="width:100%;height:100%;" frameborder="0" allowfullscreen allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture" loading="lazy"></iframe>
                 </div>
                 <div *ngIf="!isYoutubeUrl(block.content)">
                   <video [src]="block.content" controls class="block-video-direct"></video>
                 </div>
               </div>
+
+               <div *ngIf="block.type === 'blockquote'" style="width: 100%; border-left: 4px solid var(--accent-orange); padding: 1rem 1.5rem; background-color: var(--paper-cream); margin-bottom: 2rem;">
+                  <p style="font-family: var(--font-body); font-style: italic; font-size: 1.125rem; color: var(--charcoal); margin: 0; line-height: 1.75;">
+                    {{ block.content }}
+                  </p>
+                </div>
+
+                <div *ngIf="block.type === 'code'" style="width: 100%; margin-bottom: 2rem; position: relative;" class="code-block-wrapper">
+                  <!-- Header estilo editor de código (macOS like) -->
+                  <div style="background-color: var(--charcoal); color: #fff; padding: 0.5rem 1rem; border-top-left-radius: 6px; border-top-right-radius: 6px; display: flex; align-items: center; gap: 0.5rem; border-bottom: 1px solid #333;">
+                    <div style="width: 10px; height: 10px; border-radius: 50%; background-color: #ef4444;"></div>
+                    <div style="width: 10px; height: 10px; border-radius: 50%; background-color: #f59e0b;"></div>
+                    <div style="width: 10px; height: 10px; border-radius: 50%; background-color: #10b981;"></div>
+                    <span style="font-family: var(--font-mono); font-size: 0.65rem; letter-spacing: 1px; margin-left: auto; color: #888;">// SYS.SCRIPT //</span>
+                  </div>
+                  <!-- Cuerpo del código -->
+                  <pre style="background-color: #1a1a1a; padding: 1.5rem; border-bottom-left-radius: 6px; border-bottom-right-radius: 6px; overflow-x: auto; margin: 0;"><code style="font-family: var(--font-mono); font-size: 0.875rem; color: #eab308; line-height: 1.5; white-space: pre-wrap;">{{ block.content }}</code></pre>
+                </div>
 
               <div *ngIf="block.type === 'comparison'" class="comp-box" [id]="'blk-' + i">
                 <div class="comp-header">
@@ -188,12 +241,13 @@
 
           <footer class="log-footer">
             <div class="author-info">
-              <div class="author-avatar">
-                <span class="material-symbols-outlined author-icon">person</span>
+              <div class="author-avatar" style="overflow: hidden; border-radius: 50%;">
+                <img *ngIf="log.author?.avatar_url" [src]="log.author?.avatar_url" style="width:100%; height:100%; object-fit:cover;">
+                <span *ngIf="!log.author?.avatar_url" class="material-symbols-outlined author-icon">person</span>
               </div>
-              <div>
+              <div style="display: flex; flex-direction: column;">
                 <span class="author-label">LOGGED_BY</span>
-                <span class="author-name">ADMIN</span>
+                <a [routerLink]="['/u', log.author?.username]" class="author-name" style="text-decoration:none;">@{{log.author?.username || 'ADMIN'}}</a>
               </div>
             </div>
             
@@ -212,7 +266,6 @@
           <!-- Comments Section -->
           <div class="comments-section" style="margin-top: 2rem; border-top: 2px dashed var(--charcoal); padding-top: 2rem;">
             <h3 style="font-family: var(--font-display); font-size: 1.5rem; margin-bottom: 1.5rem;">FIELD NOTES ({{ comments.length }})</h3>
-            
             <div class="add-comment" style="margin-bottom: 2rem; display: flex; flex-direction: column; gap: 0.5rem;">
               <textarea [(ngModel)]="newCommentText" placeholder="Add a field note..." rows="3" style="width: 100%; padding: 0.75rem; border: 2px solid var(--charcoal); background: var(--white); font-family: var(--font-body); resize: vertical;"></textarea>
               <button (click)="submitComment()" [disabled]="!newCommentText.trim()" style="align-self: flex-end; padding: 0.5rem 1.5rem; background: var(--charcoal); color: white; border: none; font-family: var(--font-mono); font-weight: bold; cursor: pointer;">SUBMIT NOTE</button>
@@ -245,72 +298,6 @@
         </div>
       </article>
 
-      <!-- RIGHT: STICKY SIDEBAR -->
-      <aside class="log-sidebar">
-        <div class="sidebar-card">
-          <div class="sidebar-card-header">
-            <span class="material-symbols-outlined" style="font-size:14px;">schedule</span>
-            SYS_INFO
-          </div>
-          <div class="sidebar-meta-row">
-            <span class="sidebar-meta-label">Read time</span>
-            <span class="sidebar-meta-val">~{{ readingTime }} min</span>
-          </div>
-          <div class="sidebar-meta-row">
-            <span class="sidebar-meta-label">Filed</span>
-            <span class="sidebar-meta-val">{{ log.createdAt | date:'dd MMM yy' }}</span>
-          </div>
-          <div class="sidebar-meta-row" style="border-bottom:none;">
-            <span class="sidebar-meta-label">Tags</span>
-            <span class="sidebar-meta-val" style="color:var(--primary);">{{ log.tags.length }}</span>
-          </div>
-        </div>
-
-        <!-- Read Mode Button -->
-        <button class="sidebar-card btn-read-mode-toggle" (click)="toggleReadMode()" style="justify-content: center; padding: 0.5rem; text-align: center; font-family: var(--font-mono); font-size: 0.75rem; font-weight: bold; color: var(--charcoal); cursor: pointer; transition: background-color 0.2s, color 0.2s; display: flex; align-items: center; gap: 0.4rem; background-color: var(--charcoal); color: white;">
-          <span class="material-symbols-outlined" style="font-size:16px;">chrome_reader_mode</span>
-          MODO LECTURA
-        </button>
-
-        <div *ngIf="tocItems.length > 0" class="sidebar-card">
-          <div class="sidebar-card-header">
-            <span class="material-symbols-outlined" style="font-size:14px;">toc</span>
-            INDEX_LOG
-          </div>
-          <nav class="toc-list">
-            <button *ngFor="let item of tocItems"
-               class="toc-item"
-               [class.toc-item-h2]="item.level === 2"
-               [class.toc-item-active]="activeSectionId === item.id"
-               (click)="scrollToSection(item.id)">
-              <span *ngIf="item.icon" class="material-symbols-outlined toc-icon">{{ item.icon }}</span>
-              <span *ngIf="!item.icon" class="toc-bullet">{{ item.level === 1 ? '▸' : '›' }}</span>
-              <span class="toc-text">{{ item.text | uppercase }}</span>
-            </button>
-          </nav>
-        </div>
-
-        <div *ngIf="log.tags.length > 0" class="sidebar-card">
-          <div class="sidebar-card-header">
-            <span class="material-symbols-outlined" style="font-size:14px;">label</span>
-            FIELD_TAGS
-          </div>
-          <div class="sidebar-tags">
-            <span *ngFor="let tag of log.tags" class="sidebar-tag">#{{ tag }}</span>
-          </div>
-        </div>
-
-        <!-- Bibliography Button -->
-        <button *ngIf="bibliographyBlock" class="sidebar-card" (click)="toggleBibliography($event)" style="justify-content: center; padding: 0.5rem; text-align: center; font-family: var(--font-mono); font-size: 0.75rem; font-weight: bold; color: var(--charcoal); cursor: pointer; transition: background-color 0.2s;">
-          <span class="material-symbols-outlined" style="font-size:14px; margin-right: 0.25rem;">library_books</span>
-          REFERENCES
-        </button>
-
-        <a class="sidebar-back-btn" routerLink="/logs">
-          <span class="material-symbols-outlined" style="font-size:14px;">west</span>
-          Back to Archives
-        </a>
-      </aside>
     </div>
   </ng-container>
 
@@ -344,5 +331,13 @@
     (downloadReady)="generatePdf()" 
     (closeEvent)="isModalOpen = false">
   </app-ad-modal>
+
+<!-- Gallery Lightbox -->
+<div *ngIf="lightboxImage" class="gallery-lightbox" (click)="closeLightbox()">
+  <button class="lightbox-close" (click)="closeLightbox()">
+    <span class="material-symbols-outlined">close</span>
+  </button>
+  <img [src]="lightboxImage" alt="Full size preview" class="lightbox-img" (click)="$event.stopPropagation()" />
+</div>
 
 </main>

@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { ContentService, ProfileData, TechEntry, CustomWidget } from '../../services/content.service';
+import imageCompression from 'browser-image-compression';
 
 @Component({
   selector: 'app-profile-editor',
@@ -14,8 +15,6 @@ import { ContentService, ProfileData, TechEntry, CustomWidget } from '../../serv
 export class ProfileEditor implements OnInit {
   private contentService = inject(ContentService);
   private sanitizer = inject(DomSanitizer);
-
-  availableWidgets = signal<CustomWidget[]>([]);
 
   profile = signal<ProfileData>({
     name: '',
@@ -35,7 +34,6 @@ export class ProfileEditor implements OnInit {
 
   isSaving = signal(false);
   saveToast = signal<'success' | 'error' | null>(null);
-  draggingWidget = signal<CustomWidget | null>(null);
 
   // Nickname
   nicknameInput = '';
@@ -58,9 +56,6 @@ export class ProfileEditor implements OnInit {
   }
 
   async loadData() {
-    const widgets = await this.contentService.getCustomWidgets();
-    this.availableWidgets.set(widgets);
-
     const p = await this.contentService.getProfile();
     if (p) {
       this.profile.set(p);
@@ -104,15 +99,14 @@ export class ProfileEditor implements OnInit {
   async onAvatarFileSelected(event: Event) {
     const input = event.target as HTMLInputElement;
     if (!input.files?.length) return;
-    const file = input.files[0];
-
-    if (file.size > 2 * 1024 * 1024) {
-      alert('Image must be less than 2MB.');
-      return;
-    }
+    let file = input.files[0];
 
     this.uploadingAvatar = true;
     try {
+      if (file.size > 0.5 * 1024 * 1024) { // Compress if > 500KB
+        const options = { maxSizeMB: 0.2, maxWidthOrHeight: 500, useWebWorker: true };
+        file = await imageCompression(file, options);
+      }
       const url = await this.contentService.uploadAvatar(file);
       this.profile.update(p => ({ ...p, avatar_url: url }));
     } catch (e) {
@@ -126,15 +120,14 @@ export class ProfileEditor implements OnInit {
   async onPersonnelPhotoSelected(event: Event) {
     const input = event.target as HTMLInputElement;
     if (!input.files?.length) return;
-    const file = input.files[0];
+    let file = input.files[0];
 
-    if (file.size > 2 * 1024 * 1024) {
-      alert('Image must be less than 2MB.');
-      return;
-    }
-
-    this.uploadingAvatar = true;
+    this.uploadingAvatar = true; // reusing state from original code
     try {
+      if (file.size > 1 * 1024 * 1024) { // Compress if > 1MB
+        const options = { maxSizeMB: 0.5, maxWidthOrHeight: 1200, useWebWorker: true };
+        file = await imageCompression(file, options);
+      }
       const url = await this.contentService.uploadAvatar(file);
       this.profile.update(p => ({ ...p, personnel_photo: url }));
     } catch (e) {
@@ -209,53 +202,7 @@ export class ProfileEditor implements OnInit {
     });
   }
 
-  // ===== WIDGET DRAG & DROP =====
-  onDragStart(event: DragEvent, widget: CustomWidget) {
-    this.draggingWidget.set(widget);
-    if (event.dataTransfer) {
-      event.dataTransfer.effectAllowed = 'copy';
-      event.dataTransfer.setData('text/plain', widget.id || '');
-    }
-  }
-
-  onDragOver(event: DragEvent) {
-    event.preventDefault();
-    if (event.dataTransfer) {
-      event.dataTransfer.dropEffect = 'copy';
-    }
-  }
-
-  onDrop(event: DragEvent) {
-    event.preventDefault();
-    const widget = this.draggingWidget();
-    if (!widget || !widget.id) return;
-
-    const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
-    const x = event.clientX - rect.left - 50;
-    const y = event.clientY - rect.top - 50;
-
-    this.profile.update(p => ({
-      ...p,
-      widgets: [...p.widgets, { widgetId: widget.id!, x, y }]
-    }));
-
-    this.draggingWidget.set(null);
-  }
-
-  removePlacedWidget(index: number) {
-    this.profile.update(p => {
-      const arr = [...p.widgets];
-      arr.splice(index, 1);
-      return { ...p, widgets: arr };
-    });
-  }
-
   // ===== TEMPLATE HELPERS =====
-  getWidgetHtml(id: string): SafeHtml {
-    const w = this.availableWidgets().find(w => w.id === id);
-    return w ? this.sanitizer.bypassSecurityTrustHtml(w.html_content) : '';
-  }
-
   getSafeHtml(html: string): SafeHtml {
     return this.sanitizer.bypassSecurityTrustHtml(html);
   }

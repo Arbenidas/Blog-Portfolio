@@ -1,6 +1,7 @@
 {
     "NAV": {
         "HOME": "HOME_HUB",
+        "FEED": "FEED_GALLERY",
         "WORKS": "WORKS_DATABASE",
         "LOGS": "FIELD_LOGS",
         "GUIDES": "FIELD_GUIDES",
@@ -11,5 +12,26 @@
         "LANGUAGE": "LANGUAGE",
         "SELECT_EN": "ENGLISH",
         "SELECT_ES": "SPANISH"
+    },
+    "MANIFESTO": {
+        "TAB_TITLE": "CORE_MANIFESTO",
+        "TITLE": "MANIFESTO",
+        "META_VERSION": "// VERSION: 1.0.0",
+        "META_STATUS": "// STATUS: ACTIVE",
+        "META_AUTHOR": "// AUTHOR: ARBE",
+        "R1_NUM": "01",
+        "R1_TITLE": "KNOWLEDGE IS OPEN SOURCE",
+        "R1_BODY": "In a closed digital world, sharing knowledge is an act of rebellion. Documenting, teaching, and opening the creative and technical processes is our primary responsibility. Kept knowledge dies; shared knowledge evolves.",
+        "R2_NUM": "02",
+        "R2_TITLE": "THE HUMAN IN THE LOOP",
+        "R2_BODY": "AI is a tool, not a replacement. Relying exclusively on artificial intelligence to build software leads to cognitive stagnation. We write code, break things, and learn from failure. We use compute to accelerate, not to stop thinking.",
+        "R3_NUM": "03",
+        "R3_TITLE": "PERPETUAL ITERATION",
+        "R3_BODY": "Software is never 'finished'. We reject complacency. Moving forward means refactoring, experimenting with new languages, and pushing the boundaries of what we built yesterday. Comfort is the enemy of progress.",
+        "R4_NUM": "04",
+        "R4_TITLE": "CREATE TO TEACH",
+        "R4_BODY": "The best way to solidify a skill is to explain it to someone else. Every log, guide, and line of code documented here exists under the premise that someone, somewhere, can use it to build something better.",
+        "FOOTER_SYSTEM": ">_ SYSTEM: ACKNOWLEDGE AND PROCEED",
+        "BTN_ENTER": "ENTER_THE_GRID"
     }
 }

@@ -4,7 +4,7 @@ import { SupabaseService } from './supabase.service';
 
 export interface EditorBlock {
     id: string;
-    type: 'h1' | 'h2' | 'p' | 'image' | 'video' | 'code' | 'objective-header' | 'objectives' | 'divider' | 'tech-stack' | 'diagram' | 'widget' | 'comparison' | 'bibliography';
+    type: 'h1' | 'h2' | 'p' | 'image' | 'gallery' | 'video' | 'code' | 'blockquote' | 'objective-header' | 'objectives' | 'divider' | 'tech-stack' | 'diagram' | 'widget' | 'comparison' | 'bibliography';
     content: string;
     data?: any;
 }
@@ -78,9 +78,11 @@ export interface DocumentEntry {
     author?: { username: string; avatar_url: string; full_name: string } | any; // Temporary type until fully implemented
     // for works specifically
     coverPhoto?: string;
-    category: 'work' | 'log';
+    category: 'work' | 'log' | 'guide';
     indexLog?: string;
     updatedAt: string;
+    upvoteCount?: number;
+    commentCount?: number;
 }
 
 @Injectable({
@@ -227,6 +229,88 @@ export class ContentService {
         return entries.slice(0, limit);
     }
 
+    async getFeedDocuments(page: number = 1, limitPerPage: number = 15, filters: string[] = []): Promise<DocumentEntry[]> {
+        let query = this.supabase.client
+            .from('documents')
+            .select('*, profiles:author_id(username, avatar_url, full_name)')
+            .eq('status', 'published')
+            .neq('slug', 'system-settings')
+            .order('created_at', { ascending: false });
+
+        if (filters.length > 0 && !filters.includes('all')) {
+            query = query.in('category', filters);
+        }
+
+        const from = (page - 1) * limitPerPage;
+        const to = from + limitPerPage - 1;
+        query = query.range(from, to);
+
+        const { data: docs, error } = await query;
+        if (error || !docs?.length) {
+            console.error('Error fetching feed documents:', error);
+            return [];
+        }
+
+        const docIds = docs.map((d: any) => d.id);
+
+        // Fetch upvote and comment counts in bulk
+        const [upvoteData, commentData] = await Promise.all([
+            this.supabase.client.from('document_upvotes').select('document_id').in('document_id', docIds),
+            this.supabase.client.from('document_comments').select('document_id').in('document_id', docIds)
+        ]);
+
+        const upvoteCounts: Record<string, number> = {};
+        (upvoteData.data || []).forEach((r: any) => {
+            upvoteCounts[r.document_id] = (upvoteCounts[r.document_id] || 0) + 1;
+        });
+
+        const commentCounts: Record<string, number> = {};
+        (commentData.data || []).forEach((r: any) => {
+            commentCounts[r.document_id] = (commentCounts[r.document_id] || 0) + 1;
+        });
+
+        // Map to entries and attach real counts
+        return (docs as any[]).map(doc => {
+            const entry = this.mapToEntry(doc);
+            (entry as any).upvoteCount = upvoteCounts[doc.id] || 0;
+            (entry as any).commentCount = commentCounts[doc.id] || 0;
+            return entry;
+        });
+    }
+
+    async getTopContributors(limitCount: number = 3): Promise<any[]> {
+        const { data, error } = await this.supabase.client.rpc('get_top_contributors', {
+            limit_count: limitCount
+        });
+
+        if (error) {
+            console.error('Error fetching top contributors:', error);
+            return [];
+        }
+
+        return data || [];
+    }
+
+    async getUniqueTags(): Promise<string[]> {
+        // Obtenemos los tags de todos los documentos públicos
+        const { data, error } = await this.supabase.client
+            .from('documents')
+            .select('tags')
+            .eq('status', 'published');
+
+        if (error) {
+            console.error('Error fetching unique tags:', error);
+            return [];
+        }
+
+        // Aplanamos el array de arrays y sacamos únicos
+        const allTags = data.flatMap(d => d.tags || []);
+        const uniqueTags = Array.from(new Set(allTags));
+
+        // Filtramos strings vacíos y nos quedamos con los 15 más populares/recientes
+        return uniqueTags.filter(t => t.trim().length > 0).slice(0, 15);
+    }
+
     async getPlatformStats(): Promise<{ activeAgents: number, publishedLogs: number, archivedWorks: number }> {
         try {
             // Query 1: Active Agents (Count of profiles)
@@ -362,7 +446,7 @@ export class ContentService {
         }));
     }
 
-    async getAdminDocuments(category: 'work' | 'log'): Promise<DocumentEntry[]> {
+    async getAdminDocuments(category: 'work' | 'log' | 'guide'): Promise<DocumentEntry[]> {
         const session = await this.supabase.client.auth.getSession();
         const user = session.data.session?.user;
         if (!user) return [];
@@ -807,6 +891,29 @@ export class ContentService {
 
         const { error } = await this.supabase.client.storage
             .from('videos') // Reutilizamos el bucket que ya existe
+            .upload(filePath, file, {
+                cacheControl: '3600',
+                upsert: false
+            });
+
+        if (error) throw error;
+
+        const { data } = this.supabase.client.storage
+            .from('videos')
+            .getPublicUrl(filePath);
+
+        return data.publicUrl;
+    }
+
+    // --- GALLERY IMAGE UPLOAD ---
+
+    async uploadGalleryImage(file: File): Promise<string> {
+        const ext = file.name.split('.').pop() || 'jpg';
+        const fileName = `${Date.now()}_gallery.${ext}`;
+        const filePath = `gallery/${fileName}`;
+
+        const { error } = await this.supabase.client.storage
+            .from('videos')
             .upload(filePath, file, {
                 cacheControl: '3600',
                 upsert: false

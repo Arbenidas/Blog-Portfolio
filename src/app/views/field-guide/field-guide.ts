@@ -21,6 +21,10 @@ import { FFlowModule } from '@foblex/flow';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class FieldGuide implements OnInit, OnDestroy {
+  // Gallery Lightbox
+  lightboxImage: string | null = null;
+  openLightbox(src: string) { this.lightboxImage = src; }
+  closeLightbox() { this.lightboxImage = null; }
   private contentService = inject(ContentService);
   private seoService = inject(SeoService);
   private route = inject(ActivatedRoute);
@@ -36,8 +40,8 @@ export class FieldGuide implements OnInit, OnDestroy {
   log: DocumentEntry | undefined;
   availableWidgets: CustomWidget[] = [];
   isLoading = true;
-
   showBibliography = false;
+  allGuides: DocumentEntry[] = [];
 
   // Social State
   upvoteCount = 0;
@@ -163,6 +167,7 @@ export class FieldGuide implements OnInit, OnDestroy {
         const removeTask = this.pendingTasks.add();
         try {
           this.availableWidgets = await this.contentService.getCustomWidgets();
+          this.allGuides = await this.contentService.getAllGuides();
 
           let entry: DocumentEntry | undefined;
 

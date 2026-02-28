@@ -7,6 +7,7 @@ import { LanguageService } from '../../services/language/language.service';
 import { SupabaseService } from '../../services/supabase.service';
 import { SiteFooter } from '../site-footer/site-footer';
 import { routeAnimations } from './route-animations';
+import { NotificationService } from '../../services/notification.service';
 
 @Component({
   selector: 'app-public-layout',
@@ -20,6 +21,7 @@ export class PublicLayout {
   protected languageService = inject(LanguageService);
   protected supabaseService = inject(SupabaseService);
   protected router = inject(Router);
+  public notifications = inject(NotificationService);
 
   animationState = signal<string>('Home');
 

@@ -43,6 +43,7 @@
     "@ngx-translate/core": "^17.0.0",
     "@ngx-translate/http-loader": "^17.0.0",
     "@supabase/supabase-js": "^2.97.0",
+    "browser-image-compression": "^2.0.2",
     "express": "^5.1.0",
     "html2canvas": "^1.4.1",
     "jspdf": "^4.2.0",

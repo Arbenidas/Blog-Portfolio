@@ -58,7 +58,7 @@ export class HomeView implements OnInit, OnDestroy {
   ngOnInit() {
     this.seoService.updateMetaTags({
       title: 'Arbe | Developer & Architect',
-      description: 'Personal portfolio, digital workshop, and engineering field logs of Arbe. Focusing on Angular, Node.js, and solid architectures.',
+      description: 'Personal portfolio, blog, and engineering field logs of Arbe. Focusing on Angular, Node.js, and solid architectures.',
       type: 'website'
     });
 

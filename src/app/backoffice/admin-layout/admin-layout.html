@@ -37,7 +37,20 @@
         <span class="material-symbols-outlined admin-nav-icon">article</span>
         <span *ngIf="!isSidebarCollapsed">Logs Archive</span>
       </a>
+      <a routerLink="/admin/guides" routerLinkActive="active-link" class="admin-nav-link" [title]="isSidebarCollapsed ? 'Guides Archive' : ''">
+        <span class="material-symbols-outlined admin-nav-icon">library_books</span>
+        <span *ngIf="!isSidebarCollapsed">Guides Archive</span>
+      </a>
       
+      <div class="admin-nav-section" *ngIf="!isSidebarCollapsed">
+        <span class="admin-nav-section-title">Interaction</span>
+      </div>
+      
+      <a routerLink="/admin/author-hub" routerLinkActive="active-link" class="admin-nav-link" [title]="isSidebarCollapsed ? 'Author Hub' : ''">
+        <span class="material-symbols-outlined admin-nav-icon">hub</span>
+        <span *ngIf="!isSidebarCollapsed">Author Hub</span>
+      </a>
+
       <div class="admin-nav-section" *ngIf="!isSidebarCollapsed">
         <span class="admin-nav-section-title">Configuration</span>
       </div>
@@ -73,8 +86,12 @@
         <span class="admin-location-val">/ADMIN/SECURE_Z</span>
       </div>
       <div class="admin-topbar-right">
-        <button class="btn-notifications">
+        <button class="btn-notifications" routerLink="/admin/author-hub" style="position: relative;">
           <span class="material-symbols-outlined" style="font-size: 16px;">notifications</span>
+          <div *ngIf="notifications.unreadCount() > 0" 
+               style="position: absolute; top: -2px; right: -2px; background: red; color: white; border-radius: 50%; width: 14px; height: 14px; font-size: 9px; display: flex; align-items: center; justify-content: center; font-weight: bold;">
+            {{ notifications.unreadCount() }}
+          </div>
         </button>
         <div style="display: flex; align-items: center; gap: 0.5rem;">
           <div class="admin-user-avatar">AR</div>

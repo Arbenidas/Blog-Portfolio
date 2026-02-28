@@ -17,8 +17,8 @@
 }
 
 .admin-sidebar {
-    width: 16rem;
-    /* 256px */
+    width: 17.5rem;
+    /* 280px */
     background-color: var(--charcoal);
     color: var(--paper-cream);
     border-right: 2px solid var(--charcoal);
@@ -128,6 +128,8 @@
     border-left: 4px solid transparent;
     box-sizing: border-box;
     white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .admin-sidebar.collapsed .admin-nav-link {

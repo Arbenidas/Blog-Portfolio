@@ -5,6 +5,7 @@ import { RouterModule, ActivatedRoute, Router } from '@angular/router';
 import { CdkDragDrop, moveItemInArray, CdkDrag, CdkDropList, CdkDragHandle } from '@angular/cdk/drag-drop';
 import { ContentService, EditorBlock, DocumentEntry, CustomWidget, DiagramNodeConfig } from '../../services/content.service';
 import { DomSanitizer, SafeHtml, SafeResourceUrl } from '@angular/platform-browser';
+import imageCompression from 'browser-image-compression';
 import { FFlowModule } from '@foblex/flow';
 @Component({
   selector: 'app-block-editor',
@@ -65,12 +66,12 @@ export class BlockEditor implements OnInit, OnDestroy {
   showZenHelp = false;
 
   contentBlocks: EditorBlock[] = [];
+  // Widget/Sticker Layer (Keeping the array for backwards compatibility of data model)
   widgetBlocks: EditorBlock[] = [];
 
   // === GESTIÓN DE LA PORTADA ===
   pendingCoverFile: File | null = null;
 
-  availableWidgets = signal<CustomWidget[]>([]);
   customNodeTemplates: DiagramNodeConfig[] = [];
   systemTags: string[] = [];
 
@@ -156,12 +157,10 @@ export class BlockEditor implements OnInit, OnDestroy {
   }
 
   async loadWidgets() {
-    const [widgets, diagramNodes, sysTags] = await Promise.all([
-      this.contentService.getCustomWidgets(),
+    const [diagramNodes, sysTags] = await Promise.all([
       this.contentService.getDiagramNodes(),
       this.contentService.getSystemTags()
     ]);
-    this.availableWidgets.set(widgets);
     this.customNodeTemplates = diagramNodes;
     this.systemTags = sysTags;
   }
@@ -239,7 +238,7 @@ export class BlockEditor implements OnInit, OnDestroy {
     this.updateIndexLogLive();
   }
 
-  addBlock(type: 'h1' | 'h2' | 'p' | 'image' | 'video' | 'code' | 'objective-header' | 'objectives' | 'divider' | 'diagram') {
+  addBlock(type: 'h1' | 'h2' | 'p' | 'image' | 'gallery' | 'video' | 'code' | 'blockquote' | 'objective-header' | 'objectives' | 'divider' | 'diagram') {
     const block: EditorBlock = {
       id: Math.random().toString(36).substr(2, 9),
       type,
@@ -266,6 +265,12 @@ export class BlockEditor implements OnInit, OnDestroy {
           connections: []
         };
         break;
+      case 'image':
+        block.data = { size: 'full', align: 'center' };
+        break;
+      case 'gallery':
+        block.data = { images: [], layout: 'grid' };
+        break;
       case 'video':
         block.data = { source: 'youtube' };
         break;
@@ -276,46 +281,25 @@ export class BlockEditor implements OnInit, OnDestroy {
       this.updateIndexLogLive();
     }
   }
-  openWidgetGallery() {
-    this.showWidgetGallery = true;
-  }
 
-  closeWidgetGallery() {
-    this.showWidgetGallery = false;
-  }
-
-  addWidget(widgetId: string) {
-    this.widgetBlocks.push({
-      id: Math.random().toString(36).substring(2, 9),
-      type: 'widget',
-      content: widgetId,
-      data: { x: -200, y: 100 } // Default to the top-left margin
-    });
-    this.closeWidgetGallery();
-  }
-
-  getWidgetHtml(widgetId: string): SafeHtml {
-    const w = this.availableWidgets().find((x: CustomWidget) => x.id === widgetId);
-    if (w) {
-      return this.sanitizer.bypassSecurityTrustHtml(w.html_content);
-    }
-    return this.sanitizer.bypassSecurityTrustHtml('<span>[Missing Sticker]</span>');
-  }
-
-  removeWidget(index: number) {
-    this.widgetBlocks.splice(index, 1);
-  }
-
-  onWidgetDragEnded(event: any, widget: EditorBlock) {
-    const position = event.source.getFreeDragPosition();
-    if (!widget.data) widget.data = {};
-    widget.data.x = position.x;
-    widget.data.y = position.y;
-  }
-
-  onCoverPhotoSelected(event: any) {
-    const file = event.target.files[0];
+  async onCoverPhotoSelected(event: any) {
+    let file = event.target.files[0];
     if (file) {
+      this.isUploadingCover = true;
+      this.cdr.detectChanges();
+
+      try {
+        if (file.size > 1 * 1024 * 1024) { // Compress if > 1MB
+          const options = { maxSizeMB: 0.8, maxWidthOrHeight: 1920, useWebWorker: true };
+          file = await imageCompression(file, options);
+        }
+      } catch (err) {
+        console.warn('Compression error:', err);
+      }
+
+      this.isUploadingCover = false;
+      this.cdr.detectChanges();
+
       // 1. Guardamos el archivo físico en la RAM (No en el documento)
       this.pendingCoverFile = file;
 
@@ -596,7 +580,7 @@ export class BlockEditor implements OnInit, OnDestroy {
       blocks: allBlocks
     });
 
-    const routeBase = this.category === 'work' ? 'works' : 'logs';
+    const routeBase = this.category === 'work' ? 'works' : (this.category === 'guide' ? 'guides' : 'logs');
     window.open(`/${routeBase}/preview`, '_blank');
   }
 
@@ -650,11 +634,13 @@ export class BlockEditor implements OnInit, OnDestroy {
     { type: 'image', label: 'Imagen', icon: 'image' },
     { type: 'video', label: 'Video', icon: 'videocam' },
     { type: 'code', label: 'Bloque de Código', icon: 'code' },
+    { type: 'blockquote', label: 'Cita / Blockquote', icon: 'format_quote' },
     { type: 'diagram', label: 'Diagrama', icon: 'account_tree' },
     { type: 'divider', label: 'Separador', icon: 'horizontal_rule' },
     { type: 'objective-header', label: 'Cabecera de Obj.', icon: 'hdr_strong' },
     { type: 'objectives', label: 'Grid de Objetivos', icon: 'grid_view' },
-    { type: 'comparison', label: 'Cuadro Comparativo', icon: 'splitscreen' }
+    { type: 'comparison', label: 'Cuadro Comparativo', icon: 'splitscreen' },
+    { type: 'gallery', label: 'Galería de Imágenes', icon: 'auto_awesome_mosaic' }
   ];
 
   onBlockKeyDown(event: KeyboardEvent, index: number) {
@@ -763,11 +749,10 @@ export class BlockEditor implements OnInit, OnDestroy {
         return;
       }
 
-      // NUEVO: Cabecera de Objetivo (estilo Quote)
+      // NUEVO: Blockquote
       if (value === '> ') {
-        block.type = 'objective-header';
+        block.type = 'blockquote';
         block.content = '';
-        block.data = { title: 'NEW_SECTION', subtitle: '/TARGET' }; // Datos por defecto
         setTimeout(() => document.getElementById(`block-input-${index}`)?.focus(), 50);
         this.saveSnapshot();
         return;
@@ -831,6 +816,9 @@ export class BlockEditor implements OnInit, OnDestroy {
         };
         block.content = '';
         break;
+      case 'gallery':
+        block.data = { images: [], layout: 'grid' };
+        break;
     }
 
     this.closeSlashMenu();
@@ -842,6 +830,55 @@ export class BlockEditor implements OnInit, OnDestroy {
         if (el) el.focus();
       }, 50);
     }
+  }
+
+  // --- GALLERY BLOCK: MULTI-IMAGE UPLOAD ---
+  async onGalleryImagesSelected(event: any, block: EditorBlock) {
+    const files: FileList = event.target.files;
+    if (!files || files.length === 0) return;
+
+    if (!block.data) block.data = { images: [], layout: 'grid' };
+    if (!block.data.images) block.data.images = [];
+
+    for (let i = 0; i < files.length; i++) {
+      let file = files[i];
+      try {
+        if (file.size > 1 * 1024 * 1024) {
+          const options = { maxSizeMB: 0.8, maxWidthOrHeight: 1920, useWebWorker: true };
+          file = await imageCompression(file, options);
+        }
+      } catch (err) {
+        console.warn('Gallery compression error:', err);
+      }
+
+      // Upload to Supabase
+      try {
+        const url = await this.contentService.uploadGalleryImage(file);
+        block.data.images.push(url);
+      } catch (uploadErr) {
+        console.warn('Gallery upload error:', uploadErr);
+        // Fallback: use blob URL for preview
+        block.data.images.push(URL.createObjectURL(file));
+      }
+    }
+    this.cdr.detectChanges();
+  }
+
+  removeGalleryImage(block: EditorBlock, imgIndex: number) {
+    if (block.data?.images) {
+      block.data.images.splice(imgIndex, 1);
+    }
+  }
+
+  // --- LIGHTBOX ---
+  lightboxImage: string | null = null;
+
+  openLightbox(src: string) {
+    this.lightboxImage = src;
+  }
+
+  closeLightbox() {
+    this.lightboxImage = null;
   }
 
   // --- LÓGICA DE ARRASTRE DEL BANNER ---

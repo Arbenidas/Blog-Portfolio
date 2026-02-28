@@ -19,13 +19,13 @@ export class SeoService {
     private document = inject(DOCUMENT);
     private platformId = inject(PLATFORM_ID);
 
-    private readonly DEFAULT_TITLE = "Arbe's Digital Workshop - Portfolio";
+    private readonly DEFAULT_TITLE = "arbes.blog - Portfolio";
     private readonly DEFAULT_DESC = "A showcase of industrial design, engineering projects, and creative logs.";
     private readonly DEFAULT_IMAGE = "https://arbe.blog/logo.png";
     private readonly DEFAULT_URL = "https://arbe.blog/";
 
     updateMetaTags(config: MetaConfig) {
-        const title = config.title ? `${config.title} | Arbe_Workshop` : this.DEFAULT_TITLE;
+        const title = config.title ? `${config.title} | arbes.blog` : this.DEFAULT_TITLE;
         const description = config.description || this.DEFAULT_DESC;
         const image = config.image ? this.getTransformedImageUrl(config.image) : this.DEFAULT_IMAGE;
 
@@ -44,7 +44,7 @@ export class SeoService {
         this.metaService.updateTag({ name: 'description', content: description });
 
         // Open Graph (Facebook, LinkedIn, Discord)
-        this.metaService.updateTag({ property: 'og:site_name', content: 'Arbe_Workshop' });
+        this.metaService.updateTag({ property: 'og:site_name', content: 'arbes.blog' });
         this.metaService.updateTag({ property: 'og:title', content: title });
         this.metaService.updateTag({ property: 'og:description', content: description });
         this.metaService.updateTag({ property: 'og:image', content: image });

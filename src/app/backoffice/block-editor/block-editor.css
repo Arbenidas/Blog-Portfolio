@@ -104,11 +104,18 @@
     background-color: white;
     border: 2px solid var(--charcoal);
     box-shadow: 8px 8px 0 var(--charcoal);
-    padding: 2rem;
+    padding: 1.25rem;
     position: relative;
+    overflow-x: hidden;
 }
 
 @media (min-width: 768px) {
+    .workspace-box {
+        padding: 2rem;
+    }
+}
+
+@media (min-width: 1024px) {
     .workspace-box {
         padding: 3rem;
     }
@@ -436,6 +443,18 @@
     line-height: 1;
 }
 
+/* --- Touch Targets Fallback (iPad Mini 6) --- */
+@media (max-width: 1133px) {
+    .btn-toolbar {
+        min-width: 44px;
+        min-height: 44px;
+    }
+
+    .btn-toolbar-stickers {
+        min-height: 44px;
+    }
+}
+
 /* --- Toolbar Flotante a la Derecha (Solo para Monitores Grandes) --- */
 @media (min-width: 1200px) {
     .toolbar-container {
@@ -539,8 +558,10 @@
 }
 
 .btn-drag-handle {
-    width: 1.5rem;
-    height: 1.5rem;
+    width: 2.75rem;
+    /* ~44px */
+    height: 2.75rem;
+    /* ~44px */
     display: flex;
     align-items: center;
     justify-content: center;
@@ -555,8 +576,10 @@
 }
 
 .btn-remove-block {
-    width: 1.5rem;
-    height: 1.5rem;
+    width: 2.75rem;
+    /* ~44px */
+    height: 2.75rem;
+    /* ~44px */
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1408,7 +1431,8 @@
     display: flex;
     align-items: center;
     gap: 0.75rem;
-    padding: 0.5rem 1rem;
+    padding: 0.75rem 1rem;
+    /* Increased padding to hit ~44px total height */
     font-family: var(--font-mono);
     font-size: 0.875rem;
     color: var(--charcoal);
@@ -1834,6 +1858,40 @@
     color: #1a1a1a;
 }
 
+.input-p,
+.input-blockquote {
+    width: 100%;
+    border: 1px dashed transparent;
+    padding: 0.5rem;
+    font-size: 1.125rem;
+    line-height: 1.75;
+    background: transparent;
+    transition: all 0.2s;
+    outline: none;
+    margin-right: 2rem;
+    resize: none;
+    overflow: hidden;
+    font-family: var(--font-body);
+}
+
+.input-blockquote {
+    border-left: 4px solid var(--accent-orange);
+    padding-left: 1.5rem;
+    font-style: italic;
+    font-size: 1.25rem;
+    color: var(--charcoal);
+    background-color: rgba(249, 248, 243, 0.5);
+    /* paper white */
+}
+
+.input-p:focus,
+.input-h1:focus,
+.input-h2:focus,
+.input-blockquote:focus {
+    border-color: #d1d5db;
+    background: white;
+}
+
 .comp-title {
     font-family: var(--font-display, sans-serif);
     font-weight: 900;
@@ -1894,4 +1952,168 @@
 .comp-delete:hover {
     background-color: #dc2626;
     transform: translateY(-50%) scale(1.1);
+}
+
+/* =========================================================
+   THEME: TECHNICAL DOCUMENTATION (GUIDES ONLY)
+   Override brutalist styles with clean, structural docs aesthetics
+   ========================================================= */
+
+.theme-docs.workspace-box {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+}
+
+/* Document Meta Overrides */
+.theme-docs .meta-input-title {
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-weight: 800;
+    line-height: 1.2;
+    font-size: 2.25rem;
+    letter-spacing: -0.02em;
+}
+
+.theme-docs .meta-slug-input {
+    color: var(--primary);
+}
+
+.theme-docs .meta-cover-input:focus,
+.theme-docs .meta-input-title:focus,
+.theme-docs .meta-tags-input:focus,
+.theme-docs .meta-select:focus,
+.theme-docs .meta-textarea:focus {
+    border-bottom-color: var(--primary);
+    border-color: var(--primary);
+}
+
+.theme-docs .meta-cover-input-group {
+    border: 1px solid #e5e7eb !important;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.theme-docs .meta-cover-input-group .btn-upload {
+    border-left: 1px solid #e5e7eb !important;
+}
+
+.theme-docs .meta-cover-preview {
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+}
+
+/* Blocks Input Overrides */
+.theme-docs .input-h1 {
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-weight: 700;
+}
+
+.theme-docs .input-h2 {
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-weight: 600;
+}
+
+.theme-docs .block-image-empty,
+.theme-docs .block-video-empty {
+    border-radius: 8px;
+}
+
+.theme-docs .block-image-item,
+.theme-docs .block-video-embed,
+.theme-docs .block-video-direct {
+    border: none;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.theme-docs div[style*="border: 2px solid var(--charcoal)"] {
+    border: none !important;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+}
+
+.theme-docs .block-diagram-box {
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+    box-shadow: none;
+    background-color: #fafafa;
+}
+
+.theme-docs .comp-box {
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+}
+
+.theme-docs .comp-header {
+    background-color: #f3f4f6;
+    color: var(--charcoal);
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.theme-docs .comp-row,
+.theme-docs .comp-add {
+    border-top: 1px solid #e5e7eb;
+}
+
+.theme-docs .comp-vs {
+    border-left: 1px dashed #e5e7eb;
+    border-right: 1px dashed #e5e7eb;
+}
+
+.theme-docs .comp-title {
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* --- Gallery Lightbox --- */
+.gallery-lightbox {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    background: rgba(0, 0, 0, 0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    animation: lightbox-fade-in 0.2s ease;
+}
+
+@keyframes lightbox-fade-in {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+.lightbox-close {
+    position: absolute;
+    top: 1.5rem;
+    right: 1.5rem;
+    background: transparent;
+    border: 2px solid white;
+    color: white;
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 10;
+    transition: background 0.2s;
+}
+
+.lightbox-close:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.lightbox-img {
+    max-width: 90vw;
+    max-height: 90vh;
+    object-fit: contain;
+    cursor: default;
+    box-shadow: 0 0 60px rgba(0, 0, 0, 0.5);
 }
