@@ -11,11 +11,12 @@ import { ShareButtons } from '../../components/share-buttons/share-buttons.compo
 import { AdModalComponent } from '../../components/ad-modal/ad-modal';
 import { PdfService } from '../../services/pdf.service';
 import { FFlowModule } from '@foblex/flow';
+import { MarkdownComponent } from 'ngx-markdown';
 
 @Component({
   selector: 'app-field-log',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, ShareButtons, FFlowModule, AdModalComponent],
+  imports: [CommonModule, FormsModule, RouterModule, ShareButtons, FFlowModule, AdModalComponent, MarkdownComponent],
   templateUrl: './field-log.html',
   styleUrl: './field-log.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -42,6 +43,7 @@ export class FieldLog implements OnInit, OnDestroy {
   isLoading = true;
 
   showBibliography = false;
+  renderedMarkdown: SafeHtml = '';
 
   // Social State
   upvoteCount = 0;
@@ -68,6 +70,23 @@ export class FieldLog implements OnInit, OnDestroy {
   /** Auto-generated table of contents from indexable blocks */
   get tocItems(): { level: number; text: string; id: string; icon: string | null }[] {
     if (!this.log) return [];
+
+    // If we have markdownContent, extract TOC from it
+    if (this.log.markdownContent) {
+      const items: { level: number; text: string; id: string; icon: string | null }[] = [];
+      const lines = this.log.markdownContent.split('\n');
+      let hCount = 0;
+      lines.forEach(line => {
+        const hMatch = line.match(/^(#{1,2})\s+(.+)$/);
+        if (hMatch) {
+          const level = hMatch[1].length;
+          const text = hMatch[2].trim();
+          items.push({ level, text, id: 'md-h-' + hCount++, icon: null });
+        }
+      });
+      return items;
+    }
+
     const items: { level: number; text: string; id: string; icon: string | null }[] = [];
     this.log.blocks.forEach((b: any, i: number) => {
       if (b.type === 'h1') {
@@ -91,10 +110,15 @@ export class FieldLog implements OnInit, OnDestroy {
   /** Estimated read time in minutes */
   get readingTime(): number {
     if (!this.log) return 1;
-    const words = this.log.blocks
-      .filter((b: any) => b.type === 'p' || b.type === 'h1' || b.type === 'h2')
-      .map((b: any) => b.content.split(/\s+/).length)
-      .reduce((a: number, b: number) => a + b, 0);
+    let words = 0;
+    if (this.log.markdownContent) {
+      words = this.log.markdownContent.split(/\s+/).length;
+    } else {
+      words = this.log.blocks
+        .filter((b: any) => b.type === 'p' || b.type === 'h1' || b.type === 'h2')
+        .map((b: any) => b.content.split(/\s+/).length)
+        .reduce((a: number, b: number) => a + b, 0);
+    }
     return Math.max(1, Math.ceil(words / 200));
   }
 
@@ -183,6 +207,7 @@ export class FieldLog implements OnInit, OnDestroy {
 
           if (entry) {
             this.log = entry;
+            // No manual parsing needed with ngx-markdown
             this.updateSeo();
 
             // Fetch social data
@@ -216,9 +241,17 @@ export class FieldLog implements OnInit, OnDestroy {
 
   private updateSeo() {
     if (this.log) {
+      let description = `Field log: ${this.log.title}`;
+      if (this.log.markdownContent) {
+        description = this.log.markdownContent.substring(0, 160).replace(/[#*`]/g, '');
+      } else {
+        const pBlock = this.log.blocks.find(b => b.type === 'p');
+        if (pBlock) description = pBlock.content;
+      }
+
       this.seoService.updateMetaTags({
         title: this.log.title,
-        description: this.log.blocks.find(b => b.type === 'p')?.content || `Field log: ${this.log.title}`,
+        description: description,
         image: this.getCoverUrl(this.log.coverPhoto),
         type: 'article'
       });
@@ -395,6 +428,19 @@ export class FieldLog implements OnInit, OnDestroy {
       console.error('Error adding comment:', e);
       alert('Failed to post comment. Make sure you are logged in.');
     }
+  }
+
+  /** Injects IDs for TOC after ngx-markdown renders */
+  onMarkdownReady() {
+    if (!isPlatformBrowser(this.platformId)) return;
+    // Tiny timeout to ensure DOM selection works
+    setTimeout(() => {
+      const headings = document.querySelectorAll('.markdown-body h1, .markdown-body h2');
+      headings.forEach((h, i) => {
+        h.id = 'md-h-' + i;
+      });
+      this.setupScrollObserver();
+    }, 50);
   }
 
 }

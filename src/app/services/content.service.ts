@@ -4,7 +4,7 @@ import { SupabaseService } from './supabase.service';
 
 export interface EditorBlock {
     id: string;
-    type: 'h1' | 'h2' | 'p' | 'image' | 'gallery' | 'video' | 'code' | 'blockquote' | 'objective-header' | 'objectives' | 'divider' | 'tech-stack' | 'diagram' | 'widget' | 'comparison' | 'bibliography';
+    type: 'h1' | 'h2' | 'p' | 'image' | 'gallery' | 'video' | 'code' | 'blockquote' | 'objective-header' | 'objectives' | 'divider' | 'tech-stack' | 'diagram' | 'widget' | 'comparison' | 'bibliography' | 'table' | 'tree';
     content: string;
     data?: any;
 }
@@ -27,6 +27,15 @@ export interface DiagramNodeConfig {
     icon?: string;
     font?: string;
     created_at?: string;
+}
+
+export interface SavedDiagram {
+    id?: string;
+    name: string;
+    diagram_data: { nodes: any[]; connections: any[] };
+    thumbnail_url?: string;
+    created_at?: string;
+    updated_at?: string;
 }
 
 export interface ProfileExperience {
@@ -73,6 +82,7 @@ export interface DocumentEntry {
     tags: string[];
     createdAt: string;
     blocks: EditorBlock[];
+    markdownContent?: string;
     // optional fields depending on type
     status?: 'draft' | 'published' | 'archived';
     author?: { username: string; avatar_url: string; full_name: string } | any; // Temporary type until fully implemented
@@ -141,6 +151,7 @@ export class ContentService {
             tags: d.tags || [],
             indexLog: d.index_log,
             blocks: d.blocks || [],
+            markdownContent: d.markdown_content,
             status: d.status || 'published',
             createdAt: d.created_at,
             updatedAt: d.updated_at
@@ -158,6 +169,7 @@ export class ContentService {
             tags: d.tags || [],
             indexLog: d.index_log,
             blocks: [],
+            markdownContent: d.markdown_content,
             status: d.status || 'published',
             createdAt: d.created_at,
             updatedAt: d.updated_at
@@ -530,6 +542,7 @@ export class ContentService {
             tags: doc.tags || [],
             indexLog: doc.indexLog || '',
             blocks: doc.blocks || [],
+            markdownContent: doc.markdownContent || '',
             createdAt: now,
             updatedAt: now
         };
@@ -581,6 +594,7 @@ export class ContentService {
             tags: doc.tags || [],
             index_log: doc.indexLog || '',
             blocks: doc.blocks || [],
+            markdown_content: doc.markdownContent || '',
             status: doc.status || 'published',
             updated_at: new Date().toISOString()
         };
@@ -713,6 +727,58 @@ export class ContentService {
     async deleteDiagramNode(id: string): Promise<void> {
         const { error } = await this.supabase
             .from('diagram_nodes')
+            .delete()
+            .eq('id', id);
+        if (error) throw error;
+    }
+
+    // --- SAVED DIAGRAMS ---
+
+    async getSavedDiagrams(): Promise<SavedDiagram[]> {
+        const { data, error } = await this.supabase
+            .from('saved_diagrams')
+            .select('*')
+            .order('updated_at', { ascending: false });
+        if (error) {
+            console.error('Error fetching saved diagrams:', error);
+            return [];
+        }
+        return data || [];
+    }
+
+    async saveDiagram(diagram: SavedDiagram): Promise<SavedDiagram> {
+        const payload: any = {
+            name: diagram.name,
+            diagram_data: diagram.diagram_data,
+            thumbnail_url: diagram.thumbnail_url || '',
+            updated_at: new Date().toISOString()
+        };
+
+        if (diagram.id) {
+            const { data, error } = await this.supabase
+                .from('saved_diagrams')
+                .update(payload)
+                .eq('id', diagram.id)
+                .select()
+                .single();
+            if (error) throw error;
+            return data;
+        } else {
+            const { data: { user } } = await this.supabase.client.auth.getUser();
+            payload.author_id = user?.id;
+            const { data, error } = await this.supabase
+                .from('saved_diagrams')
+                .insert([payload])
+                .select()
+                .single();
+            if (error) throw error;
+            return data;
+        }
+    }
+
+    async deleteSavedDiagram(id: string): Promise<void> {
+        const { error } = await this.supabase
+            .from('saved_diagrams')
             .delete()
             .eq('id', id);
         if (error) throw error;

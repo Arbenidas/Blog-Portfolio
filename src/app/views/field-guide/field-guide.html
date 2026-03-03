@@ -114,15 +114,38 @@
 
           <!-- Content Body -->
           <div class="log-content">
-            <ng-container *ngFor="let block of log.blocks; let first = first; let i = index">
+            <!-- Raw Markdown Content Rendering -->
+            <markdown *ngIf="log.markdownContent" 
+                      class="markdown-body" 
+                      [data]="log.markdownContent"
+                      (ready)="onMarkdownReady()">
+            </markdown>
+
+            <!-- Legacy Block Fallback Rendering -->
+            <ng-container *ngIf="!log.markdownContent">
+              <ng-container *ngFor="let block of log.blocks; let first = first; let i = index">
               
               <p *ngIf="block.type === 'p'" [ngClass]="first ? 'block-p-first' : ''" [id]="'blk-' + i">{{ block.content }}</p>
 
-              <h2 *ngIf="block.type === 'h1'" class="block-h1" [id]="'blk-' + i">{{ block.content }}</h2>
-              <h3 *ngIf="block.type === 'h2'" class="block-h2" [id]="'blk-' + i">{{ block.content }}</h3>
+              <h2 *ngIf="block.type === 'h1'" class="block-h1" [id]="'blk-' + i"><span class="md-hash">#</span> {{ block.content }}</h2>
+              <h3 *ngIf="block.type === 'h2'" class="block-h2" [id]="'blk-' + i"><span class="md-hash">##</span> {{ block.content }}</h3>
 
               <div *ngIf="block.type === 'code'" class="block-code">
-                <pre><code>{{ block.content }}</code></pre>
+                <div class="block-code-header">
+                  <div class="block-code-dots">
+                    <span class="dot dot-red"></span>
+                    <span class="dot dot-yellow"></span>
+                    <span class="dot dot-green"></span>
+                  </div>
+                  <span *ngIf="block.data?.filename" class="block-code-filename-label">{{ block.data.filename }}</span>
+                  <span class="block-code-lang-label">{{ (block.data?.language || 'code') | uppercase }}</span>
+                </div>
+                <pre class="block-code-pre"><code>{{ block.content }}</code></pre>
+                <div *ngIf="block.data?.error" class="block-code-error-box" [ngClass]="'error-' + (block.data?.errorType || 'error')">
+                  <span class="block-code-error-icon">{{ block.data?.errorType === 'warning' ? '⚠️' : block.data?.errorType === 'note' ? 'ℹ️' : '❌' }}</span>
+                  <span class="block-code-error-label">{{ (block.data?.errorType || 'error') | uppercase }}:</span>
+                  <span class="block-code-error-text">{{ block.data.error }}</span>
+                </div>
               </div>
 
               <div *ngIf="block.type === 'image'" class="block-image clearfix">
@@ -160,16 +183,22 @@
                   </p>
                 </div>
 
-                <div *ngIf="block.type === 'code'" style="width: 100%; margin-bottom: 2rem; position: relative;" class="code-block-wrapper">
-                  <!-- Header estilo editor de código (macOS like) -->
-                  <div style="background-color: var(--charcoal); color: #fff; padding: 0.5rem 1rem; border-top-left-radius: 6px; border-top-right-radius: 6px; display: flex; align-items: center; gap: 0.5rem; border-bottom: 1px solid #333;">
-                    <div style="width: 10px; height: 10px; border-radius: 50%; background-color: #ef4444;"></div>
-                    <div style="width: 10px; height: 10px; border-radius: 50%; background-color: #f59e0b;"></div>
-                    <div style="width: 10px; height: 10px; border-radius: 50%; background-color: #10b981;"></div>
-                    <span style="font-family: var(--font-mono); font-size: 0.65rem; letter-spacing: 1px; margin-left: auto; color: #888;">// SYS.SCRIPT //</span>
+                <div *ngIf="block.type === 'code'" class="block-code" style="width: 100%; margin-bottom: 2rem; position: relative;">
+                  <div class="block-code-header">
+                    <div class="block-code-dots">
+                      <span class="dot dot-red"></span>
+                      <span class="dot dot-yellow"></span>
+                      <span class="dot dot-green"></span>
+                    </div>
+                    <span *ngIf="block.data?.filename" class="block-code-filename-label">{{ block.data.filename }}</span>
+                    <span class="block-code-lang-label">{{ (block.data?.language || 'code') | uppercase }}</span>
                   </div>
-                  <!-- Cuerpo del código -->
-                  <pre style="background-color: #1a1a1a; padding: 1.5rem; border-bottom-left-radius: 6px; border-bottom-right-radius: 6px; overflow-x: auto; margin: 0;"><code style="font-family: var(--font-mono); font-size: 0.875rem; color: #eab308; line-height: 1.5; white-space: pre-wrap;">{{ block.content }}</code></pre>
+                  <pre class="block-code-pre"><code>{{ block.content }}</code></pre>
+                  <div *ngIf="block.data?.error" class="block-code-error-box" [ngClass]="'error-' + (block.data?.errorType || 'error')">
+                    <span class="block-code-error-icon">{{ block.data?.errorType === 'warning' ? '⚠️' : block.data?.errorType === 'note' ? 'ℹ️' : '❌' }}</span>
+                    <span class="block-code-error-label">{{ (block.data?.errorType || 'error') | uppercase }}:</span>
+                    <span class="block-code-error-text">{{ block.data.error }}</span>
+                  </div>
                 </div>
 
               <div *ngIf="block.type === 'comparison'" class="comp-box" [id]="'blk-' + i">
@@ -186,6 +215,32 @@
                   <div class="comp-input comp-text" style="white-space:pre-wrap;">{{ row.col1 }}</div>
                   <div class="comp-vs"></div>
                   <div class="comp-input comp-text" style="white-space:pre-wrap;">{{ row.col2 }}</div>
+                </div>
+              </div>
+              <div *ngIf="block.type === 'table'" class="block-table-container">
+                <div class="block-table-box">
+                  <table class="brutal-table">
+                    <thead>
+                      <tr>
+                        <th *ngFor="let header of block.data?.headers">{{ header }}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr *ngFor="let row of block.data?.rows">
+                        <td *ngFor="let cell of row">{{ cell }}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <div *ngIf="block.type === 'tree'" class="block-tree-container">
+                <div class="block-tree-box">
+                  <div class="block-tree-header">
+                    <span class="material-symbols-outlined block-tree-icon">folder_open</span>
+                    <span class="block-tree-label">DIRECTORY_TREE</span>
+                  </div>
+                  <pre class="block-tree-pre"><code>{{ block.content }}</code></pre>
                 </div>
               </div>
 
@@ -236,6 +291,7 @@
                 <div class="block-divider-2"></div>
               </div>
 
+            </ng-container>
             </ng-container>
           </div>
 
@@ -291,7 +347,7 @@
           <div class="share-container">
             <app-share-buttons 
               [title]="log.title" 
-              [description]="log.blocks[0]?.type === 'p' ? log.blocks[0].content : ''" 
+              [description]="log.markdownContent || (log.blocks[0]?.type === 'p' ? log.blocks[0].content : '')" 
               [image]="log.coverPhoto || ''">
             </app-share-buttons>
           </div>

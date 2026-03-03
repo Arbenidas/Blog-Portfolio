@@ -814,3 +814,110 @@ body.zen-is-active {
   cursor: default;
   box-shadow: 0 0 60px rgba(0, 0, 0, 0.5);
 }
+
+/* =========================================================
+   PROFESSIONAL MARKDOWN STYLING (ngx-markdown + github-markdown-css)
+   ========================================================= */
+
+.markdown-body {
+  background-color: transparent !important;
+  color: var(--charcoal) !important;
+  font-family: var(--font-body) !important;
+  line-height: 1.7 !important;
+  padding: 0 !important;
+}
+
+/* Force light-theme variables to prevent invisible text in dark mode system settings */
+.markdown-body {
+  --color-canvas-default: transparent !important;
+  --color-fg-default: var(--charcoal) !important;
+  --color-canvas-subtle: var(--paper-cream) !important;
+  --color-border-default: rgba(0, 0, 0, 0.1) !important;
+  --color-accent-fg: var(--primary) !important;
+}
+
+.markdown-body h1,
+.markdown-body h2,
+.markdown-body h3,
+.markdown-body h4,
+.markdown-body h5,
+.markdown-body h6 {
+  font-family: var(--font-display) !important;
+  color: var(--charcoal) !important;
+  border-bottom-color: rgba(0, 0, 0, 0.1) !important;
+  margin-top: 2rem !important;
+  margin-bottom: 1.25rem !important;
+  font-weight: 900 !important;
+  text-transform: uppercase !important;
+}
+
+.markdown-body p {
+  margin-bottom: 1.25rem !important;
+}
+
+.markdown-body code {
+  font-family: var(--font-mono) !important;
+  background-color: rgba(0, 0, 0, 0.05) !important;
+  color: var(--accent-orange) !important;
+  padding: 0.2rem 0.4rem !important;
+  font-size: 0.9em !important;
+}
+
+.markdown-body pre {
+  background-color: #1a1a1a !important;
+  /* Keep code dark for Prism Okaidia */
+  border: 2px solid var(--charcoal) !important;
+  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.1) !important;
+  padding: 1.5rem !important;
+  border-radius: 4px !important;
+  margin-bottom: 1.5rem !important;
+}
+
+.markdown-body pre code {
+  color: #f8f8f2 !important;
+  /* Prism Okaidia default text color */
+  background-color: transparent !important;
+  padding: 0 !important;
+  font-size: 0.9rem !important;
+}
+
+.markdown-body blockquote {
+  border-left: 4px solid var(--accent-orange) !important;
+  color: #555 !important;
+  background: var(--paper-cream) !important;
+  padding: 1rem 1.5rem !important;
+  margin: 2rem 0 !important;
+  font-style: italic !important;
+}
+
+.markdown-body a {
+  color: var(--primary) !important;
+  text-decoration: underline !important;
+}
+
+.markdown-body table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  margin-bottom: 2rem !important;
+  border: 2px solid var(--charcoal) !important;
+}
+
+.markdown-body th,
+.markdown-body td {
+  border: 1px solid var(--charcoal) !important;
+  padding: 0.75rem !important;
+  text-align: left !important;
+}
+
+.markdown-body th {
+  background-color: var(--charcoal) !important;
+  color: white !important;
+  font-family: var(--font-mono) !important;
+  text-transform: uppercase !important;
+}
+
+.markdown-body img {
+  border: 2px solid var(--charcoal) !important;
+  box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.1) !important;
+  margin: 2rem 0 !important;
+}

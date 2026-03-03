@@ -1,12 +1,16 @@
-import { Component, ChangeDetectorRef, inject, OnInit, OnDestroy, signal, HostListener } from '@angular/core';
+import { Component, ChangeDetectorRef, inject, OnInit, OnDestroy, signal, HostListener, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule, ActivatedRoute, Router } from '@angular/router';
 import { CdkDragDrop, moveItemInArray, CdkDrag, CdkDropList, CdkDragHandle } from '@angular/cdk/drag-drop';
-import { ContentService, EditorBlock, DocumentEntry, CustomWidget, DiagramNodeConfig } from '../../services/content.service';
+import { ContentService, EditorBlock, DocumentEntry, CustomWidget, DiagramNodeConfig, SavedDiagram } from '../../services/content.service';
 import { DomSanitizer, SafeHtml, SafeResourceUrl } from '@angular/platform-browser';
 import imageCompression from 'browser-image-compression';
 import { FFlowModule } from '@foblex/flow';
+import { MarkdownComponent } from 'ngx-markdown';
+import html2canvas from 'html2canvas';
+import { DesignStudio } from '../design-studio/design-studio';
+
 @Component({
   selector: 'app-block-editor',
   standalone: true,
@@ -14,10 +18,9 @@ import { FFlowModule } from '@foblex/flow';
     CommonModule,
     FormsModule,
     RouterModule,
-    CdkDrag,
-    CdkDropList,
-    CdkDragHandle,
-    FFlowModule
+    FFlowModule,
+    MarkdownComponent,
+    DesignStudio
   ],
   templateUrl: './block-editor.html',
   styleUrl: './block-editor.css',
@@ -63,7 +66,20 @@ export class BlockEditor implements OnInit, OnDestroy {
   pendingDraftData: any = null;
   isExiting = false;
   zenMode = false;
+  isPreviewing = false;
+  previewIframeUrl: SafeResourceUrl | null = null;
   showZenHelp = false;
+  isToolbarCollapsed = false;
+
+  pastedMarkdown = '';
+  markdownContent = '';
+  renderedMarkdown: SafeHtml = '';
+  showPasteMdModal = false;
+
+  @ViewChild('editorPane') editorPane!: ElementRef<HTMLDivElement>;
+  @ViewChild('previewPane') previewPane!: ElementRef<HTMLDivElement>;
+  private scrollTimeout: any;
+  private currentScrollSource: 'editor' | 'preview' | null = null;
 
   contentBlocks: EditorBlock[] = [];
   // Widget/Sticker Layer (Keeping the array for backwards compatibility of data model)
@@ -93,8 +109,8 @@ export class BlockEditor implements OnInit, OnDestroy {
   ];
 
   get wordCount(): number {
-    const fullText = this.contentBlocks.map(b => b.content || '').join(' ');
-    const words = fullText.trim().split(/\s+/).filter(w => w.length > 0);
+    const text = this.markdownContent || '';
+    const words = text.trim().split(/\s+/).filter(w => w.length > 0);
     return words.length;
   }
 
@@ -156,6 +172,51 @@ export class BlockEditor implements OnInit, OnDestroy {
     }
   }
 
+  // =========================================================
+  // DOCUMENT MAP (DYNAMIC TOC)
+  // =========================================================
+  tocList: { id: string, label: string, level: number }[] = [];
+  activeTocId: string = '';
+
+  parseToc() {
+    if (!this.markdownContent) {
+      this.tocList = [];
+      return;
+    }
+
+    const lines = this.markdownContent.split('\n');
+    const toc: { id: string, label: string, level: number }[] = [];
+
+    // Pattern to catch #, ##, ###
+    const headingRegex = /^(#{1,3})\s+(.*)$/;
+
+    lines.forEach((line, index) => {
+      const match = line.match(headingRegex);
+      if (match) {
+        const level = match[1].length; // number of '#'
+        const rawLabel = match[2];
+        const label = rawLabel.trim();
+        // Generamos un ID seguro para usar en anclas HTML
+        const id = 'toc-' + label.toLowerCase().replace(/[^a-z0-9]+/g, '-') + '-' + index;
+
+        toc.push({ id, label, level });
+      }
+    });
+
+    this.tocList = toc;
+  }
+
+  scrollToHeading(id: string) {
+    // Cuando el TOC se renderiza en la Vista Previa, los headings necesitan IDs
+    // Para simplificar, confiaremos en un scroll manual para la versión en crudo
+    // o usaremos marcadores en la vista previa del bloque
+    const el = document.getElementById(id);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      this.activeTocId = id;
+    }
+  }
+
   async loadWidgets() {
     const [diagramNodes, sysTags] = await Promise.all([
       this.contentService.getDiagramNodes(),
@@ -201,36 +262,176 @@ export class BlockEditor implements OnInit, OnDestroy {
         this.coverPhotoUrl = '';
       }
 
+      // MIGRATION LOGIC: If we have markdownContent, use it. 
+      // If NOT, but we HAVE blocks, migrate them.
+      if (doc.markdownContent) {
+        this.markdownContent = doc.markdownContent;
+      } else if (doc.blocks && doc.blocks.length > 0) {
+        console.info('[Migration] Document has legacy blocks. Converting to Markdown...');
+        this.markdownContent = this.migrateLegacyBlocksToMarkdown(doc.blocks);
+      } else {
+        this.markdownContent = '';
+      }
 
-      this.category = doc.category;
-      this.tags = doc.tags.join(', ');
+      this.contentBlocks = doc.blocks || []; // Keep for compatibility during transition if needed
+      this.documentStatus = doc.status || 'draft';
+      this.category = doc.category || 'work';
       this.indexLog = doc.indexLog || '';
+      this.tags = (doc.tags || []).join(', ');
 
-      const techBlock = doc.blocks.find((b: EditorBlock) => b.type === 'tech-stack');
-      if (techBlock && techBlock.data?.status) {
-        this.deployStatus = techBlock.data.status;
+      // Extract tech stack status and bibliography from blocks if migrating
+      if (!doc.markdownContent && doc.blocks) {
+        const techBlock = doc.blocks.find((b: EditorBlock) => b.type === 'tech-stack');
+        if (techBlock && techBlock.data?.status) {
+          this.deployStatus = techBlock.data.status;
+        }
+        const biblioBlock = doc.blocks.find((b: EditorBlock) => b.type === 'bibliography');
+        if (biblioBlock) {
+          this.bibliography = biblioBlock.content;
+        }
       }
 
-      const biblioBlock = doc.blocks.find((b: EditorBlock) => b.type === 'bibliography');
-      if (biblioBlock) {
-        this.bibliography = biblioBlock.content;
-      }
-
-      // Separating standard blocks from widgets and tech-stack
-      this.contentBlocks = JSON.parse(JSON.stringify(doc.blocks.filter((b: EditorBlock) => b.type !== 'widget' && b.type !== 'tech-stack' && b.type !== 'bibliography')));
-      this.widgetBlocks = JSON.parse(JSON.stringify(doc.blocks.filter((b: EditorBlock) => b.type === 'widget')));
-      this.documentStatus = doc.status || 'published';
+      this.parseToc(); // Initialize TOC on load
       this.cdr.detectChanges();
-
-      // Tomamos foto inicial después de cargar
       this.saveSnapshot();
-
-      // Verificar si hay un borrador local más reciente o pendiente
       this.checkLocalDraft(slug);
     } else {
       console.error('Document not found or access denied:', slug);
       this.router.navigate(['/404']);
     }
+  }
+
+  onMarkdownChange(newValue: string) {
+    this.markdownContent = newValue;
+    this.saveSnapshot();
+    // Trigger scroll sync on change to follow cursor/new lines
+    setTimeout(() => this.syncScroll('editor'), 0);
+  }
+
+  onMarkdownKeyDown(event: KeyboardEvent) {
+    const textarea = event.target as HTMLTextAreaElement;
+    if (!textarea) return;
+
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const text = this.markdownContent;
+
+    // === 1. Auto-closing pairs ===
+    const pairs: Record<string, string> = {
+      '(': ')',
+      '[': ']',
+      '{': '}',
+      '*': '*',
+      '_': '_',
+      '`': '`'
+    };
+
+    if (pairs[event.key]) {
+      // If text is selected, wrap it
+      if (start !== end) {
+        event.preventDefault();
+        const selectedText = text.substring(start, end);
+        const wrappedText = event.key + selectedText + pairs[event.key];
+        this.markdownContent = text.substring(0, start) + wrappedText + text.substring(end);
+
+        setTimeout(() => {
+          textarea.setSelectionRange(start + 1, start + 1 + selectedText.length);
+        }, 0);
+        return;
+      } else {
+        // Just insert pair and put cursor in middle
+        event.preventDefault();
+        const pair = event.key + pairs[event.key];
+        this.markdownContent = text.substring(0, start) + pair + text.substring(end);
+
+        setTimeout(() => {
+          textarea.setSelectionRange(start + 1, start + 1);
+        }, 0);
+        return;
+      }
+    }
+
+    // === 2. Smart List Continuation ===
+    if (event.key === 'Enter') {
+      // Find the current line
+      const textToCursor = text.substring(0, start);
+      const lines = textToCursor.split('\n');
+      const currentLine = lines[lines.length - 1];
+
+      // Check if line starts with a list marker (-, *, 1., etc)
+      const listMatch = currentLine.match(/^(\s*)([-*]|\d+\.)\s+(.*)$/);
+
+      if (listMatch) {
+        event.preventDefault(); // Stop normal enter
+
+        const [_, indent, marker, content] = listMatch;
+
+        // If the line is JUST the marker (empty list item), delete it to break the list
+        if (!content.trim()) {
+          const beforeLine = textToCursor.substring(0, textToCursor.lastIndexOf(currentLine));
+          this.markdownContent = beforeLine + '\n' + text.substring(end);
+          setTimeout(() => {
+            textarea.setSelectionRange(beforeLine.length + 1, beforeLine.length + 1);
+          }, 0);
+          return;
+        }
+
+        // Otherwise, continue the list
+        let nextMarker = marker;
+        if (marker.match(/\d+\./)) {
+          const num = parseInt(marker, 10);
+          nextMarker = `${num + 1}.`;
+        }
+
+        const insertion = `\n${indent}${nextMarker} `;
+        this.markdownContent = text.substring(0, start) + insertion + text.substring(end);
+
+        setTimeout(() => {
+          textarea.setSelectionRange(start + insertion.length, start + insertion.length);
+          this.syncScroll('editor');
+        }, 0);
+        return;
+      }
+    }
+  }
+
+  // renderPreview removed as ngx-markdown handles it
+
+  migrateLegacyBlocksToMarkdown(blocks: EditorBlock[]): string {
+    let md = '';
+    blocks.forEach(block => {
+      switch (block.type) {
+        case 'h1': md += `# ${block.content}\n\n`; break;
+        case 'h2': md += `## ${block.content}\n\n`; break;
+        case 'p': md += `${block.content}\n\n`; break;
+        case 'blockquote': md += `> ${block.content}\n\n`; break;
+        case 'divider': md += `---\n\n`; break;
+        case 'image':
+          const alt = block.data?.text || 'image';
+          md += `![${alt}](${block.content})\n\n`;
+          break;
+        case 'code':
+          const lang = block.data?.language || 'typescript';
+          md += `\`\`\`${lang}\n${block.content}\n\`\`\`\n\n`;
+          break;
+        case 'comparison':
+          md += `| ${block.data?.col1Title || 'Col 1'} | ${block.data?.col2Title || 'Col 2'} |\n`;
+          md += `|---|---|\n`;
+          (block.data?.rows || []).forEach((row: any) => {
+            md += `| ${row.col1} | ${row.col2} |\n`;
+          });
+          md += `\n`;
+          break;
+        case 'tech-stack':
+          md += `### Tech Stack\n\n`;
+          md += `- **Tags**: ${block.data?.tags}\n`;
+          md += `- **Status**: ${block.data?.status}\n\n`;
+          break;
+        default:
+          if (block.content) md += `${block.content}\n\n`;
+      }
+    });
+    return md.trim();
   }
 
   drop(event: CdkDragDrop<EditorBlock[]>) {
@@ -259,11 +460,14 @@ export class BlockEditor implements OnInit, OnDestroy {
       case 'diagram':
         block.data = {
           nodes: [
-            { id: 'node_start', text: 'START', x: 50, y: 150 },
-            { id: 'node_end', text: 'END', x: 350, y: 150 }
+            { id: 'node_start', text: 'START', position: { x: 50, y: 150 } },
+            { id: 'node_end', text: 'END', position: { x: 350, y: 150 } }
           ],
           connections: []
         };
+        break;
+      case 'code':
+        block.data = { language: 'typescript', filename: '', error: '', errorType: 'error' };
         break;
       case 'image':
         block.data = { size: 'full', align: 'center' };
@@ -281,6 +485,63 @@ export class BlockEditor implements OnInit, OnDestroy {
       this.updateIndexLogLive();
     }
   }
+
+  addTableBlock() {
+    const block: EditorBlock = {
+      id: Math.random().toString(36).substr(2, 9),
+      type: 'table',
+      content: '',
+      data: {
+        headers: ['Header 1', 'Header 2', 'Header 3'],
+        rows: [
+          ['Item 1', 'Item 2', 'Item 3'],
+          ['Item 4', 'Item 5', 'Item 6']
+        ]
+      }
+    };
+    this.contentBlocks.push(block);
+    this.saveSnapshot();
+  }
+
+  addTreeBlock() {
+    const block: EditorBlock = {
+      id: Math.random().toString(36).substr(2, 9),
+      type: 'tree',
+      content: 'project-root/\n├── src/\n│   ├── main.tf\n│   └── variables.tf\n├── tests/\n│   └── main_test.go\n└── README.md',
+      data: {}
+    };
+    this.contentBlocks.push(block);
+    this.saveSnapshot();
+  }
+
+  // === MÉTODOS DE TABLA ===
+  addTableRow(block: EditorBlock) {
+    if (block.type !== 'table' || !block.data?.rows) return;
+    const cols = block.data.headers.length;
+    block.data.rows.push(new Array(cols).fill(''));
+    this.saveSnapshot();
+  }
+
+  removeTableRow(block: EditorBlock, index: number) {
+    if (block.type !== 'table' || !block.data?.rows) return;
+    block.data.rows.splice(index, 1);
+    this.saveSnapshot();
+  }
+
+  addTableColumn(block: EditorBlock) {
+    if (block.type !== 'table' || !block.data?.headers) return;
+    block.data.headers.push('New Header');
+    block.data.rows.forEach((row: any[]) => row.push(''));
+    this.saveSnapshot();
+  }
+
+  removeTableColumn(block: EditorBlock, index: number) {
+    if (block.type !== 'table' || !block.data?.headers) return;
+    block.data.headers.splice(index, 1);
+    block.data.rows.forEach((row: any[]) => row.splice(index, 1));
+    this.saveSnapshot();
+  }
+
 
   async onCoverPhotoSelected(event: any) {
     let file = event.target.files[0];
@@ -474,10 +735,11 @@ export class BlockEditor implements OnInit, OnDestroy {
       slug: this.slug,
       title: this.title,
       coverPhoto: finalCover,
-      category: this.category as any, // Cast to any to bypass strict type check for now if interface wasn't fully updated
+      category: this.category as any,
       tags: tagArray,
       indexLog: this.indexLog,
-      blocks: allBlocks,
+      blocks: [], // We are moving away from blocks
+      markdownContent: this.markdownContent,
       status: this.documentStatus
     });
 
@@ -504,9 +766,320 @@ export class BlockEditor implements OnInit, OnDestroy {
     }, 1500);
   }
 
-  autoResize(element: HTMLElement) {
-    element.style.height = 'auto'; // Resetea la altura
-    element.style.height = element.scrollHeight + 'px'; // Ajusta al texto real
+  public autoResize(element: HTMLElement) {
+    if (element.classList.contains('raw-markdown-editor')) return; // Allow native scrolling for main editor
+    element.style.height = 'auto';
+    element.style.height = (element.scrollHeight) + 'px';
+  }
+
+  syncScroll(source: 'editor' | 'preview') {
+    if (this.currentScrollSource && this.currentScrollSource !== source) return;
+
+    const editor = this.editorPane?.nativeElement;
+    const preview = this.previewPane?.nativeElement;
+    if (!editor || !preview) return;
+
+    this.currentScrollSource = source;
+
+    if (source === 'editor') {
+      const denom = editor.scrollHeight - editor.clientHeight;
+      if (denom > 0) {
+        const percentage = editor.scrollTop / denom;
+        preview.scrollTop = percentage * (preview.scrollHeight - preview.clientHeight);
+      }
+    } else {
+      const denom = preview.scrollHeight - preview.clientHeight;
+      if (denom > 0) {
+        const percentage = preview.scrollTop / denom;
+        editor.scrollTop = percentage * (editor.scrollHeight - editor.clientHeight);
+      }
+    }
+
+    // Reset the source after a short delay to allow the other pane to finish its programmatic scroll
+    clearTimeout(this.scrollTimeout);
+    this.scrollTimeout = setTimeout(() => {
+      this.currentScrollSource = null;
+    }, 50);
+  }
+
+  public insertMarkdownSnippet(snippet: string, forceStart?: number) {
+    console.log('Inserting snippet:', snippet);
+    const textarea = document.querySelector('.raw-markdown-editor') as HTMLTextAreaElement;
+    if (!textarea) {
+      this.markdownContent += snippet;
+      return;
+    }
+
+    const start = forceStart !== undefined && forceStart !== null ? forceStart : textarea.selectionStart;
+    const end = forceStart !== undefined && forceStart !== null ? forceStart : textarea.selectionEnd;
+    const text = this.markdownContent;
+
+    this.markdownContent = text.substring(0, start) + snippet + text.substring(end);
+
+    // Devolver el foco y posicionar cursor
+    setTimeout(() => {
+      textarea.focus();
+      textarea.setSelectionRange(start + snippet.length, start + snippet.length);
+      this.autoResize(textarea);
+    }, 0);
+
+    this.onMarkdownChange(this.markdownContent);
+  }
+
+  editorCursorPos: number | null = null;
+
+  public openDiagramBuilder() {
+    const textarea = document.querySelector('.raw-markdown-editor') as HTMLTextAreaElement;
+    if (textarea) {
+      this.editorCursorPos = textarea.selectionStart;
+    }
+
+    this.diagramName = '';
+    this.editingDiagramId = null;
+    this.diagramData = {
+      nodes: [
+        { id: 'node_start', text: 'START', position: { x: 50, y: 150 }, shape: 'box', bg_color: 'bg-white', text_color: 'text-charcoal', border_style: 'border-2 border-charcoal', shadow_style: 'shadow-[4px_4px_0_#1a1a1a]' }
+      ],
+      connections: []
+    };
+    this.showDiagramModal = true;
+    this.loadSavedDiagrams();
+    this.refreshNodeTemplates();
+  }
+
+  // =========================================================
+  // === DIAGRAM BUILDER MODAL ===
+  // =========================================================
+  showDiagramModal = false;
+  isUploadingDiagram = false;
+  isSavingDiagram = false;
+  showDesignStudioPanel = false;
+  diagramData: any = { nodes: [], connections: [] };
+
+  // Diagram persistence
+  savedDiagrams: SavedDiagram[] = [];
+  diagramName = '';
+  editingDiagramId: string | null = null;
+  sidebarTab: 'templates' | 'saved' = 'templates';
+
+  closeDiagramModal() {
+    this.showDiagramModal = false;
+    this.showDesignStudioPanel = false;
+    this.diagramName = '';
+    this.editingDiagramId = null;
+    this.sidebarTab = 'templates';
+  }
+
+  toggleDesignStudioPanel() {
+    this.showDesignStudioPanel = !this.showDesignStudioPanel;
+    // Refresh node templates when closing studio (user may have saved/deleted nodes)
+    if (!this.showDesignStudioPanel) {
+      this.refreshNodeTemplates();
+    }
+  }
+
+  async refreshNodeTemplates() {
+    this.customNodeTemplates = await this.contentService.getDiagramNodes();
+    this.cdr.detectChanges();
+  }
+
+  addNodeFromStudio(config: DiagramNodeConfig) {
+    this.addModalDiagramNode(config);
+  }
+
+  addModalDiagramNode(templateIdOrConfig?: string | DiagramNodeConfig) {
+    // Stagger position so nodes don't stack on top of each other
+    const offset = this.diagramData.nodes.length * 40;
+    let newNode: any = {
+      id: 'node_' + Math.random().toString(36).substr(2, 6),
+      text: 'NEW_NODE',
+      position: { x: 200 + offset, y: 150 + offset },
+      shape: 'box', icon: null,
+      bg_color: 'bg-white', text_color: 'text-charcoal',
+      border_style: 'border-2 border-charcoal', shadow_style: 'shadow-[4px_4px_0_#1a1a1a]'
+    };
+
+    if (typeof templateIdOrConfig === 'string') {
+      const tpl = this.customNodeTemplates.find(t => t.id === templateIdOrConfig);
+      if (tpl) {
+        newNode.text = tpl.name;
+        newNode.icon = tpl.icon;
+        newNode.shape = tpl.shape;
+        newNode.bg_color = tpl.bg_color;
+        newNode.text_color = tpl.text_color;
+        newNode.border_style = tpl.border_style;
+        newNode.shadow_style = tpl.shadow_style;
+        newNode.font = tpl.font;
+      }
+    } else if (templateIdOrConfig && typeof templateIdOrConfig === 'object') {
+      const config = templateIdOrConfig as DiagramNodeConfig;
+      newNode.text = config.name;
+      newNode.icon = config.icon || null;
+      newNode.shape = config.shape || 'box';
+      newNode.bg_color = config.bg_color || 'bg-white';
+      newNode.text_color = config.text_color || 'text-charcoal';
+      newNode.border_style = config.border_style || 'border-2 border-charcoal';
+      newNode.shadow_style = config.shadow_style || 'shadow-[4px_4px_0_#1a1a1a]';
+      newNode.font = config.font || 'font-mono';
+    }
+
+    this.diagramData.nodes.push(newNode);
+  }
+
+  onModalNodeDrag(event: any, node: any) {
+    node.position.x = event.x;
+    node.position.y = event.y;
+  }
+
+  trackNodeById(index: number, node: any): string {
+    return node.id;
+  }
+
+  onModalNodeDragEnded(event: any, node: any) {
+    // No-op: position is already tracked via fNodePositionChange
+  }
+
+  onModalConnectionCreated(event: any) {
+    this.diagramData.connections.push({
+      from: event.fOutputId,
+      to: event.fInputId
+    });
+  }
+
+  removeModalDiagramNode(nodeId: string) {
+    this.diagramData.nodes = this.diagramData.nodes.filter((n: any) => n.id !== nodeId);
+    this.diagramData.connections = this.diagramData.connections.filter((c: any) => !c.from.startsWith(nodeId) && !c.to.startsWith(nodeId));
+  }
+
+  async exportDiagramToImage() {
+    const canvasElement = document.getElementById('diagram-export-area');
+    if (!canvasElement) return;
+
+    this.isUploadingDiagram = true;
+    this.cdr.detectChanges();
+
+    try {
+      const canvas = await html2canvas(canvasElement, {
+        backgroundColor: '#ffffff',
+        scale: 2, // Higher resolution
+        logging: false
+      });
+
+      canvas.toBlob(async (blob) => {
+        if (!blob) {
+          throw new Error('Canvas to Blob conversion failed.');
+        }
+
+        const file = new File([blob], `diagram_${new Date().getTime()}.png`, { type: 'image/png' });
+
+        // Optimizamos el tamaño del diagrama (opcional)
+        const options = { maxSizeMB: 0.5, maxWidthOrHeight: 1920, useWebWorker: true };
+        const compressedFile = await imageCompression(file, options);
+
+        // Subimos a Supabase Storage
+        const publicUrl = await this.contentService.uploadGalleryImage(compressedFile);
+
+        // Insertamos el Markdown
+        this.insertMarkdownSnippet(`\n![Diagram](${publicUrl})\n`, this.editorCursorPos ?? undefined);
+
+        this.closeDiagramModal();
+      }, 'image/png');
+    } catch (err) {
+      console.error('Failed to export diagram:', err);
+      alert('Error exporting diagram. Please try again.');
+    } finally {
+      this.isUploadingDiagram = false;
+      this.cdr.detectChanges();
+    }
+  }
+
+  // === DIAGRAM PERSISTENCE ===
+
+  async loadSavedDiagrams() {
+    this.savedDiagrams = await this.contentService.getSavedDiagrams();
+    this.cdr.detectChanges();
+  }
+
+  async saveDiagram() {
+    if (!this.diagramName.trim()) {
+      this.diagramName = 'Untitled Diagram';
+    }
+
+    this.isSavingDiagram = true;
+    this.cdr.detectChanges();
+
+    try {
+      // Generate thumbnail from current canvas
+      let thumbnailUrl = '';
+      const canvasEl = document.getElementById('diagram-export-area');
+      if (canvasEl) {
+        const canvas = await html2canvas(canvasEl, {
+          backgroundColor: '#ffffff',
+          scale: 1,
+          logging: false
+        });
+        const blob = await new Promise<Blob | null>(resolve => canvas.toBlob(resolve, 'image/png'));
+        if (blob) {
+          const file = new File([blob], `diagram_thumb_${Date.now()}.png`, { type: 'image/png' });
+          const options = { maxSizeMB: 0.2, maxWidthOrHeight: 600, useWebWorker: true };
+          const compressed = await imageCompression(file, options);
+          thumbnailUrl = await this.contentService.uploadGalleryImage(compressed);
+        }
+      }
+
+      const saved = await this.contentService.saveDiagram({
+        id: this.editingDiagramId || undefined,
+        name: this.diagramName.trim(),
+        diagram_data: {
+          nodes: JSON.parse(JSON.stringify(this.diagramData.nodes)),
+          connections: JSON.parse(JSON.stringify(this.diagramData.connections))
+        },
+        thumbnail_url: thumbnailUrl
+      });
+
+      this.editingDiagramId = saved.id || null;
+      await this.loadSavedDiagrams();
+      this.sidebarTab = 'saved';
+    } catch (err) {
+      console.error('Error saving diagram:', err);
+      alert('Error saving diagram. Please try again.');
+    } finally {
+      this.isSavingDiagram = false;
+      this.cdr.detectChanges();
+    }
+  }
+
+  loadDiagram(diagram: SavedDiagram) {
+    this.diagramName = diagram.name;
+    this.editingDiagramId = diagram.id || null;
+    this.diagramData = {
+      nodes: JSON.parse(JSON.stringify(diagram.diagram_data.nodes)),
+      connections: JSON.parse(JSON.stringify(diagram.diagram_data.connections))
+    };
+    this.cdr.detectChanges();
+  }
+
+  async deleteSavedDiagram(id: string) {
+    if (!confirm('Delete this diagram permanently?')) return;
+    try {
+      await this.contentService.deleteSavedDiagram(id);
+      if (this.editingDiagramId === id) {
+        this.editingDiagramId = null;
+        this.diagramName = '';
+      }
+      await this.loadSavedDiagrams();
+    } catch (err) {
+      console.error('Error deleting diagram:', err);
+    }
+  }
+
+  insertDiagramAsImage(thumbnailUrl: string) {
+    if (!thumbnailUrl) {
+      alert('This diagram has no thumbnail. Open it and export it first.');
+      return;
+    }
+    this.insertMarkdownSnippet(`\n![Diagram](${thumbnailUrl})\n`, this.editorCursorPos ?? undefined);
+    this.closeDiagramModal();
   }
 
   toggleZenMode() {
@@ -524,6 +1097,16 @@ export class BlockEditor implements OnInit, OnDestroy {
       // Quitamos el aviso
       document.body.classList.remove('zen-is-active');
     }
+  }
+
+  toggleToolbar() {
+    this.isToolbarCollapsed = !this.isToolbarCollapsed;
+  }
+
+  closePreview() {
+    this.isPreviewing = false;
+    this.previewIframeUrl = null;
+    this.cdr.detectChanges();
   }
 
   async preview() {
@@ -577,11 +1160,14 @@ export class BlockEditor implements OnInit, OnDestroy {
       category: this.category as any,
       tags: tagArray,
       indexLog: this.indexLog,
-      blocks: allBlocks
+      blocks: [],
+      markdownContent: this.markdownContent
     });
 
     const routeBase = this.category === 'work' ? 'works' : (this.category === 'guide' ? 'guides' : 'logs');
-    window.open(`/${routeBase}/preview`, '_blank');
+    this.previewIframeUrl = this.sanitizer.bypassSecurityTrustResourceUrl(`/${routeBase}/preview`);
+    this.isPreviewing = true;
+    this.cdr.detectChanges();
   }
 
   // === CSS helpers for custom diagram nodes ===
@@ -744,6 +1330,7 @@ export class BlockEditor implements OnInit, OnDestroy {
       if (value === '```') {
         block.type = 'code';
         block.content = '';
+        block.data = { language: 'typescript', filename: '', error: '', errorType: 'error' };
         setTimeout(() => document.getElementById(`block-input-${index}`)?.focus(), 50);
         this.saveSnapshot();
         return;
@@ -794,14 +1381,13 @@ export class BlockEditor implements OnInit, OnDestroy {
         block.data = [{ label: 'OBJ', title: 'Nuevo Objetivo', desc: '...', progress: 50 }];
         break;
       case 'diagram':
-        block.data = {
-          nodes: [
-            { id: 'node_start', text: 'START', x: 50, y: 150 },
-            { id: 'node_end', text: 'END', x: 350, y: 150 }
-          ],
-          connections: []
-        };
-        break;
+        // Instead of creating a block, we open the Diagram Builder modal
+        // and remove the empty paragraph where the slash command was typed.
+        this.contentBlocks.splice(this.activeBlockIndex, 1);
+        this.closeSlashMenu();
+        this.cdr.detectChanges();
+        this.openDiagramBuilder();
+        return; // Early return to avoid focusing on deleted block
       case 'video':
         block.data = { source: 'youtube' };
         break;
@@ -816,8 +1402,24 @@ export class BlockEditor implements OnInit, OnDestroy {
         };
         block.content = '';
         break;
+      case 'code':
+        block.data = { language: 'typescript', filename: '', error: '', errorType: 'error' };
+        break;
       case 'gallery':
         block.data = { images: [], layout: 'grid' };
+        break;
+      case 'table':
+        block.data = {
+          headers: ['Header 1', 'Header 2', 'Header 3'],
+          rows: [
+            ['Item 1', 'Item 2', 'Item 3'],
+            ['Item 4', 'Item 5', 'Item 6']
+          ]
+        };
+        break;
+      case 'tree':
+        block.content = 'project-root/\n├── src/\n│   ├── main.tf\n│   └── variables.tf\n├── tests/\n│   └── main_test.go\n└── README.md';
+        block.data = {};
         break;
     }
 
@@ -1060,6 +1662,102 @@ export class BlockEditor implements OnInit, OnDestroy {
       }
     }, 50);
   }
+
+  // =========================================================
+  // === FLOATING QUICK ACTIONS (TEXT SELECTION) ===
+  // =========================================================
+  showFloatingToolbar = false;
+  floatToolbarLeft = 0;
+  floatToolbarTop = 0;
+  selectedTextRange: { start: number, end: number } | null = null;
+
+  @ViewChild('editorPane', { static: false }) editorTextarea!: ElementRef<HTMLTextAreaElement>;
+
+  onMarkdownSelect(event: any) {
+    const textarea = event.target as HTMLTextAreaElement;
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+
+    // Solo mostramos la barra rápida si hay texto seleccionado
+    if (start !== end) {
+      this.selectedTextRange = { start, end };
+
+      // Intentamos posicionar el popup brutalista justo arriba del cursor
+      try {
+        const textToCursor = textarea.value.substring(0, start);
+        const lines = textToCursor.split('\n');
+        const currentLineIndex = lines.length;
+
+        // Un cálculo aproximado y estable para textarea brutalista sin librerías complejas:
+        // Cada línea de nuestro textarea (line-height 2, font 1.15rem) ocupa aprox 36px
+        // La fuente es monoespaciada, estimamos ~9px por caracter
+        const lineHeight = 36;
+        const charWidth = 9;
+        const currentLineText = lines[lines.length - 1];
+
+        // scrollTop y scrollLeft base
+        const scrollTop = textarea.scrollTop;
+        const scrollLeft = textarea.scrollLeft;
+
+        // X e Y base relativas al textarea
+        // Le sumamos el padding interno de 3rem (48px) o 8vh
+        const baseY = (currentLineIndex * lineHeight) - scrollTop;
+        const baseX = (currentLineText.length * charWidth) - scrollLeft + 48; // aprox padding
+
+        // Calculamos las coordenadas FINALES respecto a la pantalla
+        const rect = textarea.getBoundingClientRect();
+
+        this.floatToolbarTop = rect.top + baseY - 60; // 60px arriba del texto
+        this.floatToolbarLeft = rect.left + Math.min(baseX, rect.width - 200); // 200px max width
+
+        this.showFloatingToolbar = true;
+      } catch (e) {
+        // Fallback al centro inferior si falla el cálculo manual
+        this.showFloatingToolbar = true;
+        this.floatToolbarTop = window.innerHeight - 100;
+        this.floatToolbarLeft = window.innerWidth / 2;
+      }
+    } else {
+      this.showFloatingToolbar = false;
+      this.selectedTextRange = null;
+    }
+  }
+
+  applyQuickFormat(syntax: string) {
+    if (!this.selectedTextRange || !this.editorTextarea) return;
+
+    const { start, end } = this.selectedTextRange;
+    const textarea = this.editorTextarea.nativeElement;
+
+    const text = this.markdownContent;
+    const prefix = text.substring(0, start);
+    const selected = text.substring(start, end);
+    const suffix = text.substring(end);
+
+    let formattedText = '';
+
+    if (syntax === 'link') {
+      formattedText = `[${selected}](url)`;
+    } else if (syntax === 'bold') {
+      formattedText = `**${selected}**`;
+    } else if (syntax === 'italic') {
+      formattedText = `*${selected}*`;
+    } else if (syntax === 'code') {
+      formattedText = `\`${selected}\``;
+    }
+
+    this.markdownContent = prefix + formattedText + suffix;
+    this.saveSnapshot();
+    this.showFloatingToolbar = false;
+    this.selectedTextRange = null;
+    this.saveDraftLocally();
+
+    // Devolvemos el foco
+    setTimeout(() => {
+      textarea.focus();
+      textarea.setSelectionRange(start + syntax.length, start + formattedText.length);
+    }, 50);
+  }
   // === LÓGICA DE DIAGRAMAS FOBLEX ===
 
   // Actualizamos la función para que acepte un ID de plantilla opcional
@@ -1178,9 +1876,339 @@ export class BlockEditor implements OnInit, OnDestroy {
     this.saveSnapshot();
   }
 
-  // 3. Eliminar una fila del cuadro
   removeComparisonRow(block: any, rowIndex: number) {
     block.data.rows.splice(rowIndex, 1);
     this.saveSnapshot();
   }
+
+  // =========================================================
+  // MARKDOWN IMPORT FEATURE
+  // =========================================================
+  importMarkdownFile(event: any) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e: any) => {
+      const markdown = e.target.result;
+      const parsedBlocks = this.parseMarkdownToBlocks(markdown);
+
+      if (this.contentBlocks.length > 0) {
+        if (confirm('¿Quieres reemplazar el contenido actual? Cancelar si quieres añadirlo al final.')) {
+          this.contentBlocks = parsedBlocks;
+        } else {
+          this.contentBlocks = [...this.contentBlocks, ...parsedBlocks];
+        }
+      } else {
+        this.contentBlocks = parsedBlocks;
+      }
+
+      this.saveSnapshot();
+      event.target.value = null; // Reset input
+    };
+    reader.readAsText(file);
+  }
+
+  importPastedMarkdown() {
+    if (!this.pastedMarkdown.trim()) return;
+
+    const parsedBlocks = this.parseMarkdownToBlocks(this.pastedMarkdown);
+
+    if (this.contentBlocks.length > 0) {
+      if (confirm('¿Quieres reemplazar el contenido actual? Cancelar si quieres añadirlo al final.')) {
+        this.contentBlocks = parsedBlocks;
+      } else {
+        this.contentBlocks = [...this.contentBlocks, ...parsedBlocks];
+      }
+    } else {
+      this.contentBlocks = parsedBlocks;
+    }
+
+    this.saveSnapshot();
+    this.showPasteMdModal = false;
+    this.pastedMarkdown = '';
+  }
+
+  parseMarkdownToBlocks(markdown: string): EditorBlock[] {
+    const lines = markdown.split('\n');
+    const blocks: EditorBlock[] = [];
+    let inCodeBlock = false;
+    let codeLanguage = '';
+    let codeContent: string[] = [];
+    let currentParagraph: string[] = [];
+
+    const flushParagraph = () => {
+      if (currentParagraph.length > 0) {
+        blocks.push({
+          id: Math.random().toString(36).substr(2, 9),
+          type: 'p',
+          content: currentParagraph.join('\n')
+        });
+        currentParagraph = [];
+      }
+    };
+
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+
+      // Code Block handling
+      if (line.trim().startsWith('```')) {
+        if (inCodeBlock) {
+          blocks.push({
+            id: Math.random().toString(36).substr(2, 9),
+            type: 'code',
+            content: codeContent.join('\n'),
+            data: { language: codeLanguage || 'typescript', filename: '', error: '', errorType: 'error' }
+          });
+          inCodeBlock = false;
+          codeContent = [];
+          codeLanguage = '';
+        } else {
+          flushParagraph();
+          inCodeBlock = true;
+          codeLanguage = line.trim().replace('```', '').trim().toLowerCase();
+        }
+        continue;
+      }
+
+      if (inCodeBlock) {
+        codeContent.push(line);
+        continue;
+      }
+
+      // Headings
+      if (line.startsWith('# ')) {
+        flushParagraph();
+        blocks.push({
+          id: Math.random().toString(36).substr(2, 9),
+          type: 'h1',
+          content: line.substring(2).trim()
+        });
+        continue;
+      }
+      if (line.startsWith('## ')) {
+        flushParagraph();
+        blocks.push({
+          id: Math.random().toString(36).substr(2, 9),
+          type: 'h2',
+          content: line.substring(3).trim()
+        });
+        continue;
+      }
+
+      // Blockquote
+      if (line.startsWith('> ')) {
+        flushParagraph();
+        blocks.push({
+          id: Math.random().toString(36).substr(2, 9),
+          type: 'blockquote',
+          content: line.substring(2).trim()
+        });
+        continue;
+      }
+
+      // Divider
+      if (line.trim() === '---' || line.trim() === '***') {
+        flushParagraph();
+        blocks.push({
+          id: Math.random().toString(36).substr(2, 9),
+          type: 'divider',
+          content: ''
+        });
+        continue;
+      }
+
+      // Images ![alt](url)
+      const imageMatch = line.match(/^!\[(.*?)\]\(([^)\s]+)(?:\s+"(.*?)")?\)$/);
+      if (imageMatch) {
+        flushParagraph();
+        blocks.push({
+          id: Math.random().toString(36).substr(2, 9),
+          type: 'image',
+          content: imageMatch[2],
+          data: { text: imageMatch[1] || '' }
+        });
+        continue;
+      }
+
+      // Empty Lines (Paragraph break)
+      if (line.trim() === '') {
+        flushParagraph();
+        continue;
+      }
+
+      currentParagraph.push(line);
+    }
+
+    // Flush any remaining
+    flushParagraph();
+
+    return blocks;
+  }
+
+  trackByIndex(index: number, obj: any): any {
+    return index;
+  }
+
+  // === MÉTODOS DE PEGAR MARKDOWN E INTELIGENCIA ARTIFICIAL ===
+
+  @HostListener('window:paste', ['$event'])
+  onGlobalPaste(event: ClipboardEvent) {
+    if (this.showPasteMdModal) return;
+
+    const target = event.target as HTMLElement;
+    const isInputOrTextarea = target.tagName === 'INPUT' || target.tagName === 'TEXTAREA';
+    const textData = event.clipboardData?.getData('text/plain');
+    if (!textData) return;
+
+    // Detect if the pasted text has multiple lines or contains strong markdown patterns like images, code blocks, or headings
+    const isMarkdownPattern = /(^#{1,6}\s|^!\[.*?\]\(.*?|^```|^- \[[ x]\])/m.test(textData);
+    const isMultiLine = textData.split('\n').length > 2;
+
+    if (isMarkdownPattern || (isMultiLine && !isInputOrTextarea)) {
+      event.preventDefault();
+      this.pastedMarkdown = textData;
+      this.showPasteMdModal = true;
+    }
+  }
+
+  onPasteModal(event: ClipboardEvent) {
+    const htmlData = event.clipboardData?.getData('text/html');
+    if (htmlData) {
+      event.preventDefault();
+
+      const newBlocks = this.parseHtmlToBlocks(htmlData);
+
+      if (newBlocks.length === 0) return;
+
+      if (this.contentBlocks.length > 0) {
+        if (confirm('Se detectó contenido enriquecido (IA). ¿Quieres reemplazar el contenido actual del editor? Cancelar si quieres añadirlo al final.')) {
+          this.contentBlocks = newBlocks;
+        } else {
+          this.contentBlocks = [...this.contentBlocks, ...newBlocks];
+        }
+      } else {
+        this.contentBlocks = newBlocks;
+      }
+
+      this.updateIndexLogLive();
+      this.saveSnapshot();
+      this.showPasteMdModal = false;
+      this.pastedMarkdown = '';
+    }
+  }
+
+  parseHtmlToBlocks(html: string): EditorBlock[] {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, 'text/html');
+    const blocks: EditorBlock[] = [];
+
+    const newId = () => Math.random().toString(36).substr(2, 9);
+
+    const processElement = (el: HTMLElement) => {
+      let text = el.textContent?.trim() || '';
+      if (!text && el.tagName !== 'TR' && el.tagName !== 'TABLE' && el.tagName !== 'IMG') return;
+
+      if (['H1', 'H2', 'H3', 'H4', 'H5', 'H6'].includes(el.tagName)) {
+        blocks.push({
+          id: newId(),
+          type: el.tagName === 'H1' ? 'h1' : 'h2', // Mapping all headings to h2 except h1
+          content: text
+        });
+      } else if (el.tagName === 'P') {
+        let innerMd = this.convertInlineTextNode(el).trim();
+        if (innerMd) {
+          blocks.push({ id: newId(), type: 'p', content: innerMd });
+        }
+      } else if (el.tagName === 'CODE' || el.tagName === 'PRE') {
+        let lang = 'plaintext';
+        const codeEl = el.tagName === 'PRE' ? el.querySelector('code') : el;
+        if (codeEl?.className) {
+          const m = codeEl.className.match(/language-(\w+)/);
+          if (m) lang = m[1];
+        }
+        const content = (codeEl ? codeEl.textContent : el.textContent) || '';
+
+        // Heuristic for Directory Tree vs Normal Code
+        if (content.match(/[├└│]/) || content.includes('├──') || content.includes('└──')) {
+          blocks.push({ id: newId(), type: 'tree', content: content.trim(), data: {} });
+        } else {
+          blocks.push({ id: newId(), type: 'code', content: content.trim(), data: { language: lang, filename: '', error: '', errorType: 'error' } });
+        }
+      } else if (el.tagName === 'UL' || el.tagName === 'OL') {
+        let listMd = '';
+        let isOl = el.tagName === 'OL';
+        let i = 1;
+        Array.from(el.querySelectorAll(':scope > li')).forEach(li => {
+          listMd += (isOl ? `${i}. ` : '- ') + this.convertInlineTextNode(li).replace(/\n/g, '') + '\n';
+          i++;
+        });
+        blocks.push({ id: newId(), type: 'p', content: listMd.trim() });
+      } else if (el.tagName === 'TABLE') {
+        const headers: string[] = [];
+        const rows: string[][] = [];
+
+        const trs = Array.from(el.querySelectorAll('tr'));
+        if (trs.length === 0) return;
+
+        trs.forEach((tr, index) => {
+          const cells = Array.from(tr.querySelectorAll(index === 0 ? 'th, td' : 'td'));
+          const cellTexts = cells.map(c => this.convertInlineTextNode(c as HTMLElement).trim());
+          if (index === 0) {
+            headers.push(...cellTexts);
+          } else {
+            while (cellTexts.length < headers.length) cellTexts.push(''); // pad
+            rows.push(cellTexts);
+          }
+        });
+
+        if (headers.length === 0 && rows.length > 0) {
+          rows[0].forEach((_, i) => headers.push(`Col ${i + 1}`));
+        }
+
+        blocks.push({ id: newId(), type: 'table', content: '', data: { headers, rows } });
+      } else if (el.tagName === 'DIV' || el.tagName === 'SECTION' || el.tagName === 'ARTICLE' || el.tagName === 'MAIN' || el.tagName === 'BODY') {
+        Array.from(el.children).forEach(child => processElement(child as HTMLElement));
+      } else {
+        let innerMd = this.convertInlineTextNode(el).trim();
+        if (innerMd) {
+          blocks.push({ id: newId(), type: 'p', content: innerMd });
+        }
+      }
+    };
+
+    processElement(doc.body);
+    return blocks;
+  }
+
+  convertInlineTextNode(node: Node): string {
+    if (node.nodeType === Node.TEXT_NODE) {
+      return (node.textContent || '').replace(/\s+/g, ' ');
+    }
+    if (node.nodeType === Node.ELEMENT_NODE) {
+      const el = node as HTMLElement;
+      // Skip structural blocks that we will parse separately at the top level
+      if (['DIV', 'P', 'UL', 'OL', 'LI', 'PRE', 'TABLE'].includes(el.tagName)) {
+        let text = '';
+        Array.from(el.childNodes).forEach(c => text += this.convertInlineTextNode(c));
+        return text;
+      }
+
+      let innerText = '';
+      Array.from(el.childNodes).forEach(child => {
+        innerText += this.convertInlineTextNode(child);
+      });
+
+      switch (el.tagName) {
+        case 'STRONG': case 'B': return `**${innerText.trim()}**`;
+        case 'EM': case 'I': return `_${innerText.trim()}_`;
+        case 'CODE': return `\`${innerText.trim()}\``;
+        case 'A': return `[${innerText.trim()}](${el.getAttribute('href') || ''})`;
+        case 'BR': return '\n';
+        default: return innerText;
+      }
+    }
+    return '';
+  }
+
 }

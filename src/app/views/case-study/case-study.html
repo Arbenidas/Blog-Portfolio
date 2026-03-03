@@ -83,10 +83,82 @@
     </div>
   </div>
 
-  <!-- 2-COLUMN: ARTICLE + SIDEBAR -->
+  <!-- 2-COLUMN: SIDEBAR (Left) + ARTICLE (Right) -->
   <div class="cs-page-grid">
+    <!-- LEFT: STICKY SIDEBAR -->
+    <aside class="log-sidebar">
 
-  <article class="article-container" id="pdf-content-area">
+      <!-- Reading Info -->
+      <div class="sidebar-card">
+        <div class="sidebar-card-header">
+          <span class="material-symbols-outlined" style="font-size:14px;">schedule</span>
+          SYS_INFO
+        </div>
+        <div class="sidebar-meta-row">
+          <span class="sidebar-meta-label">Read time</span>
+          <span class="sidebar-meta-val">~{{ readingTime }} min</span>
+        </div>
+        <div class="sidebar-meta-row">
+          <span class="sidebar-meta-label">Filed</span>
+          <span class="sidebar-meta-val">{{ work.createdAt | date:'dd MMM yy' }}</span>
+        </div>
+        <div class="sidebar-meta-row" style="border-bottom:none;">
+          <span class="sidebar-meta-label">Tags</span>
+          <span class="sidebar-meta-val" style="color:var(--primary);">{{ work.tags.length }}</span>
+        </div>
+      </div>
+
+      <!-- Read Mode Button -->
+      <button class="sidebar-card btn-read-mode-toggle" (click)="toggleReadMode()" style="justify-content: center; padding: 0.5rem; text-align: center; font-family: var(--font-mono); font-size: 0.75rem; font-weight: bold; color: var(--charcoal); cursor: pointer; transition: background-color 0.2s, color 0.2s; display: flex; align-items: center; gap: 0.4rem; background-color: var(--charcoal); color: white;">
+        <span class="material-symbols-outlined" style="font-size:16px;">chrome_reader_mode</span>
+        MODO LECTURA
+      </button>
+
+      <!-- Table of Contents -->
+
+      <div *ngIf="tocItems.length > 0" class="sidebar-card">
+        <div class="sidebar-card-header">
+          <span class="material-symbols-outlined" style="font-size:14px;">toc</span>
+          INDEX_LOG
+        </div>
+        <nav class="toc-list">
+          <button *ngFor="let item of tocItems"
+             class="toc-item"
+             [class.toc-item-h2]="item.level === 2"
+             [class.toc-item-active]="activeSectionId === item.id"
+             (click)="scrollToSection(item.id)">
+            <span *ngIf="item.icon" class="material-symbols-outlined toc-icon">{{ item.icon }}</span>
+            <span *ngIf="!item.icon" class="toc-bullet">{{ item.level === 1 ? '▸' : '›' }}</span>
+            <span class="toc-text">{{ item.text | uppercase }}</span>
+          </button>
+        </nav>
+      </div>
+
+      <div *ngIf="work.tags.length > 0" class="sidebar-card">
+        <div class="sidebar-card-header">
+          <span class="material-symbols-outlined" style="font-size:14px;">label</span>
+          FIELD_TAGS
+        </div>
+        <div class="sidebar-tags">
+          <span *ngFor="let tag of work.tags" class="sidebar-tag">#{{ tag }}</span>
+        </div>
+      </div>
+
+      <!-- Bibliography Button -->
+      <button *ngIf="bibliographyBlock" class="sidebar-card" (click)="toggleBibliography($event)" style="justify-content: center; padding: 0.5rem; text-align: center; font-family: var(--font-mono); font-size: 0.75rem; font-weight: bold; color: var(--charcoal); cursor: pointer; transition: background-color 0.2s;">
+        <span class="material-symbols-outlined" style="font-size:14px; margin-right: 0.25rem;">library_books</span>
+        REFERENCES
+      </button>
+
+      <!-- Back button -->
+      <a class="sidebar-back-btn" routerLink="/works">
+        <span class="material-symbols-outlined" style="font-size:14px;">west</span>
+        Back to Database
+      </a>
+
+    </aside>
+
+    <article class="article-container" id="pdf-content-area">
     <div class="article-inner">
 
       <section class="hero-section">
@@ -163,31 +235,25 @@
       <!-- MAIN CONTENT AREA -->
       <section class="content-section">
         
-        <!-- INDEX LOG SIDEBAR (if present) -->
-        <aside *ngIf="work.indexLog" class="index-sidebar sidebar-card" style="margin-top: 0; padding: 0;">
-          <div class="sidebar-card-header">
-            <span class="material-symbols-outlined" style="font-size:14px;">toc</span>
-            INDEX_LOG
-          </div>
-          <ul class="toc-list" style="padding: 0.5rem 0;">
-            <li *ngFor="let item of work.indexLog.split('\n'); let ij = index" class="toc-item">
-              <span *ngIf="ij === 0" class="toc-bullet">▸</span>
-              <span *ngIf="ij !== 0" class="toc-bullet">›</span>
-              <span class="toc-text">{{ item.trim() | uppercase }}</span>
-            </li>
-          </ul>
-        </aside>
-
         <!-- Dynamic Content Blocks -->
         <div class="dynamic-blocks-container">
-          <ng-container *ngFor="let block of work.blocks; let i = index">
+          <!-- Raw Markdown Content Rendering -->
+          <markdown *ngIf="work.markdownContent" 
+                    class="markdown-body" 
+                    [data]="work.markdownContent"
+                    (ready)="onMarkdownReady()">
+          </markdown>
+
+          <!-- Legacy Block Fallback Rendering -->
+          <ng-container *ngIf="!work.markdownContent">
+            <ng-container *ngFor="let block of work.blocks; let i = index">
           
           <div *ngIf="block.type === 'h1'" class="block-h1-container" [id]="'cs-blk-' + i">
-            <h2 class="block-h1-title">{{ block.content }}_</h2>
+            <h2 class="block-h1-title"><span class="md-hash">#</span> {{ block.content }}</h2>
           </div>
 
           <div *ngIf="block.type === 'h2'" class="block-h2-container" [id]="'cs-blk-' + i">
-            <h3 class="block-h2-title">{{ block.content }}_</h3>
+            <h3 class="block-h2-title"><span class="md-hash">##</span> {{ block.content }}</h3>
           </div>
 
           <div *ngIf="block.type === 'p'" class="block-p-container">
@@ -233,9 +299,20 @@
           <div *ngIf="block.type === 'code'" class="block-code-container">
             <div class="block-code-box">
               <div class="block-code-header">
-                <span>&gt; SYSTEM_LOG</span>
+                <div class="block-code-dots">
+                  <span class="dot dot-red"></span>
+                  <span class="dot dot-yellow"></span>
+                  <span class="dot dot-green"></span>
+                </div>
+                <span *ngIf="block.data?.filename" class="block-code-filename-label">{{ block.data.filename }}</span>
+                <span class="block-code-lang-label">{{ (block.data?.language || 'code') | uppercase }}</span>
               </div>
               <pre class="block-code-pre"><code>{{ block.content }}</code></pre>
+              <div *ngIf="block.data?.error" class="block-code-error-box" [ngClass]="'error-' + (block.data?.errorType || 'error')">
+                <span class="block-code-error-icon">{{ block.data?.errorType === 'warning' ? '⚠️' : block.data?.errorType === 'note' ? 'ℹ️' : '❌' }}</span>
+                <span class="block-code-error-label">{{ (block.data?.errorType || 'error') | uppercase }}:</span>
+                <span class="block-code-error-text">{{ block.data.error }}</span>
+              </div>
             </div>
           </div>
 
@@ -330,7 +407,7 @@
             </div>
           </div>
           </ng-container>
-
+          </ng-container>
         </div>
 
       </section>
@@ -390,7 +467,7 @@
         <div class="share-container">
           <app-share-buttons 
             [title]="work.title" 
-            [description]="work.blocks[0]?.type === 'p' ? work.blocks[0].content : ''" 
+            [description]="work.markdownContent || (work.blocks[0]?.type === 'p' ? work.blocks[0].content : '')" 
             [image]="work.coverPhoto || ''">
           </app-share-buttons>
         </div>
@@ -398,79 +475,6 @@
 
     </div>
   </article>
-
-  <!-- RIGHT: STICKY SIDEBAR -->
-  <aside class="log-sidebar">
-
-    <!-- Reading Info -->
-    <div class="sidebar-card">
-      <div class="sidebar-card-header">
-        <span class="material-symbols-outlined" style="font-size:14px;">schedule</span>
-        SYS_INFO
-      </div>
-      <div class="sidebar-meta-row">
-        <span class="sidebar-meta-label">Read time</span>
-        <span class="sidebar-meta-val">~{{ readingTime }} min</span>
-      </div>
-      <div class="sidebar-meta-row">
-        <span class="sidebar-meta-label">Filed</span>
-        <span class="sidebar-meta-val">{{ work.createdAt | date:'dd MMM yy' }}</span>
-      </div>
-      <div class="sidebar-meta-row" style="border-bottom:none;">
-        <span class="sidebar-meta-label">Tags</span>
-        <span class="sidebar-meta-val" style="color:var(--primary);">{{ work.tags.length }}</span>
-      </div>
-    </div>
-
-    <!-- Read Mode Button -->
-    <button class="sidebar-card btn-read-mode-toggle" (click)="toggleReadMode()" style="justify-content: center; padding: 0.5rem; text-align: center; font-family: var(--font-mono); font-size: 0.75rem; font-weight: bold; color: var(--charcoal); cursor: pointer; transition: background-color 0.2s, color 0.2s; display: flex; align-items: center; gap: 0.4rem; background-color: var(--charcoal); color: white;">
-      <span class="material-symbols-outlined" style="font-size:16px;">chrome_reader_mode</span>
-      MODO LECTURA
-    </button>
-
-    <!-- Table of Contents -->
-
-    <div *ngIf="tocItems.length > 0" class="sidebar-card">
-      <div class="sidebar-card-header">
-        <span class="material-symbols-outlined" style="font-size:14px;">toc</span>
-        INDEX_LOG
-      </div>
-      <nav class="toc-list">
-        <button *ngFor="let item of tocItems"
-           class="toc-item"
-           [class.toc-item-h2]="item.level === 2"
-           [class.toc-item-active]="activeSectionId === item.id"
-           (click)="scrollToSection(item.id)">
-          <span *ngIf="item.icon" class="material-symbols-outlined toc-icon">{{ item.icon }}</span>
-          <span *ngIf="!item.icon" class="toc-bullet">{{ item.level === 1 ? '▸' : '›' }}</span>
-          <span class="toc-text">{{ item.text | uppercase }}</span>
-        </button>
-      </nav>
-    </div>
-
-    <div *ngIf="work.tags.length > 0" class="sidebar-card">
-      <div class="sidebar-card-header">
-        <span class="material-symbols-outlined" style="font-size:14px;">label</span>
-        FIELD_TAGS
-      </div>
-      <div class="sidebar-tags">
-        <span *ngFor="let tag of work.tags" class="sidebar-tag">#{{ tag }}</span>
-      </div>
-    </div>
-
-    <!-- Bibliography Button -->
-    <button *ngIf="bibliographyBlock" class="sidebar-card" (click)="toggleBibliography($event)" style="justify-content: center; padding: 0.5rem; text-align: center; font-family: var(--font-mono); font-size: 0.75rem; font-weight: bold; color: var(--charcoal); cursor: pointer; transition: background-color 0.2s;">
-      <span class="material-symbols-outlined" style="font-size:14px; margin-right: 0.25rem;">library_books</span>
-      REFERENCES
-    </button>
-
-    <!-- Back button -->
-    <a class="sidebar-back-btn" routerLink="/works">
-      <span class="material-symbols-outlined" style="font-size:14px;">west</span>
-      Back to Database
-    </a>
-
-  </aside>
   </div><!-- /cs-page-grid -->
 
 

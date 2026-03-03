@@ -26,7 +26,9 @@
               }
             ],
             "styles": [
-              "src/styles.css"
+              "src/styles.css",
+              "node_modules/github-markdown-css/github-markdown.css",
+              "node_modules/prismjs/themes/prism-okaidia.css"
             ],
             "polyfills": [],
             "server": "src/main.server.ts",

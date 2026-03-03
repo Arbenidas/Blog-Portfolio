@@ -3,6 +3,8 @@ import { provideRouter } from '@angular/router';
 import { provideHttpClient, withFetch } from '@angular/common/http';
 import { provideTranslateService, TranslateLoader } from '@ngx-translate/core';
 import { TranslateHttpLoader, provideTranslateHttpLoader } from '@ngx-translate/http-loader';
+import { provideMarkdown } from 'ngx-markdown';
+import { SecurityContext } from '@angular/core';
 
 import { routes } from './app.routes';
 import { provideClientHydration, withEventReplay } from '@angular/platform-browser';
@@ -27,5 +29,6 @@ export const appConfig: ApplicationConfig = {
       prefix: './assets/i18n/',
       suffix: '.json',
     }),
+    provideMarkdown(),
   ]
 };

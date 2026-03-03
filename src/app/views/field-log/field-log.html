@@ -56,212 +56,9 @@
       </a>
     </div>
 
-    <!-- 2-COLUMN: ARTICLE + SIDEBAR -->
+    <!-- 2-COLUMN: SIDEBAR (Left) + ARTICLE (Right) -->
     <div class="log-page-grid">
-
-      <!-- LEFT: ARTICLE -->
-      <article class="article-container" id="pdf-content-area">
-        <div class="article-inner">
-          <!-- Decoratives -->
-          <div class="tape-strip" style="top: -10px; left: 5%; transform: rotate(-2deg);"></div>
-          <div class="file-ref-badge">
-            <span class="file-ref-val">{{ (log.id || 'PRV').slice(0, 3) | uppercase }}</span>
-            <span class="file-ref-label">FILE_REF</span>
-          </div>
-          
-          <!-- Meta Header -->
-          <header class="log-header">
-            <div *ngIf="log.coverPhoto" class="cover-photo-box" style="overflow: hidden;">
-               <img [src]="getCoverUrl(log.coverPhoto)" 
-                    class="cover-photo-img" 
-                    [ngStyle]="getCoverStyles(log.coverPhoto)" />
-            </div>
-            <div class="meta-badges">
-              <span class="meta-badge meta-badge-status">STATUS: LOGGED</span>
-              <span class="meta-badge meta-badge-date">{{ log.createdAt | date:'MMM.dd.yyyy' }}</span>
-              <!-- Download PDF Button -->
-              <button class="btn-download-hero" (click)="openPdfModal()">
-                <span class="material-symbols-outlined" style="font-size:14px; margin-right:4px; vertical-align:-2px;">download</span>
-                PDF
-              </button>
-            </div>
-            <h1 class="log-title">{{ log.title }}</h1>
-            <div class="log-tags">
-              <a *ngFor="let tag of log.tags" class="log-tag" href="#">#{{ tag }}</a>
-            </div>
-          </header>
-
-          <!-- Content Body -->
-          <div class="log-content">
-            <ng-container *ngFor="let block of log.blocks; let first = first; let i = index">
-              
-              <p *ngIf="block.type === 'p'" [ngClass]="first ? 'block-p-first' : ''" [id]="'blk-' + i">{{ block.content }}</p>
-
-              <h2 *ngIf="block.type === 'h1'" class="block-h1" [id]="'blk-' + i">{{ block.content }}</h2>
-              <h3 *ngIf="block.type === 'h2'" class="block-h2" [id]="'blk-' + i">{{ block.content }}</h3>
-
-              <div *ngIf="block.type === 'code'" class="block-code">
-                <pre><code>{{ block.content }}</code></pre>
-              </div>
-
-              <div *ngIf="block.type === 'image'" class="block-image clearfix">
-                 <div class="block-image-tape"></div>
-                 <div [ngClass]="['img-size-' + (block.data?.size || 'full'), 'img-align-' + (block.data?.align || 'center')]">
-                   <img [src]="block.content" class="block-image-img riso-print" loading="lazy">
-                 </div>
-                 <p *ngIf="block.data?.text" style="margin-top: 0.5rem; white-space: pre-wrap;">{{ block.data.text }}</p>
-              </div>
-
-              <div *ngIf="block.type === 'gallery' && block.data?.images?.length" style="margin: 1.5rem 0;">
-                <div style="font-family: var(--font-mono); font-size: 0.7rem; font-weight: bold; color: #6b7280; text-transform: uppercase; margin-bottom: 0.5rem;">
-                  <span class="material-symbols-outlined" style="font-size: 14px; vertical-align: text-bottom;">auto_awesome_mosaic</span>
-                  GALLERY — {{ block.data.images.length }} ITEMS
-                </div>
-                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 0.5rem;">
-                  <div *ngFor="let img of block.data.images" style="border: 2px solid var(--charcoal); box-shadow: 3px 3px 0 var(--charcoal); overflow: hidden; cursor: pointer;" (click)="openLightbox(img)">
-                    <img [src]="img" loading="lazy" alt="Gallery item" style="width: 100%; height: 100%; object-fit: cover; display: block; aspect-ratio: 4/3;" />
-                  </div>
-                </div>
-              </div>
-
-              <div *ngIf="block.type === 'video'" class="block-video">
-                <div class="block-image-tape"></div>
-                <div *ngIf="isYoutubeUrl(block.content)" class="block-video-embed">
-                  <iframe [src]="getSafeVideoUrl(block.content)" style="width:100%;height:100%;" frameborder="0" allowfullscreen allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture" loading="lazy"></iframe>
-                </div>
-                <div *ngIf="!isYoutubeUrl(block.content)">
-                  <video [src]="block.content" controls class="block-video-direct"></video>
-                </div>
-              </div>
-
-              <div *ngIf="block.type === 'comparison'" class="comp-box" [id]="'blk-' + i">
-                <div class="comp-header">
-                  <span class="material-symbols-outlined">compare_arrows</span>
-                  <span>DATA_COMPARISON_LOG</span>
-                </div>
-                <div class="comp-row comp-title-bg">
-                  <div class="comp-input comp-title">{{ block.data.col1Title }}</div>
-                  <div class="comp-vs">VS</div>
-                  <div class="comp-input comp-title">{{ block.data.col2Title }}</div>
-                </div>
-                <div class="comp-row" *ngFor="let row of block.data.rows">
-                  <div class="comp-input comp-text" style="white-space:pre-wrap;">{{ row.col1 }}</div>
-                  <div class="comp-vs"></div>
-                  <div class="comp-input comp-text" style="white-space:pre-wrap;">{{ row.col2 }}</div>
-                </div>
-              </div>
-
-              <div *ngIf="block.type === 'diagram'" class="block-diagram" [id]="'blk-' + i">
-                <div class="block-diagram-box">
-                  <div class="block-diagram-label" style="background:var(--charcoal);color:white;padding:0.5rem 1rem;border-bottom:2px solid var(--charcoal);font-weight:bold;">
-                    <span class="material-symbols-outlined" style="font-size:12px;">account_tree</span> SYSTEM_DIAGRAM
-                    <span style="margin-left:auto;color:#86efac;font-size:0.65rem;float:right;">[SECURE_VIEW]</span>
-                  </div>
-                  <div class="foblex-canvas-wrapper" [ngClass]="'size-' + (block.data.size || 'large')">
-                    <f-flow>
-                      <f-canvas>
-                        <f-connection *ngFor="let conn of block.data?.connections" [fOutputId]="conn.from" [fInputId]="conn.to" fBehavior="floating" fType="straight"></f-connection>
-                        <div fNode *ngFor="let node of block.data?.nodes" [fNodePosition]="{x: node.x, y: node.y}" class="brutalist-node-strict">
-                          <span *ngIf="node.icon" class="material-symbols-outlined strict-icon">{{ node.icon }}</span>
-                          <span class="strict-input" style="pointer-events:none;">{{ node.text }}</span>
-                          <div fNodeInput [fInputId]="node.id" fInputConnectableSide="left" class="f-port f-port-in" style="pointer-events:none;"></div>
-                          <div fNodeOutput [fOutputId]="node.id" fOutputConnectableSide="right" class="f-port f-port-out" style="pointer-events:none;"></div>
-                        </div>
-                      </f-canvas>
-                    </f-flow>
-                  </div>
-                </div>
-              </div>
-
-              <div *ngIf="block.type === 'objective-header'" class="block-obj-header-container" [id]="'blk-' + i">
-                <h2 class="block-obj-title">{{ block.data?.title }}</h2>
-                <span class="block-obj-subtitle">{{ block.data?.subtitle }}</span>
-              </div>
-
-              <div *ngIf="block.type === 'objectives'" style="width:100%;">
-                <div class="block-obj-grid">
-                  <div *ngFor="let obj of block.data" class="block-obj-card">
-                    <div class="block-obj-label">{{ obj.label }}</div>
-                    <h3 class="block-obj-item-title">{{ obj.title }}</h3>
-                    <p class="block-obj-desc">{{ obj.desc }}</p>
-                    <div style="margin-top:auto;">
-                      <div class="block-obj-progress-bg">
-                        <div class="block-obj-progress-fill" [ngClass]="obj.progress > 50 ? 'block-obj-progress-high' : 'block-obj-progress-low'" [style.width.%]="obj.progress"></div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div *ngIf="block.type === 'divider'" class="block-divider-container">
-                <div class="block-divider-1"></div>
-                <div class="block-divider-2"></div>
-              </div>
-
-            </ng-container>
-          </div>
-
-          <footer class="log-footer">
-            <div class="author-info">
-              <div class="author-avatar" style="overflow: hidden; border-radius: 50%;">
-                <img *ngIf="log.author?.avatar_url" [src]="log.author?.avatar_url" style="width:100%; height:100%; object-fit:cover;">
-                <span *ngIf="!log.author?.avatar_url" class="material-symbols-outlined author-icon">person</span>
-              </div>
-              <div style="display: flex; flex-direction: column;">
-                <span class="author-label">LOGGED_BY</span>
-                <a [routerLink]="['/u', log.author?.username]" class="author-name" style="text-decoration:none;">@{{log.author?.username || 'ADMIN'}}</a>
-              </div>
-            </div>
-            
-            <div class="social-actions" style="display: flex; gap: 1rem; align-items: center;">
-              <button class="btn-upvote" [class.active]="userHasUpvoted" (click)="toggleUpvote()" style="display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; border: 2px solid var(--charcoal); background: var(--paper-cream); font-family: var(--font-mono); font-weight: bold; cursor: pointer;">
-                <span class="material-symbols-outlined">{{ userHasUpvoted ? 'thumb_up' : 'thumb_up_off_alt' }}</span>
-                {{ upvoteCount }} LIKES
-              </button>
-            </div>
-            
-            <div class="signed-badge">
-              SIGNED: <span class="signed-name">Admin</span>
-            </div>
-          </footer>
-          
-          <!-- Comments Section -->
-          <div class="comments-section" style="margin-top: 2rem; border-top: 2px dashed var(--charcoal); padding-top: 2rem;">
-            <h3 style="font-family: var(--font-display); font-size: 1.5rem; margin-bottom: 1.5rem;">FIELD NOTES ({{ comments.length }})</h3>
-            
-            <div class="add-comment" style="margin-bottom: 2rem; display: flex; flex-direction: column; gap: 0.5rem;">
-              <textarea [(ngModel)]="newCommentText" placeholder="Add a field note..." rows="3" style="width: 100%; padding: 0.75rem; border: 2px solid var(--charcoal); background: var(--white); font-family: var(--font-body); resize: vertical;"></textarea>
-              <button (click)="submitComment()" [disabled]="!newCommentText.trim()" style="align-self: flex-end; padding: 0.5rem 1.5rem; background: var(--charcoal); color: white; border: none; font-family: var(--font-mono); font-weight: bold; cursor: pointer;">SUBMIT NOTE</button>
-            </div>
-            
-            <div class="comments-list" style="display: flex; flex-direction: column; gap: 1.5rem;">
-              <div *ngFor="let comment of comments" class="comment-item" style="display: flex; gap: 1rem; padding-bottom: 1.5rem; border-bottom: 1px solid rgba(0,0,0,0.1);">
-                <div class="comment-avatar" style="width: 40px; height: 40px; border-radius: 50%; overflow: hidden; background: var(--charcoal); display: flex; align-items: center; justify-content: center; color: white;">
-                  <img *ngIf="comment.profiles?.avatar_url" [src]="comment.profiles.avatar_url" style="width: 100%; height: 100%; object-fit: cover;">
-                  <span *ngIf="!comment.profiles?.avatar_url" class="material-symbols-outlined">person</span>
-                </div>
-                <div class="comment-body" style="flex: 1;">
-                  <div class="comment-meta" style="display: flex; justify-content: space-between; align-items:baseline; margin-bottom: 0.25rem;">
-                    <span class="comment-author" style="font-family: var(--font-mono); font-weight: bold; font-size: 0.9rem;">{{ comment.profiles?.username || 'Unknown Agent' }}</span>
-                    <span class="comment-date" style="font-family: var(--font-mono); font-size: 0.75rem; color: #666;">{{ comment.created_at | date:'short' }}</span>
-                  </div>
-                  <div class="comment-content" style="font-family: var(--font-body); font-size: 0.95rem; line-height: 1.5; white-space: pre-wrap;">{{ comment.content }}</div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="share-container">
-            <app-share-buttons 
-              [title]="log.title" 
-              [description]="log.blocks[0]?.type === 'p' ? log.blocks[0].content : ''" 
-              [image]="log.coverPhoto || ''">
-            </app-share-buttons>
-          </div>
-        </div>
-      </article>
-
-      <!-- RIGHT: STICKY SIDEBAR -->
+      <!-- LEFT: STICKY SIDEBAR -->
       <aside class="log-sidebar">
         <div class="sidebar-card">
           <div class="sidebar-card-header">
@@ -327,8 +124,262 @@
           Back to Archives
         </a>
       </aside>
-    </div>
+
+      <!-- RIGHT: ARTICLE -->
+      <article class="article-container" id="pdf-content-area">
+        <div class="article-inner">
+          <!-- Decoratives -->
+          <div class="tape-strip" style="top: -10px; left: 5%; transform: rotate(-2deg);"></div>
+          <div class="file-ref-badge">
+            <span class="file-ref-val">{{ (log.id || 'PRV').slice(0, 3) | uppercase }}</span>
+            <span class="file-ref-label">FILE_REF</span>
+          </div>
+          
+          <!-- Meta Header -->
+          <header class="log-header">
+            <div *ngIf="log.coverPhoto" class="cover-photo-box" style="overflow: hidden;">
+               <img [src]="getCoverUrl(log.coverPhoto)" 
+                    class="cover-photo-img" 
+                    [ngStyle]="getCoverStyles(log.coverPhoto)" />
+            </div>
+            <div class="meta-badges">
+              <span class="meta-badge meta-badge-status">STATUS: LOGGED</span>
+              <span class="meta-badge meta-badge-date">{{ log.createdAt | date:'MMM.dd.yyyy' }}</span>
+              <!-- Download PDF Button -->
+              <button class="btn-download-hero" (click)="openPdfModal()">
+                <span class="material-symbols-outlined" style="font-size:14px; margin-right:4px; vertical-align:-2px;">download</span>
+                PDF
+              </button>
+            </div>
+            <h1 class="log-title">{{ log.title }}</h1>
+            <div class="log-tags">
+              <a *ngFor="let tag of log.tags" class="log-tag" href="#">#{{ tag }}</a>
+            </div>
+          </header>
+
+          <!-- Content Body -->
+          <div class="log-content">
+            <markdown *ngIf="log.markdownContent" 
+                      class="markdown-body" 
+                      [data]="log.markdownContent"
+                      (ready)="onMarkdownReady()">
+            </markdown>
+
+            <!-- Legacy Block Fallback Rendering -->
+            <ng-container *ngIf="!log.markdownContent">
+              <ng-container *ngFor="let block of log.blocks; let first = first; let i = index">
+              
+              <p *ngIf="block.type === 'p'" [ngClass]="first ? 'block-p-first' : ''" [id]="'blk-' + i">{{ block.content }}</p>
+
+              <h2 *ngIf="block.type === 'h1'" class="block-h1" [id]="'blk-' + i"><span class="md-hash">#</span> {{ block.content }}</h2>
+              <h3 *ngIf="block.type === 'h2'" class="block-h2" [id]="'blk-' + i"><span class="md-hash">##</span> {{ block.content }}</h3>
+
+              <div *ngIf="block.type === 'code'" class="block-code">
+                <div class="block-code-header">
+                  <div class="block-code-dots">
+                    <span class="dot dot-red"></span>
+                    <span class="dot dot-yellow"></span>
+                    <span class="dot dot-green"></span>
+                  </div>
+                  <span *ngIf="block.data?.filename" class="block-code-filename-label">{{ block.data.filename }}</span>
+                  <span class="block-code-lang-label">{{ (block.data?.language || 'code') | uppercase }}</span>
+                </div>
+                <pre class="block-code-pre"><code>{{ block.content }}</code></pre>
+                <div *ngIf="block.data?.error" class="block-code-error-box" [ngClass]="'error-' + (block.data?.errorType || 'error')">
+                  <span class="block-code-error-icon">{{ block.data?.errorType === 'warning' ? '⚠️' : block.data?.errorType === 'note' ? 'ℹ️' : '❌' }}</span>
+                  <span class="block-code-error-label">{{ (block.data?.errorType || 'error') | uppercase }}:</span>
+                  <span class="block-code-error-text">{{ block.data.error }}</span>
+                </div>
+              </div>
+
+              <div *ngIf="block.type === 'image'" class="block-image clearfix">
+                 <div class="block-image-tape"></div>
+                 <div [ngClass]="['img-size-' + (block.data?.size || 'full'), 'img-align-' + (block.data?.align || 'center')]">
+                   <img [src]="block.content" class="block-image-img riso-print" loading="lazy">
+                 </div>
+                 <p *ngIf="block.data?.text" style="margin-top: 0.5rem; white-space: pre-wrap;">{{ block.data.text }}</p>
+              </div>
+
+              <div *ngIf="block.type === 'gallery' && block.data?.images?.length" style="margin: 1.5rem 0;">
+                <div style="font-family: var(--font-mono); font-size: 0.7rem; font-weight: bold; color: #6b7280; text-transform: uppercase; margin-bottom: 0.5rem;">
+                  <span class="material-symbols-outlined" style="font-size: 14px; vertical-align: text-bottom;">auto_awesome_mosaic</span>
+                  GALLERY — {{ block.data.images.length }} ITEMS
+                </div>
+                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 0.5rem;">
+                  <div *ngFor="let img of block.data.images" style="border: 2px solid var(--charcoal); box-shadow: 3px 3px 0 var(--charcoal); overflow: hidden; cursor: pointer;" (click)="openLightbox(img)">
+                    <img [src]="img" loading="lazy" alt="Gallery item" style="width: 100%; height: 100%; object-fit: cover; display: block; aspect-ratio: 4/3;" />
+                  </div>
+                </div>
+              </div>
+
+              <div *ngIf="block.type === 'video'" class="block-video">
+                <div class="block-image-tape"></div>
+                <div *ngIf="isYoutubeUrl(block.content)" class="block-video-embed">
+                  <iframe [src]="getSafeVideoUrl(block.content)" style="width:100%;height:100%;" frameborder="0" allowfullscreen allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture" loading="lazy"></iframe>
+                </div>
+                <div *ngIf="!isYoutubeUrl(block.content)">
+                  <video [src]="block.content" controls class="block-video-direct"></video>
+                </div>
+              </div>
+
+              <div *ngIf="block.type === 'comparison'" class="comp-box" [id]="'blk-' + i">
+                <div class="comp-header">
+                  <span class="material-symbols-outlined">compare_arrows</span>
+                  <span>DATA_COMPARISON_LOG</span>
+                </div>
+                <div class="comp-row comp-title-bg">
+                  <div class="comp-input comp-title">{{ block.data.col1Title }}</div>
+                  <div class="comp-vs">VS</div>
+                  <div class="comp-input comp-title">{{ block.data.col2Title }}</div>
+                </div>
+                <div class="comp-row" *ngFor="let row of block.data.rows">
+                  <div class="comp-input comp-text" style="white-space:pre-wrap;">{{ row.col1 }}</div>
+                  <div class="comp-vs"></div>
+                  <div class="comp-input comp-text" style="white-space:pre-wrap;">{{ row.col2 }}</div>
+                </div>
+              </div>
+              <div *ngIf="block.type === 'table'" class="block-table-container">
+                <div class="block-table-box">
+                  <table class="brutal-table">
+                    <thead>
+                      <tr>
+                        <th *ngFor="let header of block.data?.headers">{{ header }}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr *ngFor="let row of block.data?.rows">
+                        <td *ngFor="let cell of row">{{ cell }}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <div *ngIf="block.type === 'tree'" class="block-tree-container">
+                <div class="block-tree-box">
+                  <div class="block-tree-header">
+                    <span class="material-symbols-outlined block-tree-icon">folder_open</span>
+                    <span class="block-tree-label">DIRECTORY_TREE</span>
+                  </div>
+                  <pre class="block-tree-pre"><code>{{ block.content }}</code></pre>
+                </div>
+              </div>
+
+              <div *ngIf="block.type === 'diagram'" class="block-diagram" [id]="'blk-' + i">
+                <div class="block-diagram-box">
+                  <div class="block-diagram-label" style="background:var(--charcoal);color:white;padding:0.5rem 1rem;border-bottom:2px solid var(--charcoal);font-weight:bold;">
+                    <span class="material-symbols-outlined" style="font-size:12px;">account_tree</span> SYSTEM_DIAGRAM
+                    <span style="margin-left:auto;color:#86efac;font-size:0.65rem;float:right;">[SECURE_VIEW]</span>
+                  </div>
+                  <div class="foblex-canvas-wrapper" [ngClass]="'size-' + (block.data.size || 'large')">
+                    <f-flow>
+                      <f-canvas>
+                        <f-connection *ngFor="let conn of block.data?.connections" [fOutputId]="conn.from" [fInputId]="conn.to" fBehavior="floating" fType="straight"></f-connection>
+                        <div fNode *ngFor="let node of block.data?.nodes" [fNodePosition]="{x: node.x, y: node.y}" class="brutalist-node-strict">
+                          <span *ngIf="node.icon" class="material-symbols-outlined strict-icon">{{ node.icon }}</span>
+                          <span class="strict-input" style="pointer-events:none;">{{ node.text }}</span>
+                          <div fNodeInput [fInputId]="node.id" fInputConnectableSide="left" class="f-port f-port-in" style="pointer-events:none;"></div>
+                          <div fNodeOutput [fOutputId]="node.id" fOutputConnectableSide="right" class="f-port f-port-out" style="pointer-events:none;"></div>
+                        </div>
+                      </f-canvas>
+                    </f-flow>
+                  </div>
+                </div>
+              </div>
+
+              <div *ngIf="block.type === 'objective-header'" class="block-obj-header-container" [id]="'blk-' + i">
+                <h2 class="block-obj-title">{{ block.data?.title }}</h2>
+                <span class="block-obj-subtitle">{{ block.data?.subtitle }}</span>
+              </div>
+
+              <div *ngIf="block.type === 'objectives'" style="width:100%;">
+                <div class="block-obj-grid">
+                  <div *ngFor="let obj of block.data" class="block-obj-card">
+                    <div class="block-obj-label">{{ obj.label }}</div>
+                    <h3 class="block-obj-item-title">{{ obj.title }}</h3>
+                    <p class="block-obj-desc">{{ obj.desc }}</p>
+                    <div style="margin-top:auto;">
+                      <div class="block-obj-progress-bg">
+                        <div class="block-obj-progress-fill" [ngClass]="obj.progress > 50 ? 'block-obj-progress-high' : 'block-obj-progress-low'" [style.width.%]="obj.progress"></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div *ngIf="block.type === 'divider'" class="block-divider-container">
+                <div class="block-divider-1"></div>
+                <div class="block-divider-2"></div>
+              </div>
+
+              </ng-container>
+            </ng-container>
+          </div>
+
+          <footer class="log-footer">
+            <div class="author-info">
+              <div class="author-avatar" style="overflow: hidden; border-radius: 50%;">
+                <img *ngIf="log.author?.avatar_url" [src]="log.author?.avatar_url" style="width:100%; height:100%; object-fit:cover;">
+                <span *ngIf="!log.author?.avatar_url" class="material-symbols-outlined author-icon">person</span>
+              </div>
+              <div style="display: flex; flex-direction: column;">
+                <span class="author-label">LOGGED_BY</span>
+                <a [routerLink]="['/u', log.author?.username]" class="author-name" style="text-decoration:none;">@{{log.author?.username || 'ADMIN'}}</a>
+              </div>
+            </div>
+            
+            <div class="social-actions" style="display: flex; gap: 1rem; align-items: center;">
+              <button class="btn-upvote" [class.active]="userHasUpvoted" (click)="toggleUpvote()" style="display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; border: 2px solid var(--charcoal); background: var(--paper-cream); font-family: var(--font-mono); font-weight: bold; cursor: pointer;">
+                <span class="material-symbols-outlined">{{ userHasUpvoted ? 'thumb_up' : 'thumb_up_off_alt' }}</span>
+                {{ upvoteCount }} LIKES
+              </button>
+            </div>
+            
+            <div class="signed-badge">
+              SIGNED: <span class="signed-name">Admin</span>
+            </div>
+          </footer>
+          
+          <!-- Comments Section -->
+          <div class="comments-section" style="margin-top: 2rem; border-top: 2px dashed var(--charcoal); padding-top: 2rem;">
+            <h3 style="font-family: var(--font-display); font-size: 1.5rem; margin-bottom: 1.5rem;">FIELD NOTES ({{ comments.length }})</h3>
+            
+            <div class="add-comment" style="margin-bottom: 2rem; display: flex; flex-direction: column; gap: 0.5rem;">
+              <textarea [(ngModel)]="newCommentText" placeholder="Add a field note..." rows="3" style="width: 100%; padding: 0.75rem; border: 2px solid var(--charcoal); background: var(--white); font-family: var(--font-body); resize: vertical;"></textarea>
+              <button (click)="submitComment()" [disabled]="!newCommentText.trim()" style="align-self: flex-end; padding: 0.5rem 1.5rem; background: var(--charcoal); color: white; border: none; font-family: var(--font-mono); font-weight: bold; cursor: pointer;">SUBMIT NOTE</button>
+            </div>
+            
+            <div class="comments-list" style="display: flex; flex-direction: column; gap: 1.5rem;">
+              <div *ngFor="let comment of comments" class="comment-item" style="display: flex; gap: 1rem; padding-bottom: 1.5rem; border-bottom: 1px solid rgba(0,0,0,0.1);">
+                <div class="comment-avatar" style="width: 40px; height: 40px; border-radius: 50%; overflow: hidden; background: var(--charcoal); display: flex; align-items: center; justify-content: center; color: white;">
+                  <img *ngIf="comment.profiles?.avatar_url" [src]="comment.profiles.avatar_url" style="width: 100%; height: 100%; object-fit: cover;">
+                  <span *ngIf="!comment.profiles?.avatar_url" class="material-symbols-outlined">person</span>
+                </div>
+                <div class="comment-body" style="flex: 1;">
+                  <div class="comment-meta" style="display: flex; justify-content: space-between; align-items:baseline; margin-bottom: 0.25rem;">
+                    <span class="comment-author" style="font-family: var(--font-mono); font-weight: bold; font-size: 0.9rem;">{{ comment.profiles?.username || 'Unknown Agent' }}</span>
+                    <span class="comment-date" style="font-family: var(--font-mono); font-size: 0.75rem; color: #666;">{{ comment.created_at | date:'short' }}</span>
+                  </div>
+                  <div class="comment-content" style="font-family: var(--font-body); font-size: 0.95rem; line-height: 1.5; white-space: pre-wrap;">{{ comment.content }}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="share-container">
+            <app-share-buttons 
+              [title]="log.title" 
+              [description]="log.markdownContent || (log.blocks[0]?.type === 'p' ? log.blocks[0].content : '')" 
+              [image]="log.coverPhoto || ''">
+            </app-share-buttons>
+          </div>
+        </div>
+      </article>
+    </div> <!-- End log-page-grid -->
   </ng-container>
+
+  <ng-template #legacyBlocksPlaceholder>
+  </ng-template>
 
   <!-- Bibliography Overlay Dialog -->
   <div *ngIf="showBibliography" class="biblio-overlay" (click)="toggleBibliography()">

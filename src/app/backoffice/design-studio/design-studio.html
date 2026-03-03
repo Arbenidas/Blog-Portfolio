@@ -198,10 +198,13 @@
               <span class="ds-node-shape-sm">{{ n.shape | uppercase }}</span>
             </div>
             <div class="ds-list-item-actions shrink-0">
-              <button (click)="editNode(n)" class="btn-list-action btn-list-action-edit">
+              <button (click)="insertNode.emit(n)" class="btn-list-action" style="color: var(--accent-orange);" title="Add to Diagram">
+                <span class="material-symbols-outlined" style="font-size: 16px;">add_circle</span>
+              </button>
+              <button (click)="editNode(n)" class="btn-list-action btn-list-action-edit" title="Edit">
                 <span class="material-symbols-outlined" style="font-size: 16px;">edit</span>
               </button>
-              <button (click)="deleteNode(n.id!)" class="btn-list-action btn-list-action-delete">
+              <button (click)="deleteNode(n.id!)" class="btn-list-action btn-list-action-delete" title="Delete">
                 <span class="material-symbols-outlined" style="font-size: 16px;">delete</span>
               </button>
             </div>

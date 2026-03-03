@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, OnInit, signal, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
@@ -26,6 +26,10 @@ export class DesignStudio implements OnInit {
   nodes = signal<DiagramNodeConfig[]>([]);
 
   isSaving = signal(false);
+
+  // === NEW: Event emitter for modal usage ===
+  @Output() insertNode = new EventEmitter<DiagramNodeConfig>();
+  @Output() nodeListChanged = new EventEmitter<void>();
 
   // === NODE MODE STATE ===
   nodeName = '';
@@ -213,6 +217,7 @@ export class DesignStudio implements OnInit {
       });
       await this.loadAll();
       this.resetNode();
+      this.nodeListChanged.emit();
     } catch (e) { console.error(e); }
     finally { this.isSaving.set(false); }
   }
@@ -222,6 +227,7 @@ export class DesignStudio implements OnInit {
     try {
       await this.contentService.deleteDiagramNode(id);
       await this.loadAll();
+      this.nodeListChanged.emit();
     } catch (e) { console.error(e); }
   }
 
