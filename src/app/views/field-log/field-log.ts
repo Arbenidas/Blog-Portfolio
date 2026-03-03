@@ -373,7 +373,7 @@ export class FieldLog implements OnInit, OnDestroy {
   async generatePdf() {
     try {
       if (!isPlatformBrowser(this.platformId)) return;
-      const element = document.getElementById('pdf-content-area');
+      const element = document.getElementById('pdf-clean-content-area');
       if (!element) {
         console.error('PDF content area not found.');
         return;

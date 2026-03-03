@@ -88,7 +88,15 @@
     position: relative;
     z-index: 20;
     order: 2;
+    min-width: 0;
     /* Visual Order Right */
+}
+
+.docs-main-content {
+    min-width: 0;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    order: 2;
 }
 
 /* === Left Sidebar (Navigation) === */
@@ -267,6 +275,8 @@
     padding: 1.5rem;
     position: relative;
     overflow: hidden;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
 }
 
@@ -437,6 +447,8 @@
     display: flex;
     flex-direction: column;
     gap: 1.5rem;
+    max-width: 100%;
+    overflow-x: auto;
 }
 
 /* Blocks */

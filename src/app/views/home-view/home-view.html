@@ -102,7 +102,7 @@
             </a>
           </li>
           <li>
-            <a routerLink="#" class="directory-link">
+            <a routerLink="/guides" class="directory-link">
               <span class="material-symbols-outlined">build</span>
               <span>Workshop_Guides</span>
             </a>
@@ -123,7 +123,7 @@
           <div class="trending-item" *ngFor="let tLog of trendingLogs; let i = index">
             <span class="trending-num">#{{ i + 1 }}</span>
             <div>
-              <p class="trending-text" [routerLink]="['/' + (tLog.category === 'work' ? 'works' : 'logs'), tLog.slug]">{{ tLog.title }}</p>
+              <p class="trending-text" [routerLink]="['/' + (tLog.category === 'work' ? 'works' : tLog.category === 'guide' ? 'guides' : 'logs'), tLog.slug]">{{ tLog.title }}</p>
               <span class="trending-meta">
                 <span *ngIf="tLog.author">@{{ tLog.author.username }} · </span>
                 <span style="color: var(--accent-orange);">↑{{ upvoteCounts[tLog.id] || 0 }}</span>
@@ -140,7 +140,7 @@
     <div class="center-panel">
       <!-- DYNAMIC LOGS WITH REAL SOCIAL DATA -->
       <ng-container *ngFor="let log of logs; let first = first">
-        <a [routerLink]="['/logs', log.slug]" class="post-card">
+        <a [routerLink]="['/' + (log.category === 'work' ? 'works' : log.category === 'guide' ? 'guides' : 'logs'), log.slug]" class="post-card">
           <div *ngIf="first && (upvoteCounts[log.id] || 0) + (commentCounts[log.id] || 0) > 0" class="hot-topic-badge">TOP_POST</div>
           <div class="post-content">
             <div class="post-meta">
@@ -156,7 +156,7 @@
               {{ log.title }}
             </h3>
             <p class="post-body">
-              {{ log.blocks.length > 0 ? (log.blocks[0].content | slice:0:150) + '...' : 'System analysis indicates optimal function. Further metrics pending...' }}
+              {{ getExcerpt(log) }}
             </p>
             <div class="post-footer">
               <div class="post-actions">
@@ -164,7 +164,7 @@
                 <span class="post-action-btn" (click)="$event.preventDefault()"><span class="material-symbols-outlined" style="font-size:14px;">chat_bubble</span> {{ commentCounts[log.id] || 0 }} Comments</span>
                 <span class="post-action-btn" (click)="$event.preventDefault()"><span class="material-symbols-outlined" style="font-size:14px;">share</span></span>
               </div>
-              <span class="post-id">ID: {{ log.category === 'work' ? 'WORK' : 'LOG' }}_{{ log.id.substring(0,4).toUpperCase() }}</span>
+              <span class="post-id">ID: {{ log.category === 'work' ? 'WORK' : log.category === 'guide' ? 'GUIDE' : 'LOG' }}_{{ log.id.substring(0,4).toUpperCase() }}</span>
             </div>
           </div>
         </a>
@@ -204,6 +204,10 @@
             <span *ngIf="activity.category === 'work'">
               @{{ activity.author }} deployed 
               <a [routerLink]="['/works', activity.slug]" style="color:var(--accent-orange); font-weight:bold; text-decoration: none;">{{ activity.title | slice:0:15 }}{{activity.title.length > 15 ? '...' : ''}}</a>
+            </span>
+            <span *ngIf="activity.category === 'guide'">
+              @{{ activity.author }} published 
+              <a [routerLink]="['/guides', activity.slug]" style="color:var(--primary); font-weight:bold; text-decoration: none;">{{ activity.title | slice:0:15 }}{{activity.title.length > 15 ? '...' : ''}}</a>
             </span>
           </li>
           <li class="activity-item" *ngIf="recentActivities.length === 0">

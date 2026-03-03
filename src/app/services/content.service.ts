@@ -152,6 +152,7 @@ export class ContentService {
             indexLog: d.index_log,
             blocks: d.blocks || [],
             markdownContent: d.markdown_content,
+            author: d.profiles || null,
             status: d.status || 'published',
             createdAt: d.created_at,
             updatedAt: d.updated_at
@@ -335,7 +336,7 @@ export class ContentService {
             const { count: logsCount, error: logsError } = await this.supabase.client
                 .from('documents')
                 .select('*', { count: 'exact', head: true })
-                .eq('category', 'log')
+                .in('category', ['log', 'guide'])
                 .eq('status', 'published');
             if (logsError) throw logsError;
 
@@ -359,7 +360,7 @@ export class ContentService {
         }
     }
 
-    async getAllLogs(page: number = 1, limitCount: number = 10): Promise<DocumentEntry[]> {
+    async getAllLogs(page: number = 1, limitCount: number = 10, categories: string[] = ['log', 'guide']): Promise<DocumentEntry[]> {
         // Basic Recommendation System: Get favorite tags from localStorage
         let favoriteTags: string[] = [];
         if (isPlatformBrowser(this.platformId)) {
@@ -382,7 +383,7 @@ export class ContentService {
         let query = this.supabase.client
             .from('documents')
             .select('*, profiles:author_id(username, avatar_url, full_name)')
-            .eq('category', 'log')
+            .in('category', categories)
             .eq('status', 'published');
 
         // Optional: If we wanted to strictly filter by tags, we could use .contains('tags', favoriteTags).
@@ -458,7 +459,7 @@ export class ContentService {
         }));
     }
 
-    async getAdminDocuments(category: 'work' | 'log' | 'guide'): Promise<DocumentEntry[]> {
+    async getAdminDocuments(categories: string[]): Promise<DocumentEntry[]> {
         const session = await this.supabase.client.auth.getSession();
         const user = session.data.session?.user;
         if (!user) return [];
@@ -466,7 +467,7 @@ export class ContentService {
         const { data, error } = await this.supabase
             .from('documents')
             .select('id, slug, title, category, tags, status, index_log, created_at, updated_at')
-            .eq('category', category)
+            .in('category', categories)
             .eq('author_id', user.id)
             .order('created_at', { ascending: false });
 
@@ -505,7 +506,7 @@ export class ContentService {
 
         const { data, error } = await this.supabase
             .from('documents')
-            .select('*')
+            .select('*, profiles:author_id(username, avatar_url, full_name)')
             .eq('slug', slugOrPreview)
             .single();
 

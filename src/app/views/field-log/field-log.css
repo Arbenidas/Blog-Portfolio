@@ -88,6 +88,7 @@
     position: relative;
     z-index: 20;
     order: 2;
+    min-width: 0;
     /* Visual Order Right */
 }
 
@@ -265,6 +266,8 @@
     padding: 1.5rem;
     position: relative;
     overflow: hidden;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
 }
 
 @media (min-width: 768px) {

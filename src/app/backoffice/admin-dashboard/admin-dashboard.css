@@ -300,6 +300,11 @@
     color: var(--accent-orange);
 }
 
+.entry-row:hover .entry-title-guide {
+    color: #0d9488;
+    /* teal-600 */
+}
+
 .entry-meta {
     font-family: var(--font-mono);
     font-size: 0.75rem;

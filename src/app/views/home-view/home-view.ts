@@ -164,6 +164,16 @@ export class HomeView implements OnInit, OnDestroy {
     return this.sanitizer.bypassSecurityTrustHtml(html);
   }
 
+  getExcerpt(doc: DocumentEntry): string {
+    if (doc.markdownContent) {
+      return doc.markdownContent.replace(/[#*`>\-|!\[\]()]/g, '').trim().substring(0, 150) + '...';
+    }
+    if (doc.blocks && doc.blocks.length > 0) {
+      return doc.blocks[0].content.substring(0, 150) + '...';
+    }
+    return 'System analysis indicates optimal function. Further metrics pending...';
+  }
+
   ngOnDestroy() {
     if (this.intervalId) {
       clearInterval(this.intervalId);

@@ -21,7 +21,7 @@ export class GuidesArchiveAdmin implements OnInit {
 
   async loadGuides() {
     this.isLoading = true;
-    this.guides = await this.contentService.getAdminDocuments('guide');
+    this.guides = await this.contentService.getAdminDocuments(['guide']);
     this.isLoading = false;
     this.cdr.detectChanges();
   }

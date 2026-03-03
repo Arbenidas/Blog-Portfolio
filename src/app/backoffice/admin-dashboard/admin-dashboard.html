@@ -73,12 +73,12 @@
           <div class="entry-row">
             <div class="entry-info">
               <div class="entry-badge"
-                [ngClass]="entry.category === 'work' ? 'entry-badge-work' : 'entry-badge-log'">
+                [ngClass]="'entry-badge-' + entry.category">
                 {{ entry.category | uppercase }}
               </div>
               <div class="entry-details">
                 <h3 class="entry-title"
-                  [ngClass]="entry.category === 'work' ? 'entry-title-work' : 'entry-title-log'"
+                  [ngClass]="'entry-title-' + entry.category"
                   [routerLink]="'/admin/editor/' + entry.slug">{{ entry.title }}</h3>
                 <p class="entry-meta">Edited {{ timeAgo(entry.updatedAt) }}</p>
               </div>

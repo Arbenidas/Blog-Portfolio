@@ -48,27 +48,27 @@ export class AdminDashboard {
   }
 
   async loadData() {
-    const [works, logs, drafts, systemTags, totalUpvotes] = await Promise.all([
-      this.contentService.getAdminDocuments('work'),
-      this.contentService.getAdminDocuments('log'),
+    const [works, logsAndGuides, drafts, systemTags, totalUpvotes] = await Promise.all([
+      this.contentService.getAdminDocuments(['work']),
+      this.contentService.getAdminDocuments(['log', 'guide']),
       this.contentService.getDraftDocuments(),
       this.contentService.getSystemTags(),
       this.contentService.getTotalUpvotes()
     ]);
 
     this.worksCount = works.length;
-    this.logsCount = logs.length;
+    this.logsCount = logsAndGuides.length; // Count both logs and guides as 'Field Logs' entries here
     this.totalUpvotes = totalUpvotes;
     this.drafts = drafts;
     this.systemTags = systemTags;
 
     // Merge and sort by updatedAt descending, take latest 10
-    this.recentEntries = [...works, ...logs]
+    this.recentEntries = [...works, ...logsAndGuides]
       .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
       .slice(0, 10);
 
     // Get social stats for all entries
-    const allDocIds = [...works, ...logs].map(e => e.id);
+    const allDocIds = [...works, ...logsAndGuides].map(e => e.id);
     const [upvotes, comments] = await Promise.all([
       this.contentService.getUpvoteCountsForDocuments(allDocIds),
       this.contentService.getCommentCountsForDocuments(allDocIds)

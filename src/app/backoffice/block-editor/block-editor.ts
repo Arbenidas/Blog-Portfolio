@@ -1912,18 +1912,17 @@ export class BlockEditor implements OnInit, OnDestroy {
   importPastedMarkdown() {
     if (!this.pastedMarkdown.trim()) return;
 
-    const parsedBlocks = this.parseMarkdownToBlocks(this.pastedMarkdown);
-
-    if (this.contentBlocks.length > 0) {
-      if (confirm('¿Quieres reemplazar el contenido actual? Cancelar si quieres añadirlo al final.')) {
-        this.contentBlocks = parsedBlocks;
+    if (this.markdownContent.trim().length > 0) {
+      if (confirm('¿Quieres reemplazar el contenido actual? Cancelar para añadirlo al final.')) {
+        this.markdownContent = this.pastedMarkdown;
       } else {
-        this.contentBlocks = [...this.contentBlocks, ...parsedBlocks];
+        this.markdownContent = this.markdownContent.trimEnd() + '\n\n' + this.pastedMarkdown;
       }
     } else {
-      this.contentBlocks = parsedBlocks;
+      this.markdownContent = this.pastedMarkdown;
     }
 
+    this.onMarkdownChange(this.markdownContent);
     this.saveSnapshot();
     this.showPasteMdModal = false;
     this.pastedMarkdown = '';

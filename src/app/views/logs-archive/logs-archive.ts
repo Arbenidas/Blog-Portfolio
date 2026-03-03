@@ -35,7 +35,7 @@ export class LogsArchive implements OnInit {
     });
 
     this.isLoading = true;
-    this.logs = await this.contentService.getAllLogs();
+    this.logs = await this.contentService.getAllLogs(1, 1000, ['log']);
 
     this.analyzeTags();
 
@@ -110,52 +110,60 @@ export class LogsArchive implements OnInit {
     }
   }
 
-  // --- GETTERS ---
+  getExcerpt(log: DocumentEntry): string {
+    if (log.markdownContent) {
+      return log.markdownContent.replace(/[#*`>\-|!\[\]()]/g, '').trim().substring(0, 150) + '...';
+    }
+    if (log.blocks && log.blocks.length > 0) {
+      return log.blocks[0].content.substring(0, 150) + '...';
+    }
+    return '[ENCRYPTED_DATA_PACKET]';
+  }
 
   get filteredLogs(): DocumentEntry[] {
     return this.logs.filter(log => {
       // 1. Search Query Match
       if (this.searchQuery) {
         const titleMatch = log.title.toLowerCase().includes(this.searchQuery);
-        const contentMatch = (log.blocks && log.blocks.length > 0)
-          ? log.blocks[0].content.toLowerCase().includes(this.searchQuery)
-          : false;
+        let contentMatch = false;
+        if (log.markdownContent) {
+          contentMatch = log.markdownContent.toLowerCase().includes(this.searchQuery);
+        } else if (log.blocks && log.blocks.length > 0) {
+          contentMatch = log.blocks[0].content.toLowerCase().includes(this.searchQuery);
+        }
 
         if (!titleMatch && !contentMatch) return false;
       }
 
-      // 2. Filter Protocols (Tags)
+      // 2. Filter Protocols (Tags) - Strict AND Logic
       if (this.activeFilters.size > 0) {
         if (!log.tags || log.tags.length === 0) return false;
         const logTagsLower = log.tags.map(t => t.toLowerCase());
 
-        const activeCategoryTags: string[] = [];
-        if (this.activeFilters.has('FRONTEND_DEV')) activeCategoryTags.push('frontend', 'angular', 'react', 'vue', 'html', 'css', 'ui', 'tailwind', 'typescript', 'javascript');
-        if (this.activeFilters.has('BACKEND_SYS')) activeCategoryTags.push('backend', 'node', 'express', 'nestjs', 'python', 'database', 'api', 'supabase', 'postgres', 'docker');
-        if (this.activeFilters.has('UI_DESIGN')) activeCategoryTags.push('design', 'figma', 'ux', 'ui/ux', 'prototype', 'interface', 'wireframe', 'architecture');
-        if (this.activeFilters.has('EXP_RESEARCH')) activeCategoryTags.push('research', 'case study', 'experiment', 'webgl', 'three.js', 'analysis');
+        // For EACH active filter, the log must satisfy it
+        for (const activeFilter of this.activeFilters) {
 
-        // Log must contain AT LEAST ONE of the active category's mapped tags or match the filter name exactly
-        let hasMatchedTag = false;
+          // Map to specific tags if it's a known category
+          let categoryTags: string[] = [];
+          if (activeFilter === 'FRONTEND_DEV') categoryTags = ['frontend', 'angular', 'react', 'vue', 'html', 'css', 'ui', 'tailwind', 'typescript', 'javascript'];
+          else if (activeFilter === 'BACKEND_SYS') categoryTags = ['backend', 'node', 'express', 'nestjs', 'python', 'database', 'api', 'supabase', 'postgres', 'docker'];
+          else if (activeFilter === 'UI_DESIGN') categoryTags = ['design', 'figma', 'ux', 'ui/ux', 'prototype', 'interface', 'wireframe', 'architecture'];
+          else if (activeFilter === 'EXP_RESEARCH') categoryTags = ['research', 'case study', 'experiment', 'webgl', 'three.js', 'analysis'];
+          else categoryTags = [activeFilter.toLowerCase()]; // Fallback if clicking a specific tag name directly later
 
-        for (const tag of logTagsLower) {
-          if (activeCategoryTags.includes(tag)) {
-            hasMatchedTag = true;
-            break;
-          }
-        }
+          // Check if the log satisfies THIS specific filter
+          let satisfiesFilter = false;
 
-        // Also check exact match against the filter name just in case
-        if (!hasMatchedTag) {
-          for (const activeTag of this.activeFilters) {
-            if (logTagsLower.includes(activeTag.toLowerCase())) {
-              hasMatchedTag = true;
+          for (const expectedTag of categoryTags) {
+            if (logTagsLower.includes(expectedTag)) {
+              satisfiesFilter = true;
               break;
             }
           }
-        }
 
-        if (!hasMatchedTag) return false;
+          // If the log doesn't satisfy even one active filter, reject it (AND logic)
+          if (!satisfiesFilter) return false;
+        }
       }
 
       return true;

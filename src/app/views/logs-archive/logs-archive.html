@@ -162,7 +162,7 @@
                 </h2>
                 
                 <p class="timeline-log-preview">
-                  {{ log.blocks.length > 0 ? log.blocks[0].content : 'No content' }}
+                  {{ getExcerpt(log) }}
                 </p>
                 
                 <div class="timeline-footer">
