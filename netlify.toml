@@ -30,3 +30,12 @@
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "strict-origin-when-cross-origin"
     Permissions-Policy = "camera=(), microphone=(), geolocation=()"
+
+# SPA Fallback: serve index.html for all non-static routes
+# This ensures that when Angular SSR falls back via context.next(),
+# the client browser still gets the Angular app shell and can do CSR.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
