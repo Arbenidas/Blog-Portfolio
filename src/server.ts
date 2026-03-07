@@ -7,7 +7,7 @@ const SUPABASE_URL = 'https://xadheyltgskjprmjbzvh.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhhZGhleWx0Z3NranBybWpienZoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE3NDUwMDQsImV4cCI6MjA4NzMyMTAwNH0.IJ-uk4dUpk8ojsfs3ZYnR91--vzkfAYi7Kj8UysOCD0';
 const SITE_URL = 'https://arbe.blog';
 
-/** Fetch published docs using the Supabase REST API directly (no SDK needed in Edge Functions) */
+/** Fetch published docs using the Supabase REST API (native fetch, no SDK) */
 async function getPublishedDocuments(): Promise<{ slug: string; category: string; updated_at: string }[]> {
   try {
     const url = `${SUPABASE_URL}/rest/v1/documents?select=slug,category,updated_at&status=eq.published&category=in.(log,guide,work)&order=created_at.desc`;
@@ -24,7 +24,6 @@ async function getPublishedDocuments(): Promise<{ slug: string; category: string
   }
 }
 
-/** Build the XML sitemap string */
 function buildSitemapXml(docs: { slug: string; category: string; updated_at: string }[]): string {
   const staticUrls = [
     { loc: `${SITE_URL}/`, changefreq: 'weekly', priority: '1.0' },
@@ -45,7 +44,6 @@ function buildSitemapXml(docs: { slug: string; category: string; updated_at: str
   }));
 
   const allUrls = [...staticUrls, ...dynamicUrls];
-
   const urlEntries = allUrls.map(u => `
   <url>
     <loc>${u.loc}</loc>
@@ -64,7 +62,7 @@ export async function netlifyAppEngineHandler(request: Request): Promise<Respons
   const context = getContext();
   const url = new URL(request.url);
 
-  // ===== DYNAMIC SITEMAP ENDPOINT =====
+  // Sitemap
   if (url.pathname === '/sitemap.xml') {
     const docs = await getPublishedDocuments();
     const xml = buildSitemapXml(docs);
@@ -77,20 +75,27 @@ export async function netlifyAppEngineHandler(request: Request): Promise<Respons
     });
   }
 
-  // Angular SSR
-  const result = await angularAppEngine.handle(request, context);
+  // Block known bot/scanner paths immediately — no need to run Angular SSR
+  const scannerPatterns = ['/wp-admin', '/wordpress', '/.env', '/phpmyadmin', '/cgi-bin', '/xmlrpc'];
+  if (scannerPatterns.some(p => url.pathname.startsWith(p))) {
+    return new Response('Not found', { status: 404 });
+  }
 
-  if (result) {
-    if (url.pathname.startsWith('/logs/') || url.pathname.startsWith('/works/') || url.pathname.startsWith('/guides/')) {
-      result.headers.set('Cache-Control', 'public, s-maxage=86400, stale-while-revalidate');
+  // Angular SSR — wrapped in try/catch so any SSR crash returns graceful fallback
+  try {
+    const result = await angularAppEngine.handle(request, context);
+    if (result) {
+      if (url.pathname.startsWith('/logs/') || url.pathname.startsWith('/works/') || url.pathname.startsWith('/guides/')) {
+        result.headers.set('Cache-Control', 'public, s-maxage=86400, stale-while-revalidate');
+      }
+      return result;
     }
-    return result;
+  } catch (err) {
+    console.error('[SSR] Rendering failed for', url.pathname, err);
+    // If SSR crashes, serve an empty 200 shell so the browser can do CSR instead of seeing a 5xx
   }
 
   return new Response('Not found', { status: 404 });
 }
 
-/**
- * The request handler used by the Angular CLI (dev-server and during build).
- */
 export const reqHandler = createRequestHandler(netlifyAppEngineHandler);
