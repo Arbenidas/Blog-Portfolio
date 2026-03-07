@@ -1,6 +1,5 @@
 import { AngularAppEngine, createRequestHandler } from '@angular/ssr';
 import { getContext } from '@netlify/angular-runtime/context.mjs';
-import { createClient } from '@supabase/supabase-js';
 
 const angularAppEngine = new AngularAppEngine();
 
@@ -8,19 +7,21 @@ const SUPABASE_URL = 'https://xadheyltgskjprmjbzvh.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhhZGhleWx0Z3NranBybWpienZoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE3NDUwMDQsImV4cCI6MjA4NzMyMTAwNH0.IJ-uk4dUpk8ojsfs3ZYnR91--vzkfAYi7Kj8UysOCD0';
 const SITE_URL = 'https://arbe.blog';
 
-/** Fetch all published slugs from Supabase for sitemap generation */
+/** Fetch published docs using the Supabase REST API directly (no SDK needed in Edge Functions) */
 async function getPublishedDocuments(): Promise<{ slug: string; category: string; updated_at: string }[]> {
-  const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-  const { data, error } = await supabase
-    .from('documents')
-    .select('slug, category, updated_at')
-    .eq('status', 'published')
-    .in('category', ['log', 'guide', 'work']);
-  if (error) {
-    console.error('Sitemap fetch error:', error);
+  try {
+    const url = `${SUPABASE_URL}/rest/v1/documents?select=slug,category,updated_at&status=eq.published&category=in.(log,guide,work)&order=created_at.desc`;
+    const res = await fetch(url, {
+      headers: {
+        'apikey': SUPABASE_ANON_KEY,
+        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+      },
+    });
+    if (!res.ok) return [];
+    return await res.json();
+  } catch {
     return [];
   }
-  return data || [];
 }
 
 /** Build the XML sitemap string */
@@ -34,11 +35,7 @@ function buildSitemapXml(docs: { slug: string; category: string; updated_at: str
     { loc: `${SITE_URL}/contact`, changefreq: 'yearly', priority: '0.4' },
   ];
 
-  const categoryPath: Record<string, string> = {
-    log: 'logs',
-    guide: 'guides',
-    work: 'works',
-  };
+  const categoryPath: Record<string, string> = { log: 'logs', guide: 'guides', work: 'works' };
 
   const dynamicUrls = docs.map(doc => ({
     loc: `${SITE_URL}/${categoryPath[doc.category] || doc.category}/${doc.slug}`,
@@ -80,7 +77,7 @@ export async function netlifyAppEngineHandler(request: Request): Promise<Respons
     });
   }
 
-  // Dejamos que Angular renderice la aplicación
+  // Angular SSR
   const result = await angularAppEngine.handle(request, context);
 
   if (result) {
