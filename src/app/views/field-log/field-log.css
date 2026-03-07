@@ -80,6 +80,55 @@
     }
 }
 
+/* ===== READING PROGRESS BAR ===== */
+.reading-progress-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 4px;
+    background: var(--accent-orange);
+    z-index: 9999;
+    transition: width 0.15s ease;
+    box-shadow: 0 0 8px rgba(217, 78, 30, 0.6);
+}
+
+/* ===== FONT SIZE VARIANTS ===== */
+.font-size-sm .log-content,
+.font-size-sm .markdown-body {
+    font-size: 0.875rem;
+}
+
+.font-size-lg .log-content,
+.font-size-lg .markdown-body {
+    font-size: 1.125rem;
+    line-height: 1.9;
+}
+
+/* ===== FONT SIZE CONTROL BUTTONS ===== */
+.btn-font-size {
+    background: white;
+    border: 1px solid var(--charcoal);
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    font-weight: bold;
+    padding: 0.2rem 0.4rem;
+    cursor: pointer;
+    transition: all 0.15s;
+    box-shadow: 1px 1px 0 var(--charcoal);
+    color: var(--charcoal);
+}
+
+.btn-font-size:hover {
+    background: var(--paper-cream);
+}
+
+.font-btn-active {
+    background: var(--charcoal) !important;
+    color: white !important;
+    box-shadow: none !important;
+}
+
+
 .article-container {
     background-color: var(--paper-white);
     border: 2px solid var(--charcoal);

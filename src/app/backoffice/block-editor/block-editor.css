@@ -510,55 +510,52 @@
     .toolbar-container {
         position: fixed;
         top: 50%;
-        right: 2rem;
-        /* Se ancla al lado derecho de tu pantalla */
+        right: 1.5rem;
         transform: translateY(-50%);
         flex-direction: column;
-        /* Pone los botones en vertical */
-        width: 4rem;
-        /* Un poco más estrecha */
-        margin-bottom: 0;
+        width: 3.5rem;
         padding: 0.5rem;
         box-shadow: 6px 6px 0 var(--charcoal);
         background-color: var(--paper-cream);
+        border: 2px solid var(--charcoal);
         border-radius: 4px;
-        transition: transform 0.3s ease, right 0.3s ease;
-        max-height: 90vh;
-        /* Límite de altura para que no se salga de la pantalla */
+        max-height: 85vh;
+        overflow-y: auto;
+        overflow-x: visible;
+        scrollbar-width: none;
+        /* Firefox */
+        -ms-overflow-style: none;
+        /* IE */
     }
 
-    .toolbar-container.toolbar-collapsed {
-        transform: translateY(-50%);
-        right: 2rem;
+    .toolbar-container::-webkit-scrollbar {
+        display: none;
+        /* Chrome/Safari */
     }
 
     .toolbar-fixed-actions {
         flex-direction: column;
         width: 100%;
-        margin-bottom: 0;
+        gap: 0.5rem;
+        margin-bottom: 0.5rem;
+        position: sticky;
+        top: 0;
+        background: var(--paper-cream);
+        z-index: 2;
     }
 
     .toolbar-scroll-area {
         flex-direction: column;
-        overflow: visible;
-        padding-left: 0;
+        display: flex;
+        gap: 0.5rem;
         width: 100%;
-        /* Ocultamos el scrollbar visual para que quede limpio */
-        scrollbar-width: none;
-    }
-
-    .toolbar-scroll-area::-webkit-scrollbar {
-        display: none;
     }
 
     .btn-toolbar {
         width: 100%;
         height: 2.5rem;
-        /* Botones más compactos (antes 3rem) */
-        padding: 0.25rem;
         flex-shrink: 0;
     }
-
 }
 
 /* =========================================================
@@ -758,9 +755,23 @@
     border-radius: 0;
     overflow-x: auto;
     margin: 2.5rem 0;
-    border: 2px solid var(--charcoal);
+    border: 3px solid var(--charcoal);
     box-shadow: 6px 6px 0 var(--charcoal);
     font-size: 0.95rem;
+    position: relative;
+    transition: transform 0.3s ease, box-shadow 0.3s ease, z-index 0s;
+}
+
+.markdown-content-body pre:hover {
+    transform: scale(1.02);
+    box-shadow: 12px 12px 0 var(--charcoal);
+    z-index: 10;
+}
+
+/* Dimming effect for siblings when one code block is hovered */
+.markdown-content-body:has(pre:hover) pre:not(:hover) {
+    opacity: 0.4;
+    filter: grayscale(0.5);
 }
 
 .markdown-content-body pre code {

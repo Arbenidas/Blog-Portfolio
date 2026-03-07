@@ -56,6 +56,102 @@ button {
   border: none;
   cursor: pointer;
   padding: 0;
+  transition: transform 0.1s, box-shadow 0.1s;
+}
+
+button:active:not(:disabled) {
+  transform: translateY(4px) !important;
+  box-shadow: none !important;
+}
+
+.btn-brutal {
+  border: 2px solid var(--charcoal);
+  background: white;
+  padding: 0.5rem 1rem;
+  font-family: var(--font-mono);
+  font-weight: bold;
+  text-transform: uppercase;
+  box-shadow: 4px 4px 0 var(--charcoal);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.btn-brutal:hover {
+  background-color: var(--paper-cream);
+}
+
+/* Scanlines Loading Effect */
+.scanlines {
+  position: relative;
+  overflow: hidden;
+}
+
+.scanlines::after {
+  content: " ";
+  display: block;
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  background: linear-gradient(rgba(18, 16, 16, 0) 50%,
+      rgba(0, 0, 0, 0.1) 50%),
+    linear-gradient(90deg,
+      rgba(255, 0, 0, 0.03),
+      rgba(0, 255, 0, 0.01),
+      rgba(0, 0, 255, 0.03));
+  z-index: 2;
+  background-size: 100% 4px, 3px 100%;
+  pointer-events: none;
+  animation: scanlineScroll 0.2s linear infinite;
+  opacity: 0.3;
+}
+
+@keyframes scanlineScroll {
+  0% {
+    transform: translateY(0);
+  }
+
+  100% {
+    transform: translateY(4px);
+  }
+}
+
+/* Copy Button for Code Blocks */
+.btn-copy-code {
+  background-color: var(--accent-orange);
+  color: white;
+  border: 1px solid var(--charcoal);
+  padding: 0.2rem 0.6rem;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  transition: all 0.2s;
+  text-transform: uppercase;
+  box-shadow: 2px 2px 0 var(--charcoal);
+  line-height: 1;
+}
+
+.btn-copy-code:hover {
+  background-color: var(--charcoal);
+  color: white;
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 3px 0 var(--charcoal);
+}
+
+.btn-copy-code:active {
+  transform: translate(1px, 1px);
+  box-shadow: none;
+}
+
+.btn-copy-success {
+  background-color: #22c55e !important;
+  color: white !important;
 }
 
 ul,

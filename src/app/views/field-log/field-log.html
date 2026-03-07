@@ -1,10 +1,13 @@
+<!-- Reading Progress Bar -->
+<div class="reading-progress-bar" [style.width.%]="readProgress" *ngIf="log && !isLoading"></div>
+
 <!-- Single main container — inner content switches based on state -->
-<main class="field-log-main" [class.read-mode]="isReadMode">
+<main class="field-log-main" [class.read-mode]="isReadMode" [class.font-size-sm]="fontSize==='sm'" [class.font-size-lg]="fontSize==='lg'">
   <div class="field-log-bg"></div>
 
   <!-- ===== SKELETON LOADER ===== -->
   <ng-container *ngIf="isLoading">
-    <div class="field-log-nav">
+    <div class="field-log-nav scanlines">
       <div class="skel" style="width:160px; height:16px;"></div>
     </div>
     <div class="log-page-grid">
@@ -113,6 +116,16 @@
           </div>
         </div>
 
+        <!-- Font Size Controls -->
+        <div class="sidebar-card" style="display:flex; align-items:center; justify-content:space-between; padding:0.5rem 0.75rem;">
+          <span style="font-family: var(--font-mono); font-size:0.65rem; font-weight:bold; color:#9ca3af;">FONT</span>
+          <div style="display:flex; gap:0.25rem;">
+            <button class="btn-font-size" [class.font-btn-active]="fontSize==='sm'" (click)="setFontSize('sm')">A-</button>
+            <button class="btn-font-size" [class.font-btn-active]="fontSize==='md'" (click)="setFontSize('md')">A</button>
+            <button class="btn-font-size" [class.font-btn-active]="fontSize==='lg'" (click)="setFontSize('lg')">A+</button>
+          </div>
+        </div>
+
         <!-- Bibliography Button -->
         <button *ngIf="bibliographyBlock" class="sidebar-card" (click)="toggleBibliography($event)" style="justify-content: center; padding: 0.5rem; text-align: center; font-family: var(--font-mono); font-size: 0.75rem; font-weight: bold; color: var(--charcoal); cursor: pointer; transition: background-color 0.2s;">
           <span class="material-symbols-outlined" style="font-size:14px; margin-right: 0.25rem;">library_books</span>
@@ -182,7 +195,13 @@
                     <span class="dot dot-green"></span>
                   </div>
                   <span *ngIf="block.data?.filename" class="block-code-filename-label">{{ block.data.filename }}</span>
-                  <span class="block-code-lang-label">{{ (block.data?.language || 'code') | uppercase }}</span>
+                  <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <button class="btn-copy-code" (click)="copyToClipboard(block.content, $event)">
+                      <span class="material-symbols-outlined" style="font-size: 14px;">content_copy</span>
+                      COPY
+                    </button>
+                    <span class="block-code-lang-label">{{ (block.data?.language || 'code') | uppercase }}</span>
+                  </div>
                 </div>
                 <pre class="block-code-pre"><code>{{ block.content }}</code></pre>
                 <div *ngIf="block.data?.error" class="block-code-error-box" [ngClass]="'error-' + (block.data?.errorType || 'error')">

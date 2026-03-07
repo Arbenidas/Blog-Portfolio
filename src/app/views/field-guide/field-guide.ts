@@ -44,6 +44,13 @@ export class FieldGuide implements OnInit, OnDestroy {
   showBibliography = false;
   allGuides: DocumentEntry[] = [];
 
+  // Reading Progress
+  readProgress = 0;
+  private scrollListener: (() => void) | null = null;
+
+  // Font Size (persisted)
+  fontSize: 'sm' | 'md' | 'lg' = 'md';
+
   // Social State
   upvoteCount = 0;
   userHasUpvoted = false;
@@ -174,6 +181,29 @@ export class FieldGuide implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.sectionObserver?.disconnect();
+    if (this.scrollListener) {
+      window.removeEventListener('scroll', this.scrollListener);
+    }
+  }
+
+  private setupProgressBar(): void {
+    if (!isPlatformBrowser(this.platformId)) return;
+    this.scrollListener = () => {
+      const el = document.getElementById('pdf-content-area');
+      if (!el) return;
+      const total = el.scrollHeight - window.innerHeight;
+      this.readProgress = total > 0 ? Math.min(100, Math.round((window.scrollY / total) * 100)) : 0;
+      this.cdr.markForCheck();
+    };
+    window.addEventListener('scroll', this.scrollListener, { passive: true });
+  }
+
+  setFontSize(size: 'sm' | 'md' | 'lg'): void {
+    this.fontSize = size;
+    if (isPlatformBrowser(this.platformId)) {
+      localStorage.setItem('reader_font_size', size);
+    }
+    this.cdr.markForCheck();
   }
 
   ngOnInit() {
@@ -230,6 +260,7 @@ export class FieldGuide implements OnInit, OnDestroy {
           this.isLoading = false;
           this.cdr.markForCheck();
           this.setupScrollObserver();
+          this.setupProgressBar();
           removeTask();
         }
       } else {
@@ -249,11 +280,47 @@ export class FieldGuide implements OnInit, OnDestroy {
         if (pBlock) description = pBlock.content;
       }
 
+      const slug = this.log.slug || this.log.id;
+      const coverImage = this.getCoverUrl(this.log.coverPhoto);
+
       this.seoService.updateMetaTags({
         title: this.log.title,
         description: description,
-        image: this.getCoverUrl(this.log.coverPhoto),
-        type: 'article'
+        image: coverImage,
+        type: 'article',
+        url: `/guides/${slug}`,
+        tags: this.log.tags,
+        publishedAt: this.log.createdAt,
+      });
+
+      // JSON-LD: TechArticle structured data for Google rich snippets
+      this.seoService.setJsonLd({
+        '@context': 'https://schema.org',
+        '@type': 'TechArticle',
+        'headline': this.log.title,
+        'description': description,
+        'image': coverImage || 'https://arbe.blog/logo.png',
+        'datePublished': this.log.createdAt,
+        'dateModified': this.log.updatedAt || this.log.createdAt,
+        'author': {
+          '@type': 'Person',
+          'name': this.log.author?.full_name || this.log.author?.username || 'Arbe',
+          'url': 'https://arbe.blog'
+        },
+        'publisher': {
+          '@type': 'Person',
+          'name': 'arbes.blog',
+          'logo': {
+            '@type': 'ImageObject',
+            'url': 'https://arbe.blog/logo.png'
+          }
+        },
+        'mainEntityOfPage': {
+          '@type': 'WebPage',
+          '@id': `https://arbe.blog/guides/${slug}`
+        },
+        'keywords': this.log.tags?.join(', ') || '',
+        'articleSection': 'Field Guides'
       });
     }
   }
@@ -431,16 +498,80 @@ export class FieldGuide implements OnInit, OnDestroy {
     }
   }
 
-  /** Injects IDs for TOC after ngx-markdown renders */
   onMarkdownReady() {
     if (!isPlatformBrowser(this.platformId)) return;
     setTimeout(() => {
+      // Inject heading IDs for TOC
       const headings = document.querySelectorAll('.markdown-body h1, .markdown-body h2');
       headings.forEach((h, i) => {
         h.id = 'md-h-' + i;
       });
       this.setupScrollObserver();
+
+      // Inject copy buttons into markdown-rendered code blocks
+      const preBlocks = document.querySelectorAll('.markdown-body pre');
+      preBlocks.forEach((pre) => {
+        if (pre.querySelector('.btn-copy-code-md')) return; // already injected
+        const code = pre.querySelector('code');
+        if (!code) return;
+
+        const btn = document.createElement('button');
+        btn.className = 'btn-copy-code btn-copy-code-md';
+        btn.innerHTML = '<span class="material-symbols-outlined" style="font-size: 14px;">content_copy</span> COPY';
+        btn.style.cssText = 'position: absolute; top: 0.75rem; right: 0.75rem;';
+
+        btn.addEventListener('click', async (e) => {
+          e.stopPropagation();
+          const originalHTML = btn.innerHTML;
+          try {
+            await navigator.clipboard.writeText(code.textContent || '');
+            btn.innerHTML = '<span class="material-symbols-outlined" style="font-size: 14px;">check</span> COPIED!';
+            btn.classList.add('btn-copy-success');
+          } catch {
+            btn.innerHTML = '<span class="material-symbols-outlined" style="font-size: 14px;">error</span> ERROR';
+          }
+          setTimeout(() => {
+            btn.innerHTML = originalHTML;
+            btn.classList.remove('btn-copy-success');
+          }, 2000);
+        });
+
+        (pre as HTMLElement).style.position = 'relative';
+        pre.appendChild(btn);
+      });
+
+      // Inject lightbox on markdown images
+      const mdImages = document.querySelectorAll('.markdown-body img');
+      mdImages.forEach((img) => {
+        if ((img as HTMLElement).dataset['lightboxAttached']) return;
+        (img as HTMLElement).style.cursor = 'zoom-in';
+        (img as HTMLElement).dataset['lightboxAttached'] = '1';
+        img.addEventListener('click', () => {
+          this.lightboxImage = (img as HTMLImageElement).src;
+          this.cdr.markForCheck();
+        });
+      });
     }, 500);
+  }
+
+  async copyToClipboard(content: string, event: MouseEvent) {
+    if (!isPlatformBrowser(this.platformId)) return;
+    const btn = event.currentTarget as HTMLButtonElement;
+    const originalText = btn.innerHTML;
+
+    try {
+      await navigator.clipboard.writeText(content);
+      btn.innerHTML = '<span class="material-symbols-outlined" style="font-size: 14px;">check</span> COPIED!';
+      btn.classList.add('btn-copy-success');
+    } catch (err) {
+      console.error('Failed to copy: ', err);
+      btn.innerHTML = '<span class="material-symbols-outlined" style="font-size: 14px;">error</span> ERROR';
+    }
+
+    setTimeout(() => {
+      btn.innerHTML = originalText;
+      btn.classList.remove('btn-copy-success');
+    }, 2000);
   }
 
 }

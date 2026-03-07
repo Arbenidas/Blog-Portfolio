@@ -9,6 +9,8 @@ import 'prismjs/components/prism-css.min.js';
 import 'prismjs/components/prism-scss.min.js';
 import 'prismjs/components/prism-json.min.js';
 import 'prismjs/components/prism-bash.min.js';
+import 'prismjs/components/prism-java.min.js';
+import 'prismjs/components/prism-properties.min.js';
 import 'prismjs/components/prism-markdown.min.js';
 
 bootstrapApplication(App, appConfig)

@@ -1,9 +1,13 @@
 User-agent: *
 Allow: /
-Allow: /works
-Allow: /logs
-Allow: /contact
-Disallow: /admin
-Disallow: /admin/
 
+# Block the entire admin backoffice from being indexed
+Disallow: /admin/
+Disallow: /admin/login
+
+# Block auth pages
+Disallow: /login
+Disallow: /register
+
+# Sitemap
 Sitemap: https://arbe.blog/sitemap.xml
