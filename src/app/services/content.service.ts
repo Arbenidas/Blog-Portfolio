@@ -196,6 +196,37 @@ export class ContentService {
         return data ? data.map((d: any) => this.mapToListEntry(d)) : [];
     }
 
+    /** Fetch up to `limit` related published docs from same category sharing at least one tag */
+    async getRelatedDocuments(tags: string[], excludeId: string, category: string, limit: number = 3): Promise<DocumentEntry[]> {
+        if (!tags || tags.length === 0) return [];
+        const { data, error } = await this.supabase.client
+            .from('documents')
+            .select('id, slug, title, category, tags, created_at, updated_at, cover_photo')
+            .eq('status', 'published')
+            .eq('category', category)
+            .neq('id', excludeId)
+            .overlaps('tags', tags)
+            .order('created_at', { ascending: false })
+            .limit(limit);
+        if (error) {
+            console.error('Related docs error:', error);
+            return [];
+        }
+        return (data || []).map((d: any) => ({
+            id: d.id,
+            slug: d.slug,
+            title: d.title,
+            category: d.category,
+            tags: d.tags || [],
+            blocks: [],
+            createdAt: d.created_at,
+            updatedAt: d.updated_at,
+            coverPhoto: d.cover_photo,
+        }));
+    }
+
+
+
     async getTrendingLogs(limit: number = 5): Promise<DocumentEntry[]> {
         // Get all published documents (logs, works, guides)
         const { data: docs, error } = await this.supabase.client

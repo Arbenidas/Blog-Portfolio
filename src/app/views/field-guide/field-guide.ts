@@ -51,6 +51,9 @@ export class FieldGuide implements OnInit, OnDestroy {
   // Font Size (persisted)
   fontSize: 'sm' | 'md' | 'lg' = 'md';
 
+  // Related posts
+  relatedLogs: any[] = [];
+
   // Social State
   upvoteCount = 0;
   userHasUpvoted = false;
@@ -251,6 +254,10 @@ export class FieldGuide implements OnInit, OnDestroy {
             // Phase 2.5: Record viewed tags for the local recommendation engine
             if (entry.tags && entry.tags.length > 0) {
               this.contentService.recordTagView(entry.tags);
+              // Fetch related posts by shared tags
+              this.relatedLogs = await this.contentService.getRelatedDocuments(
+                entry.tags, entry.id, entry.category, 3
+              );
             }
           } else {
             // If entry is null for some reason, reset to initial state

@@ -250,3 +250,15 @@
     align-items: center;
     gap: 0.5rem;
 }
+
+/* START_HERE link — highlighted in orange */
+.nav-link-start-here {
+    color: var(--accent-orange) !important;
+    border-color: var(--accent-orange) !important;
+    opacity: 1 !important;
+}
+
+.nav-link-start-here:hover {
+    background-color: var(--accent-orange) !important;
+    color: white !important;
+}

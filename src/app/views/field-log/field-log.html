@@ -153,6 +153,7 @@
             <div *ngIf="log.coverPhoto" class="cover-photo-box" style="overflow: hidden;">
                <img [src]="getCoverUrl(log.coverPhoto)" 
                     class="cover-photo-img" 
+                    loading="eager"
                     [ngStyle]="getCoverStyles(log.coverPhoto)" />
             </div>
             <div class="meta-badges">
@@ -164,9 +165,17 @@
                 PDF
               </button>
             </div>
+            <!-- Breadcrumbs -->
+            <nav class="article-breadcrumb" aria-label="breadcrumb">
+              <a routerLink="/" class="breadcrumb-item">arbes.blog</a>
+              <span class="breadcrumb-sep">›</span>
+              <a routerLink="/logs" class="breadcrumb-item">Logs</a>
+              <span class="breadcrumb-sep">›</span>
+              <span class="breadcrumb-item breadcrumb-current">{{ log.title }}</span>
+            </nav>
             <h1 class="log-title">{{ log.title }}</h1>
             <div class="log-tags">
-              <a *ngFor="let tag of log.tags" class="log-tag" href="#">#{{ tag }}</a>
+              <a *ngFor="let tag of log.tags" class="log-tag" [routerLink]="['/logs']" [queryParams]="{tag: tag}">#{{ tag }}</a>
             </div>
           </header>
 
@@ -394,6 +403,33 @@
           </div>
         </div>
       </article>
+
+      <!-- RELATED POSTS -->
+      <section *ngIf="relatedLogs.length > 0" class="related-posts-section" aria-label="Related Articles">
+        <div class="related-posts-header">
+          <span class="related-posts-label">// KEEP_READING</span>
+          <span class="related-posts-divider"></span>
+        </div>
+        <div class="related-posts-grid">
+          <a *ngFor="let rel of relatedLogs"
+             [routerLink]="['/logs', rel.slug || rel.id]"
+             class="related-post-card">
+            <div class="related-post-cover" *ngIf="rel.coverPhoto">
+              <img [src]="getCoverUrl(rel.coverPhoto)" [alt]="rel.title" loading="lazy" class="related-post-img" />
+            </div>
+            <div class="related-post-cover related-post-cover-placeholder" *ngIf="!rel.coverPhoto">
+              <span class="material-symbols-outlined" style="font-size:2rem; opacity:0.3;">article</span>
+            </div>
+            <div class="related-post-info">
+              <div class="related-post-tags">
+                <span *ngFor="let t of rel.tags.slice(0,2)" class="related-post-tag">#{{ t }}</span>
+              </div>
+              <h3 class="related-post-title">{{ rel.title }}</h3>
+              <span class="related-post-date">{{ rel.createdAt | date:'dd MMM yyyy' }}</span>
+            </div>
+          </a>
+        </div>
+      </section>
 
       <!-- HIDDEN CLEAN PDF CONTAINER -->
       <div id="pdf-clean-content-area" *ngIf="log" style="position: absolute; top: -10000px; left: -10000px; width: 800px; padding: 40px; background: white; color: black; font-family: 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; z-index: -999; box-sizing: border-box;">
