@@ -67,6 +67,13 @@ export class SeoService {
         if (config.publishedAt) {
             this.metaService.updateTag({ property: 'article:published_time', content: config.publishedAt });
         }
+        // #13 — article:tag for each post tag
+        if (config.tags?.length) {
+            // Remove any existing article:tag tags first
+            config.tags.forEach((tag, i) => {
+                this.metaService.updateTag({ property: 'article:tag', content: tag });
+            });
+        }
 
         // Twitter Cards
         this.metaService.updateTag({ name: 'twitter:card', content: 'summary_large_image' });

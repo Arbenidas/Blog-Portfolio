@@ -159,13 +159,13 @@ export class ContentService {
         };
     }
 
-    /** Mapper ligero para vistas de lista (sin blocks ni cover_photo) */
+    /** Mapper ligero para vistas de lista (include cover_photo for archive cards) */
     private mapToListEntry(d: any): DocumentEntry {
         return {
             id: d.id,
             slug: d.slug,
             title: d.title,
-            coverPhoto: undefined,
+            coverPhoto: d.cover_photo,
             category: d.category,
             tags: d.tags || [],
             indexLog: d.index_log,
@@ -1226,5 +1226,59 @@ export class ContentService {
             .delete()
             .eq('id', commentId);
         if (error) throw error;
+    }
+
+    // --- PREV / NEXT NAVIGATION ---
+
+    async getPrevNextLogs(currentId: string, category: string): Promise<{ prev: DocumentEntry | null, next: DocumentEntry | null }> {
+        const { data, error } = await this.supabase.client
+            .from('documents')
+            .select('id, slug, title, category, tags, created_at, updated_at, cover_photo')
+            .eq('status', 'published')
+            .eq('category', category)
+            .order('created_at', { ascending: false });
+
+        if (error || !data) return { prev: null, next: null };
+
+        const idx = data.findIndex((d: any) => d.id === currentId);
+        if (idx === -1) return { prev: null, next: null };
+
+        const mapMin = (d: any) => d ? ({
+            id: d.id, slug: d.slug, title: d.title, category: d.category,
+            tags: d.tags || [], blocks: [], createdAt: d.created_at,
+            updatedAt: d.updated_at, coverPhoto: d.cover_photo
+        } as DocumentEntry) : null;
+
+        return {
+            prev: idx > 0 ? mapMin(data[idx - 1]) : null,
+            next: idx < data.length - 1 ? mapMin(data[idx + 1]) : null
+        };
+    }
+
+    // --- VIEW COUNT ---
+
+    /** Increments view count for a document (fire-and-forget, fails silently) */
+    async recordDocumentView(documentId: string): Promise<void> {
+        try {
+            await this.supabase.client
+                .from('document_views')
+                .upsert({ document_id: documentId, view_count: 1 }, { onConflict: 'document_id', ignoreDuplicates: false });
+        } catch (e) {
+            // Silently ignore — table may not exist yet
+        }
+    }
+
+    async getViewCount(documentId: string): Promise<number> {
+        try {
+            const { data, error } = await this.supabase.client
+                .from('document_views')
+                .select('view_count')
+                .eq('document_id', documentId)
+                .single();
+            if (error || !data) return 0;
+            return data.view_count || 0;
+        } catch {
+            return 0;
+        }
     }
 }

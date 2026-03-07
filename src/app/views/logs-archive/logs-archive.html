@@ -55,7 +55,11 @@
         <div class="density-divider"></div>
         
         <div class="density-list">
-          <div *ngFor="let tech of techStackDensity" class="density-item">
+          <div *ngFor="let tech of techStackDensity" 
+               class="density-item density-item-clickable"
+               [class.density-item-active]="isTagFilterActive(tech.name)"
+               (click)="toggleTagFilter(tech.name)"
+               title="Click to filter by {{ tech.name }}">
             <div class="density-item-header">
               <span class="density-name" [class.density-primary]="tech.isPrimary">
                 <span *ngIf="tech.isPrimary" class="material-symbols-outlined density-star">star</span>
@@ -64,7 +68,7 @@
               <span class="density-count">[{{ tech.count }}]</span>
             </div>
             <div class="density-bar-bg">
-              <div class="density-bar-fill" [style.width.%]="tech.percentage"></div>
+              <div class="density-bar-fill" [style.width.%]="tech.percentage" [class.density-bar-active]="isTagFilterActive(tech.name)"></div>
             </div>
           </div>
         </div>
@@ -81,17 +85,27 @@
           </h1>
         </div>
         <div class="logs-stats">
+          <!-- #1 Dynamic count -->
           <div class="logs-total-badge">
-            TOTAL_ENTRIES: 42
+            TOTAL_ENTRIES: {{ filteredLogs.length }}
           </div>
           <p class="logs-meta">
-            Last Decryption: 2024.11.08<br/>
+            <!-- #4 Dynamic date -->
+            Last Decryption: {{ latestLogDate }}<br/>
             Status: <span class="logs-status-online">ONLINE</span>
           </p>
+          <!-- #5 View mode toggle -->
+          <button class="btn-view-toggle" (click)="toggleViewMode()" title="Toggle view mode">
+            <span class="material-symbols-outlined" style="font-size: 14px;">
+              {{ viewMode === 'timeline' ? 'grid_view' : 'view_agenda' }}
+            </span>
+            {{ viewMode === 'timeline' ? 'GRID' : 'TIMELINE' }}
+          </button>
         </div>
       </div>
 
-      <div class="timeline-container">
+      <!-- ===== TIMELINE VIEW ===== -->
+      <div class="timeline-container" *ngIf="viewMode === 'timeline'">
         <div class="logs-timeline-line"></div>
 
         <!-- LOADING SKELETON -->
@@ -140,6 +154,11 @@
             <div class="timeline-content-box" [ngStyle]="{'transform': i % 2 === 0 ? 'rotate(1deg)' : 'rotate(-1deg)'}">
               <div class="timeline-content-inner">
                 
+                <!-- #3 Cover image -->
+                <div *ngIf="log.coverPhoto" class="timeline-cover-img-wrap">
+                  <img [src]="log.coverPhoto.split('#')[0]" alt="{{ log.title }}" class="timeline-cover-img" loading="lazy" />
+                </div>
+
                 <ng-container *ngIf="i % 2 === 0; else alternativeTape">
                   <div class="tape-strip-long" style="top: -15px; right: -40px; transform: rotate(35deg);"></div>
                 </ng-container>
@@ -189,6 +208,54 @@
           </div>
         </ng-container>
       </div>
+
+      <!-- ===== GRID VIEW (#5) ===== -->
+      <div class="logs-grid" *ngIf="viewMode === 'grid'">
+
+        <!-- Skeleton for grid -->
+        <div *ngIf="isLoading">
+          <div class="logs-grid-inner">
+            <div *ngFor="let i of [1,2,3,4,5,6]" class="grid-card grid-card-skel">
+              <div class="skel" style="width:100%; height:160px; margin-bottom:0.75rem;"></div>
+              <div class="skel" style="width:60%; height:12px; margin-bottom:0.5rem;"></div>
+              <div class="skel" style="width:90%; height:20px; margin-bottom:0.5rem;"></div>
+              <div class="skel" style="width:75%; height:12px;"></div>
+            </div>
+          </div>
+        </div>
+
+        <div *ngIf="!isLoading" class="logs-grid-inner">
+          <a *ngFor="let log of filteredLogs; let i = index"
+             [routerLink]="['/logs', log.slug]"
+             class="grid-card list-anim-item">
+            
+            <!-- Cover image -->
+            <div class="grid-card-cover">
+              <img *ngIf="log.coverPhoto" [src]="log.coverPhoto.split('#')[0]" [alt]="log.title" loading="lazy" class="grid-card-cover-img" />
+              <div *ngIf="!log.coverPhoto" class="grid-card-cover-placeholder">
+                <span class="material-symbols-outlined" style="font-size:2rem; opacity:0.3;">article</span>
+              </div>
+            </div>
+
+            <div class="grid-card-body">
+              <div class="grid-card-meta">
+                <span class="grid-card-date">{{ log.createdAt | date:'dd MMM yyyy' }}</span>
+                <span class="grid-card-id">LOG_{{ log.id.slice(0, 5) | uppercase }}</span>
+              </div>
+              <h2 class="grid-card-title">{{ log.title }}</h2>
+              <p class="grid-card-excerpt">{{ getExcerpt(log) }}</p>
+              <div class="grid-card-tags">
+                <span *ngFor="let tag of log.tags.slice(0, 3)" class="timeline-tag">#{{ tag }}</span>
+              </div>
+            </div>
+          </a>
+
+          <div *ngIf="filteredLogs.length === 0" class="empty-logs" style="grid-column: 1/-1;">
+             <span class="empty-logs-text">No logs available matching the current criteria.</span>
+          </div>
+        </div>
+      </div>
+
     </section>
   </div>
 </main>

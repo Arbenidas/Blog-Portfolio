@@ -61,8 +61,19 @@ export class FieldLog implements OnInit, OnDestroy {
   comments: any[] = [];
   newCommentText = '';
 
-  // Read Mode State
+  // Read Mode State (false = light, true = dark)
   isReadMode = false;
+  isDarkReadMode = false;
+
+  // #8 Prev/Next Navigation
+  prevLog: DocumentEntry | null = null;
+  nextLog: DocumentEntry | null = null;
+
+  // #9 View Count
+  viewCount = 0;
+
+  // #11 Scroll-to-top button visibility
+  showScrollTop = false;
 
   get bibliographyBlock(): any {
     return this.log?.blocks.find(b => b.type === 'bibliography');
@@ -117,7 +128,7 @@ export class FieldLog implements OnInit, OnDestroy {
     return items;
   }
 
-  /** Estimated read time in minutes */
+  /** #6 — Estimated read time using 238 wpm average */
   get readingTime(): number {
     if (!this.log) return 1;
     let words = 0;
@@ -125,11 +136,18 @@ export class FieldLog implements OnInit, OnDestroy {
       words = this.log.markdownContent.split(/\s+/).length;
     } else {
       words = this.log.blocks
-        .filter((b: any) => b.type === 'p' || b.type === 'h1' || b.type === 'h2')
-        .map((b: any) => b.content.split(/\s+/).length)
+        .filter((b: any) => b.type !== 'image' && b.type !== 'gallery' && b.type !== 'video' && b.type !== 'diagram')
+        .map((b: any) => (b.content || '').split(/\s+/).length)
         .reduce((a: number, b: number) => a + b, 0);
     }
-    return Math.max(1, Math.ceil(words / 200));
+    return Math.max(1, Math.ceil(words / 238));
+  }
+
+  /** #12 — True if the post was updated after creation (>1 min difference) */
+  get isUpdated(): boolean {
+    if (!this.log?.updatedAt || !this.log?.createdAt) return false;
+    const diff = Math.abs(new Date(this.log.updatedAt).getTime() - new Date(this.log.createdAt).getTime());
+    return diff > 60000; // more than 1 minute
   }
 
   /** Currently visible section id (for TOC active highlight) */
@@ -197,9 +215,18 @@ export class FieldLog implements OnInit, OnDestroy {
       if (!el) return;
       const total = el.scrollHeight - window.innerHeight;
       this.readProgress = total > 0 ? Math.min(100, Math.round((window.scrollY / total) * 100)) : 0;
+      // #11 Show scroll-to-top when past 30%
+      this.showScrollTop = this.readProgress > 30;
       this.cdr.markForCheck();
     };
     window.addEventListener('scroll', this.scrollListener, { passive: true });
+  }
+
+  /** #11 — Scroll smoothly to the top of the page */
+  scrollToTop(): void {
+    if (isPlatformBrowser(this.platformId)) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   }
 
   setFontSize(size: 'sm' | 'md' | 'lg'): void {
@@ -240,24 +267,38 @@ export class FieldLog implements OnInit, OnDestroy {
 
           if (entry) {
             this.log = entry;
-            // No manual parsing needed with ngx-markdown
             this.updateSeo();
 
             // Fetch social data
             if (entry.id) {
-              const upvoteData = await this.contentService.getUpvoteCount(entry.id);
+              const [upvoteData, commentData, viewCount] = await Promise.all([
+                this.contentService.getUpvoteCount(entry.id),
+                this.contentService.getComments(entry.id),
+                this.contentService.getViewCount(entry.id)
+              ]);
               this.upvoteCount = upvoteData.count;
               this.userHasUpvoted = upvoteData.userHasUpvoted;
-              this.comments = await this.contentService.getComments(entry.id);
+              this.comments = commentData;
+              this.viewCount = viewCount;
+
+              // #9 Record the view (fire-and-forget)
+              this.contentService.recordDocumentView(entry.id);
             }
 
-            // Phase 2.5: Record viewed tags for the local recommendation engine
             if (entry.tags && entry.tags.length > 0) {
               this.contentService.recordTagView(entry.tags);
-              // Fetch related posts by shared tags
-              this.relatedLogs = await this.contentService.getRelatedDocuments(
-                entry.tags, entry.id, entry.category, 3
-              );
+              const [relatedLogs, prevNext] = await Promise.all([
+                this.contentService.getRelatedDocuments(entry.tags, entry.id, entry.category, 3),
+                this.contentService.getPrevNextLogs(entry.id, entry.category)
+              ]);
+              this.relatedLogs = relatedLogs;
+              this.prevLog = prevNext.prev;
+              this.nextLog = prevNext.next;
+            } else if (entry.id) {
+              // Still fetch prev/next even if no tags
+              const prevNext = await this.contentService.getPrevNextLogs(entry.id, entry.category);
+              this.prevLog = prevNext.prev;
+              this.nextLog = prevNext.next;
             }
           } else {
             // If entry is null for some reason, reset to initial state
@@ -466,14 +507,29 @@ export class FieldLog implements OnInit, OnDestroy {
     }
   }
 
-  // --- Read Mode ---
+  // --- Read Mode (#16 dark variant) ---
   toggleReadMode() {
     this.isReadMode = !this.isReadMode;
     if (this.isReadMode) {
+      // First toggle → light read mode
+      this.isDarkReadMode = false;
       document.body.classList.add('read-mode-active');
+      document.body.classList.remove('dark-read-mode-active');
     } else {
       document.body.classList.remove('read-mode-active');
+      document.body.classList.remove('dark-read-mode-active');
+      this.isDarkReadMode = false;
     }
+  }
+
+  toggleDarkReadMode() {
+    this.isDarkReadMode = !this.isDarkReadMode;
+    if (this.isDarkReadMode) {
+      document.body.classList.add('dark-read-mode-active');
+    } else {
+      document.body.classList.remove('dark-read-mode-active');
+    }
+    this.cdr.markForCheck();
   }
 
   // --- SOCIAL (Upvotes & Comments) ---

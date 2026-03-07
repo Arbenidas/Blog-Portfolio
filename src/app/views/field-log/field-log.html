@@ -2,7 +2,7 @@
 <div class="reading-progress-bar" [style.width.%]="readProgress" *ngIf="log && !isLoading"></div>
 
 <!-- Single main container — inner content switches based on state -->
-<main class="field-log-main" [class.read-mode]="isReadMode" [class.font-size-sm]="fontSize==='sm'" [class.font-size-lg]="fontSize==='lg'">
+<main class="field-log-main" [class.read-mode]="isReadMode" [class.dark-read-mode]="isDarkReadMode" [class.font-size-sm]="fontSize==='sm'" [class.font-size-lg]="fontSize==='lg'">
   <div class="field-log-bg"></div>
 
   <!-- ===== SKELETON LOADER ===== -->
@@ -76,16 +76,37 @@
             <span class="sidebar-meta-label">Filed</span>
             <span class="sidebar-meta-val">{{ log.createdAt | date:'dd MMM yy' }}</span>
           </div>
-          <div class="sidebar-meta-row" style="border-bottom:none;">
+          <!-- #12 Updated badge -->
+          <div *ngIf="isUpdated" class="sidebar-meta-row">
+            <span class="sidebar-meta-label updated-label">
+              <span class="material-symbols-outlined" style="font-size:12px; vertical-align:-2px;">update</span>
+              Updated
+            </span>
+            <span class="sidebar-meta-val updated-val">{{ log.updatedAt | date:'dd MMM yy' }}</span>
+          </div>
+          <div class="sidebar-meta-row">
             <span class="sidebar-meta-label">Tags</span>
             <span class="sidebar-meta-val" style="color:var(--primary);">{{ log.tags.length }}</span>
           </div>
+          <!-- #9 View count -->
+          <div class="sidebar-meta-row" style="border-bottom:none;">
+            <span class="sidebar-meta-label">
+              <span class="material-symbols-outlined" style="font-size:12px; vertical-align:-2px;">visibility</span>
+              Views
+            </span>
+            <span class="sidebar-meta-val">{{ viewCount > 0 ? viewCount : '—' }}</span>
+          </div>
         </div>
 
-        <!-- Read Mode Button -->
+        <!-- Read Mode Button (#16 with dark variant) -->
         <button class="sidebar-card btn-read-mode-toggle" (click)="toggleReadMode()" style="justify-content: center; padding: 0.5rem; text-align: center; font-family: var(--font-mono); font-size: 0.75rem; font-weight: bold; color: var(--charcoal); cursor: pointer; transition: background-color 0.2s, color 0.2s; display: flex; align-items: center; gap: 0.4rem; background-color: var(--charcoal); color: white;">
           <span class="material-symbols-outlined" style="font-size:16px;">chrome_reader_mode</span>
-          MODO LECTURA
+          {{ isReadMode ? 'EXIT READ' : 'MODO LECTURA' }}
+        </button>
+        <!-- Dark mode toggle for read mode (#16) -->
+        <button *ngIf="isReadMode" class="sidebar-card btn-dark-read-toggle" (click)="toggleDarkReadMode()">
+          <span class="material-symbols-outlined" style="font-size:16px;">{{ isDarkReadMode ? 'light_mode' : 'dark_mode' }}</span>
+          {{ isDarkReadMode ? 'LIGHT MODE' : 'DARK MODE' }}
         </button>
 
         <div *ngIf="tocItems.length > 0" class="sidebar-card">
@@ -179,8 +200,8 @@
             </div>
           </header>
 
-          <!-- Content Body -->
-          <div class="log-content">
+          <!-- Content Body with fade-in (#15) -->
+          <div class="log-content log-enter-anim">
             <markdown *ngIf="log.markdownContent" 
                       class="markdown-body" 
                       [data]="log.markdownContent"
@@ -394,6 +415,24 @@
             </div>
           </div>
 
+          <!-- #8 Prev/Next Navigation -->
+          <nav class="prev-next-nav" *ngIf="prevLog || nextLog">
+            <a *ngIf="prevLog" [routerLink]="['/logs', prevLog.slug]" class="prev-next-btn prev-btn">
+              <span class="material-symbols-outlined" style="font-size:16px;">arrow_back</span>
+              <div class="prev-next-info">
+                <span class="prev-next-label">PREV_LOG</span>
+                <span class="prev-next-title">{{ prevLog.title }}</span>
+              </div>
+            </a>
+            <a *ngIf="nextLog" [routerLink]="['/logs', nextLog.slug]" class="prev-next-btn next-btn">
+              <div class="prev-next-info" style="text-align:right;">
+                <span class="prev-next-label">NEXT_LOG</span>
+                <span class="prev-next-title">{{ nextLog.title }}</span>
+              </div>
+              <span class="material-symbols-outlined" style="font-size:16px;">arrow_forward</span>
+            </a>
+          </nav>
+
           <div class="share-container">
             <app-share-buttons 
               [title]="log.title" 
@@ -477,6 +516,11 @@
   <button *ngIf="isReadMode" class="btn-floating-exit-read-mode fade-in-up" (click)="toggleReadMode()">
     <span class="material-symbols-outlined" style="font-size: 20px;">close_fullscreen</span>
     SALIR MODO LECTURA
+  </button>
+
+  <!-- #11 Scroll to Top Button -->
+  <button *ngIf="showScrollTop" class="btn-scroll-top fade-in-up" (click)="scrollToTop()" aria-label="Scroll to top">
+    <span class="material-symbols-outlined" style="font-size: 20px;">arrow_upward</span>
   </button>
 
   <!-- Ad Modal Overlay -->

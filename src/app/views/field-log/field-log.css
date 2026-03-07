@@ -1911,3 +1911,210 @@ a.breadcrumb-item:hover {
     color: #9ca3af;
     margin-top: auto;
 }
+
+/* ====== #15 Fade-in animation for article content ====== */
+@keyframes logFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(16px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.log-enter-anim {
+    animation: logFadeIn 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* ====== #11 Scroll-to-top floating button ====== */
+.btn-scroll-top {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    z-index: 900;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: var(--charcoal);
+    color: white;
+    border: 2px solid white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.3);
+    transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), background 0.2s;
+}
+
+.btn-scroll-top:hover {
+    background: var(--accent-orange);
+    transform: translate(-2px, -2px);
+    box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.25);
+}
+
+/* Offset from exit-read-mode button when both are visible */
+.btn-floating-exit-read-mode~.btn-scroll-top {
+    bottom: 5.5rem;
+}
+
+/* ====== #8 Prev/Next Navigation ====== */
+.prev-next-nav {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-top: 2.5rem;
+    padding-top: 2rem;
+    border-top: 2px solid var(--charcoal);
+    flex-wrap: wrap;
+}
+
+.prev-next-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    border: 2px solid var(--charcoal);
+    background: var(--paper-cream);
+    color: var(--charcoal);
+    text-decoration: none;
+    font-family: var(--font-mono);
+    box-shadow: 3px 3px 0 var(--charcoal);
+    transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.2s;
+    flex: 1;
+    min-width: 200px;
+    max-width: 48%;
+}
+
+.prev-next-btn:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 5px 5px 0 var(--charcoal);
+    background: white;
+}
+
+.next-btn {
+    justify-content: flex-end;
+    margin-left: auto;
+}
+
+.prev-next-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    min-width: 0;
+}
+
+.prev-next-label {
+    font-size: 0.6rem;
+    font-weight: bold;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent-orange);
+}
+
+.prev-next-title {
+    font-size: 0.8rem;
+    font-weight: bold;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 200px;
+}
+
+/* ====== #12 Updated badge ====== */
+.updated-label {
+    color: #0d9488 !important;
+    display: flex;
+    align-items: center;
+    gap: 0.2rem;
+}
+
+.updated-val {
+    color: #0d9488 !important;
+}
+
+/* ====== #16 Dark Read Mode ====== */
+.btn-dark-read-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    padding: 0.5rem;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.2s, color 0.2s;
+    width: 100%;
+    background: #1a1a2e;
+    color: #e2e8f0;
+    border: 2px solid #334155;
+}
+
+.btn-dark-read-toggle:hover {
+    background: #0f172a;
+}
+
+/* Dark read mode overrides — applied via body class */
+.dark-read-mode .article-inner,
+body.dark-read-mode-active .article-inner {
+    background: #0f172a !important;
+    border-color: #334155 !important;
+    color: #e2e8f0 !important;
+}
+
+body.dark-read-mode-active .log-content,
+body.dark-read-mode-active .markdown-body {
+    color: #e2e8f0 !important;
+}
+
+body.dark-read-mode-active .log-title {
+    color: #f8fafc !important;
+}
+
+body.dark-read-mode-active .log-header {
+    border-color: rgba(255, 255, 255, 0.15) !important;
+}
+
+body.dark-read-mode-active .markdown-body h1,
+body.dark-read-mode-active .markdown-body h2,
+body.dark-read-mode-active .markdown-body h3 {
+    color: #f8fafc !important;
+    border-color: #334155 !important;
+}
+
+body.dark-read-mode-active .markdown-body p,
+body.dark-read-mode-active .markdown-body li {
+    color: #cbd5e1 !important;
+}
+
+body.dark-read-mode-active .markdown-body a {
+    color: #38bdf8 !important;
+}
+
+body.dark-read-mode-active .markdown-body blockquote {
+    background: #1e293b !important;
+    border-color: #38bdf8 !important;
+    color: #94a3b8 !important;
+}
+
+body.dark-read-mode-active .sidebar-card {
+    background: #1e293b !important;
+    border-color: #334155 !important;
+    color: #e2e8f0 !important;
+}
+
+body.dark-read-mode-active .sidebar-meta-label {
+    color: #94a3b8 !important;
+}
+
+body.dark-read-mode-active .sidebar-meta-val {
+    color: #f8fafc !important;
+}
+
+body.dark-read-mode-active .log-footer {
+    background: #1e293b;
+    border-top-color: #334155 !important;
+}
